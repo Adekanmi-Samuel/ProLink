@@ -210,6 +210,23 @@ const sendMessage = async (threadId, senderId, messageData) => {
     },
   });
 
+  // Send ntfy push to the other user
+  try {
+    const topic = `prolink_user_${otherUserId}`;
+    if (typeof fetch !== 'undefined') {
+      await fetch(`https://ntfy.sh/${topic}`, {
+        method: 'POST',
+        body: messageData.message_type === 'text' ? messageData.content : '📎 Attachment',
+        headers: {
+          'Title': 'New Message on ProLink',
+          'Tags': 'speech_balloon'
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send ntfy push notification for message:', err);
+  }
+
   return message;
 };
 
