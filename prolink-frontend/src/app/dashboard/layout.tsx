@@ -175,7 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           border-bottom: 1px solid var(--border);
         }
         .dash-mobile-topbar__toggle {
-          background: var(--surface);
+          background: transparent;
           border: 1px solid var(--border);
           border-radius: var(--radius);
           padding: 0.5rem;
