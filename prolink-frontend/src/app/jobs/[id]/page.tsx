@@ -10,7 +10,7 @@ import MilestonesSection from '../../../components/MilestonesSection';
 import { useSocket } from '../../../lib/SocketContext';
 
 const COLORS = ['#00D68F', '#4A8CFF', '#E8633C', '#F0B429', '#A78BFA', '#F472B6', '#14B8A6'];
-function avatarColor(name) {
+function avatarColor(name: string) {
   let hash = 0;
   for (let i = 0; i < (name || 'A').length; i++) hash = (name || 'A').charCodeAt(i) + ((hash << 5) - hash);
   return COLORS[Math.abs(hash) % COLORS.length];
@@ -111,10 +111,10 @@ export default function JobDetailPage() {
     try {
       if (jobData.isSaved) {
         await api.delete(`/saved_jobs/${jobData.id}`);
-        setJobData(prev => ({ ...prev, isSaved: false }));
+        setJobData((prev: any) => ({ ...prev, isSaved: false }));
       } else {
         await api.post('/saved_jobs', { jobId: jobData.id });
-        setJobData(prev => ({ ...prev, isSaved: true }));
+        setJobData((prev: any) => ({ ...prev, isSaved: true }));
       }
     } catch (error) {
       console.error('Failed to save/unsave job:', error);
@@ -229,14 +229,13 @@ export default function JobDetailPage() {
   return (
     <div className="page">
       {/* ═══ CONTENT ═══ */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="wrap" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
+        <div className="job-detail-layout">
           {/* ── LEFT COLUMN: Job Info ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
             {/* Job header card */}
             <motion.div
-              className="card-base"
-              style={{ padding: '1.5rem' }}
+              className="job-detail-header"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -251,10 +250,10 @@ export default function JobDetailPage() {
                       {jobData.job_type === 'fixed' ? 'Fixed Price' : 'Milestone'}
                     </span>
                   </div>
-                  <h1 className="page-title" style={{ fontSize: 'var(--text-2xl)' }}>{jobData.title}</h1>
+                  <h1 className="job-detail-title">{jobData.title}</h1>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--accent)', whiteSpace: 'nowrap' }}>
+                  <div className="job-budget-display">
                     ₦{Number(jobData.budget || 0).toLocaleString()}
                   </div>
                   {!isOwner && (
@@ -276,14 +275,16 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)' }}>
-                <span>Posted by <strong style={{ color: 'var(--fg)' }}>{jobData.client_name || 'Client'}</strong></span>
+              <div className="job-detail-meta">
+                <div className="job-detail-meta-item">
+                  Posted by <strong style={{ color: 'var(--fg)', marginLeft: 4 }}>{jobData.client_name || 'Client'}</strong>
+                </div>
                 <span style={{ color: 'var(--border)' }}>·</span>
-                <span>{new Date(jobData.posted_at).toLocaleDateString()}</span>
+                <div className="job-detail-meta-item">{new Date(jobData.posted_at).toLocaleDateString()}</div>
                 {jobData.location && (
                   <>
                     <span style={{ color: 'var(--border)' }}>·</span>
-                    <span>📍 {jobData.location}</span>
+                    <div className="job-detail-meta-item">📍 {jobData.location}</div>
                   </>
                 )}
               </div>
@@ -323,13 +324,12 @@ export default function JobDetailPage() {
             {/* Client View: Bids Received */}
             {isOwner && (
               <motion.div
-                className="card-featured"
-                style={{ padding: '1.25rem' }}
+                className="bid-form-card"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
               >
-                <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, marginBottom: '1rem' }}>
+                <h3 className="bid-form-title">
                   Bids Received ({jobData.bids?.length || 0})
                 </h3>
                 {jobData.bids && jobData.bids.length > 0 ? (
@@ -337,42 +337,50 @@ export default function JobDetailPage() {
                     {jobData.bids.map((bid: any) => {
                       const variance = getBidVariance(Number(bid.amount));
                       return (
-                        <div key={bid.id} className="card-base" style={{ padding: '1rem 1.1rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <div>
-                              <Link href={`/profiles/${bid.provider_id}`} style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 'var(--text-sm)' }}>
+                        <div key={bid.id} className="bid-card">
+                          <div className="bid-card__header">
+                            <div className="bid-card__avatar" style={{ background: avatarColor(bid.full_name) }}>
+                              {(bid.full_name || 'P').charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Link href={`/profiles/${bid.provider_id}`} className="bid-card__name">
                                 {bid.full_name || 'A Freelancer'}
                               </Link>
+                              <div className="bid-card__location">Provider</div>
                               {variance && (
                                 <div style={{
-                                  fontSize: 'var(--text-xs)',
+                                  fontSize: '0.7rem',
                                   fontWeight: 600,
-                                  marginTop: '0.25rem',
+                                  marginTop: '0.2rem',
                                   color: variance.type === 'below' ? 'var(--success)' : variance.type === 'above' ? 'var(--warning)' : 'var(--info)',
                                 }}>
                                   {variance.label}
                                 </div>
                               )}
                             </div>
-                            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--accent)', whiteSpace: 'nowrap' }}>
+                            <div className="bid-card__amount">
                               ₦{Number(bid.amount).toLocaleString()}
                             </div>
                           </div>
-                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '0.75rem' }}>
+                          
+                          <div className="bid-card__proposal">
                             {bid.proposal}
                           </div>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              onClick={() => openHireModal(bid)}
-                              disabled={jobData.status !== 'open'}
-                              className="btn btn-accent btn-sm"
-                              style={{ flex: 1 }}
-                            >
-                              {jobData.status === 'open' ? '✓ Hire Now' : 'Hired'}
-                            </button>
-                            <button onClick={() => handleContact(bid)} className="btn btn-surface btn-sm" style={{ flex: 1 }}>
-                              💬 Message
-                            </button>
+                          
+                          <div className="bid-card__footer">
+                            <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                              <button
+                                onClick={() => openHireModal(bid)}
+                                disabled={jobData.status !== 'open'}
+                                className="btn btn-accent btn-sm"
+                                style={{ flex: 1 }}
+                              >
+                                {jobData.status === 'open' ? '✓ Hire Now' : 'Hired'}
+                              </button>
+                              <button onClick={() => handleContact(bid)} className="btn btn-surface btn-sm" style={{ flex: 1 }}>
+                                💬 Message
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -425,13 +433,12 @@ export default function JobDetailPage() {
             {/* Bid Form (Provider View) */}
             {!isOwner && jobData.status === 'open' && (
               <motion.div
-                className="card-featured"
-                style={{ padding: '1.25rem' }}
+                className="bid-form-card"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <h3 className="eyebrow" style={{ marginBottom: '0.75rem' }}>Submit a Proposal</h3>
+                <h3 className="bid-form-title">Submit a Proposal</h3>
 
                 <div style={{
                   fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)', marginBottom: '1.25rem',

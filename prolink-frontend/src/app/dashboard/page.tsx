@@ -12,15 +12,15 @@ const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
 // ── Avatar colour consistent per name ──
 const COLORS = ['#00D68F', '#4A8CFF', '#E8633C', '#F0B429', '#A78BFA', '#F472B6'];
-function avatarColor(name) {
+function avatarColor(name: string) {
   let hash = 0;
   for (let i = 0; i < (name || 'A').length; i++) hash = (name || 'A').charCodeAt(i) + ((hash << 5) - hash);
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
 // ── Mini timeline dot colour per event type ──
-function eventColor(type) {
-  const m = { bid: '--copper', message: '--blue', milestone: '--accent', payment: '--gold', dispute: '--danger', system: '--info' };
+function eventColor(type: string) {
+  const m: Record<string, string> = { bid: '--copper', message: '--blue', milestone: '--accent', payment: '--gold', dispute: '--danger', system: '--info' };
   return `var(${m[type] || '--accent'})`;
 }
 
@@ -28,13 +28,13 @@ function eventColor(type) {
 //  PAGE
 // ═══════════════════════════════════════════════════════════════
 function DashboardPage() {
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [recentJobs, setRecentJobs] = useState([]);
-  const [earnings, setEarnings] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [myJobs, setMyJobs] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [recentJobs, setRecentJobs] = useState<any[]>([]);
+  const [earnings, setEarnings] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [myJobs, setMyJobs] = useState<any[]>([]);
   const [openToWork, setOpenToWork] = useState(false);
   const [openToWorkLoading, setOpenToWorkLoading] = useState(false);
 
@@ -64,7 +64,7 @@ function DashboardPage() {
         const notifRes = await api.get('/notifications?limit=8');
         setNotifications(notifRes.data?.notifications || notifRes.data || []);
       } catch { /* noop */ }
-    } catch (err) {
+    } catch (err: any) {
       setError(err?.message || String(err));
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!socket) return;
-    const handleBidUpdate = (data) => {
+    const handleBidUpdate = (data: any) => {
       // Reload dashboard silently on new bid
       load();
     };
@@ -140,41 +140,46 @@ function DashboardPage() {
   return (
     <div className="page">
       <div className="wrap" style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'var(--space-3xl)' }}>
+        
         {/* ═══ HEADER ═══ */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: FAUCET_EASING }}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-xl)', flexWrap: 'wrap', gap: '0.75rem' }}
         >
-          <div>
-            <div className="eyebrow">{isProvider ? 'Provider Dashboard' : 'Client Dashboard'}</div>
-            <h1 className="page-title" style={{ marginTop: '0.25rem' }}>
-              {profile.full_name ? (isProvider ? 'Good morning, ' : 'Welcome back, ') + profile.full_name.split(' ')[0] : 'Welcome back'}
-            </h1>
-          </div>
-          <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            {isProvider ? (
-              <button
-                onClick={toggleOpenToWork}
-                disabled={openToWorkLoading}
-                className="btn btn-surface btn-sm"
-                style={{ borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              >
-                <span
-                  className="pulse-dot"
-                  style={{ background: openToWork ? 'var(--success)' : 'var(--fg-tertiary)', width: 7, height: 7 }}
-                />
-                {openToWork ? 'Open to work' : 'Closed'}
-              </button>
-            ) : (
-              <Link href="/jobs/new" className="btn btn-copper btn-sm group" style={{ borderRadius: 999 }}>
-                + Post a job
-              </Link>
-            )}
-            <span className={'badge ' + (isProvider ? 'badge-gold' : 'badge-info')} style={{ padding: '4px 14px' }}>
-              {isProvider ? 'Provider' : 'Client'}
-            </span>
+          <div className={`dash-banner ${isProvider ? 'dash-banner--provider' : 'dash-banner--client'}`}>
+            <div className="dash-banner__eyebrow">{isProvider ? 'Provider Dashboard' : 'Client Dashboard'}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h1 className="dash-banner__name">
+                  {profile.full_name ? (isProvider ? 'Good morning, ' : 'Welcome back, ') + profile.full_name.split(' ')[0] : 'Welcome back'}
+                </h1>
+                <p className="dash-banner__sub">Here is what's happening with your account today.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {isProvider ? (
+                  <button
+                    onClick={toggleOpenToWork}
+                    disabled={openToWorkLoading}
+                    className="btn btn-surface btn-sm"
+                    style={{ borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <span
+                      className="pulse-dot"
+                      style={{ background: openToWork ? 'var(--success)' : 'var(--fg-tertiary)', width: 7, height: 7 }}
+                    />
+                    {openToWork ? 'Open to work' : 'Closed'}
+                  </button>
+                ) : (
+                  <Link href="/jobs/new" className="btn btn-copper btn-sm group" style={{ borderRadius: 999 }}>
+                    + Post a job
+                  </Link>
+                )}
+                <span className={'badge ' + (isProvider ? 'badge-gold' : 'badge-info')} style={{ padding: '4px 14px' }}>
+                  {isProvider ? 'Provider' : 'Client'}
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -189,9 +194,9 @@ function DashboardPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  PROVIDER DASHBOARD — workspace feel
+//  PROVIDER DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function ProviderDashboard({ profile, earnings, recentJobs, notifications }) {
+function ProviderDashboard({ profile, earnings, recentJobs, notifications }: any) {
   const totalEarned = earnings?.total_paid ? String(Number(earnings.total_paid).toLocaleString()) : '0';
   const thisMonth = earnings?.this_month ? String(Number(earnings.this_month).toLocaleString()) : '0';
   const activeContracts = profile?.active_contracts || 0;
@@ -199,100 +204,86 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }) {
 
   return (
     <>
-      {/* ── Stat row ── */}
       <AnimatedSection delay={0.1} stagger={0.08}>
-        <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: 'var(--space-xl)' }}>
+        <div className="stat-grid-4">
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--gold)' }}>
+            <div className="stat-card stat-card--gold">
+              <div className="stat-card__value">
                 {totalEarned === '0' ? <span style={{ color: 'var(--fg-tertiary)' }}>—</span> : <><span className="naira">₦</span>{totalEarned}</>}
               </div>
-              <div className="stat-label">Total Earned</div>
-              {totalEarned === '0' && <div className="stat-delta" style={{ color: 'var(--fg-tertiary)', fontSize: 'var(--text-xs)' }}>Complete your first job to start earning</div>}
+              <div className="stat-card__label">Total Earned</div>
+              {totalEarned === '0' && <div className="stat-card__sub">Complete your first job to start earning</div>}
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--gold)' }}>
+            <div className="stat-card stat-card--green">
+              <div className="stat-card__value">
                 {thisMonth === '0' ? <span style={{ color: 'var(--fg-tertiary)' }}>—</span> : <><span className="naira">₦</span>{thisMonth}</>}
               </div>
-              <div className="stat-label">This Month</div>
+              <div className="stat-card__label">This Month</div>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number">{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-label">Active Contracts</div>
+            <div className="stat-card stat-card--blue">
+              <div className="stat-card__value">{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
+              <div className="stat-card__label">Active Contracts</div>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--copper)' }}>{bidWinRate}</div>
-              <div className="stat-label">Bid Win Rate</div>
+            <div className="stat-card stat-card--copper">
+              <div className="stat-card__value">{bidWinRate}</div>
+              <div className="stat-card__label">Bid Win Rate</div>
             </div>
           </AnimatedStaggerItem>
         </div>
       </AnimatedSection>
 
-      {/* ── Earnings chart placeholder ── */}
       <AnimatedSection delay={0.15}>
         <AnimatedStaggerItem>
-          <div className="card-base" style={{ padding: '1.5rem', marginBottom: 'var(--space-xl)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700 }}>Earnings Trend</h3>
+          <div className="earnings-card">
+            <div className="earnings-card__header">
+              <div className="earnings-card__title">Earnings Trend</div>
               <span className="badge badge-neutral">Last 7 days</span>
             </div>
-            <div style={{ position: 'relative', height: 160, background: 'var(--accent-alpha)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-              {/* Placeholder chart — 7 bars */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: '100%', padding: '1rem' }}>
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{ flex: 1, height: `${10 + Math.sin(i) * 20 + 20}%`, background: 'var(--accent)', borderRadius: '4px 4px 0 0', opacity: 0.3 }}
-                  />
-                ))}
-              </div>
-              <div
-                style={{
-                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)', fontFamily: "'JetBrains Mono', monospace",
-                }}
-              >
+            {totalEarned === '0' ? (
+              <div className="earnings-empty">
                 Earnings will appear here after your first completed job
               </div>
-            </div>
+            ) : (
+              <div className="earnings-bars">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="earnings-bar" style={{ height: `${20 + Math.random() * 80}%` }}>
+                    <div className="earnings-bar__label">Day {i+1}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </AnimatedStaggerItem>
       </AnimatedSection>
 
-      {/* ── Two-column: matching jobs + active contracts ── */}
-      <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-lg)' }}>
-        {/* Matching jobs */}
+      <div className="dash-grid-2">
         <AnimatedSection delay={0.2}>
           <AnimatedStaggerItem>
-            <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, marginBottom: '0.75rem' }}>Matching Jobs</h3>
+            <div className="dash-section-header">
+              <div className="dash-section-title">Matching Jobs</div>
+              <Link href="/jobs" className="dash-section-link">Browse all →</Link>
+            </div>
           </AnimatedStaggerItem>
           {recentJobs.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {recentJobs.slice(0, 4).map((job, i) => (
+              {recentJobs.slice(0, 4).map((job: any, i: number) => (
                 <AnimatedStaggerItem key={job.id || i}>
-                  <Link href={'/jobs/' + job.id} className="card-base" style={{ padding: '1rem 1.25rem', textDecoration: 'none', display: 'block' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                      <h4 style={{ fontSize: 'var(--text-md)', fontWeight: 700 }}>{job.title}</h4>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--accent)', whiteSpace: 'nowrap', fontSize: 'var(--text-sm)' }}>
-                        <span className="naira">₦</span>{Number(job.budget || 0).toLocaleString()}
-                      </span>
+                  <Link href={'/jobs/' + job.id} className="job-row">
+                    <div className="job-row__dot" style={{ background: 'var(--accent)' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="job-row__title">{job.title}</div>
+                      <div className="job-row__meta">
+                        {job.location || 'Remote'} · {job.job_type || 'Fixed'} · Posted {job.created_at ? new Date(job.created_at).toLocaleDateString() : 'recently'}
+                      </div>
                     </div>
-                    <div style={{ color: 'var(--fg-secondary)', fontSize: 'var(--text-sm)', marginTop: '0.2rem' }}>
-                      {job.location || 'Remote'} · {job.job_type || 'Fixed'}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                      <span style={{ color: 'var(--fg-tertiary)', fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--text-xs)' }}>
-                        Posted {job.created_at ? new Date(job.created_at).toLocaleDateString() : 'recently'}
-                      </span>
-                      <span style={{ color: 'var(--fg-tertiary)', fontSize: 'var(--text-xs)' }}>
-                        {job.bid_count || 0} provider{(job.bid_count || 0) !== 1 ? 's' : ''} have bid
-                      </span>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--amber)', fontSize: '0.85rem' }}>
+                      <span className="naira">₦</span>{Number(job.budget || 0).toLocaleString()}
                     </div>
                   </Link>
                 </AnimatedStaggerItem>
@@ -309,17 +300,14 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }) {
               </div>
             </AnimatedStaggerItem>
           )}
-          {recentJobs.length > 0 && (
-            <AnimatedStaggerItem>
-              <Link href="/jobs" className="btn btn-outline btn-sm" style={{ marginTop: '0.75rem' }}>Browse all jobs →</Link>
-            </AnimatedStaggerItem>
-          )}
         </AnimatedSection>
 
-        {/* Active contracts */}
         <AnimatedSection delay={0.3}>
           <AnimatedStaggerItem>
-            <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, marginBottom: '0.75rem' }}>My Active Contracts</h3>
+            <div className="dash-section-header">
+              <div className="dash-section-title">My Active Contracts</div>
+              <Link href="/dashboard/contracts" className="dash-section-link">View all →</Link>
+            </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
             <div className="empty-state">
@@ -337,9 +325,9 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  CLIENT DASHBOARD — control centre feel
+//  CLIENT DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function ClientDashboard({ profile, notifications, myJobs }) {
+function ClientDashboard({ profile, notifications, myJobs }: any) {
   const jobsList = Array.isArray(myJobs) ? myJobs : [];
   const openJobs = jobsList.filter(j => j.status === 'open');
   const totalBids = jobsList.reduce(function(s, j) { return s + (j.bid_count || 0); }, 0);
@@ -347,116 +335,99 @@ function ClientDashboard({ profile, notifications, myJobs }) {
   const spentThisMonth = jobsList.reduce((s, j) => s + (Number(j.budget || 0)), 0);
 
   // Items needing attention
-  const needsAttention = [];
+  const needsAttention: any[] = [];
   openJobs.forEach(j => {
     if (j.bid_count > 0) needsAttention.push({ type: 'bid', job: j, desc: `New bids on "${j.title}"`, action: 'Review bids', href: `/jobs/${j.id}` });
   });
   jobsList.filter(j => j.status === 'in_progress').forEach(j => {
     needsAttention.push({ type: 'milestone', job: j, desc: `Milestone approval needed for "${j.title}"`, action: 'View contract', href: `/dashboard/contracts/${j.id}` });
   });
-  const unreadMessages = notifications.filter(n => n.type === 'message' && !n.read);
-  unreadMessages.forEach(n => {
+  const unreadMessages = notifications.filter((n: any) => n.type === 'message' && !n.read);
+  unreadMessages.forEach((n: any) => {
     needsAttention.push({ type: 'message', job: null, desc: n.message || 'Unread message', action: 'View messages', href: '/dashboard/messages' });
   });
 
   return (
     <>
-      {/* ── Stat row ── */}
       <AnimatedSection delay={0.1} stagger={0.08}>
-        <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: 'var(--space-xl)' }}>
+        <div className="stat-grid-4">
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number">{openJobs.length || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-label">Active Jobs</div>
+            <div className="stat-card stat-card--blue">
+              <div className="stat-card__value">{openJobs.length || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
+              <div className="stat-card__label">Active Jobs</div>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--copper)' }}>{totalBids || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-label">Bids to Review</div>
+            <div className="stat-card stat-card--copper">
+              <div className="stat-card__value">{totalBids || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
+              <div className="stat-card__label">Bids to Review</div>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--blue)' }}>{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-label">Contracts Ongoing</div>
+            <div className="stat-card stat-card--green">
+              <div className="stat-card__value">{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
+              <div className="stat-card__label">Contracts Ongoing</div>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="card-stat">
-              <div className="stat-number" style={{ color: 'var(--gold)' }}>
+            <div className="stat-card stat-card--gold">
+              <div className="stat-card__value">
                 {spentThisMonth > 0 ? <><span className="naira">₦</span>{spentThisMonth.toLocaleString()}</> : <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}
               </div>
-              <div className="stat-label">Spent (Total)</div>
+              <div className="stat-card__label">Spent (Total)</div>
             </div>
           </AnimatedStaggerItem>
         </div>
       </AnimatedSection>
 
-      {/* ── Needs Attention card ── */}
       <AnimatedSection delay={0.15}>
         <AnimatedStaggerItem>
           {needsAttention.length > 0 ? (
-            <div className="card-featured" style={{ padding: '1.25rem', marginBottom: 'var(--space-xl)' }}>
-              <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, marginBottom: '0.75rem' }}>Needs Attention</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                <motion.ul
-                  variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
-                  initial="hidden"
-                  animate="visible"
-                  style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}
-                >
-                  {needsAttention.slice(0, 4).map((item, i) => (
-                    <motion.li
-                      key={i}
-                      variants={{
-                        hidden:  { opacity: 0, x: -16 },
-                        visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }
-                      }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.5rem 0', borderBottom: i < Math.min(needsAttention.length, 4) - 1 ? '1px solid var(--border)' : 'none' }}
-                    >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
-                      <span className="pulse-dot" style={{ background: item.type === 'bid' ? 'var(--copper)' : item.type === 'milestone' ? 'var(--accent)' : 'var(--blue)', width: 6, height: 6, flexShrink: 0 }} />
-                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.desc}</span>
-                    </div>
-                    <Link href={item.href} className="btn btn-copper btn-sm" style={{ flexShrink: 0, fontSize: 'var(--text-xs)', padding: '0.3rem 0.8rem' }}>{item.action}</Link>
-                      </motion.li>
-                    ))}
-                  </motion.ul>
-                </div>
+            <div className="card-base" style={{ padding: '1.25rem', marginBottom: 'var(--space-xl)' }}>
+              <div className="dash-section-header" style={{ marginBottom: '1rem' }}>
+                <div className="dash-section-title">Needs Attention</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {needsAttention.slice(0, 4).map((item, i) => (
+                  <div key={i} className="attention-item">
+                    <div className="attention-dot" style={{ background: item.type === 'bid' ? 'var(--copper)' : item.type === 'milestone' ? 'var(--accent)' : 'var(--blue)' }} />
+                    <div className="attention-desc">{item.desc}</div>
+                    <Link href={item.href} className="attention-action">{item.action}</Link>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="card-base" style={{ padding: '1.25rem', marginBottom: 'var(--space-xl)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div className="pulse-dot" style={{ background: 'var(--success)', width: 8, height: 8 }} />
+              <div className="attention-dot" style={{ background: 'var(--success)', width: 10, height: 10 }} />
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)' }}>All caught up! No items need your attention right now.</span>
             </div>
           )}
         </AnimatedStaggerItem>
       </AnimatedSection>
 
-      {/* ── Two-column: recent jobs + activity feed ── */}
-      <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-lg)' }}>
-        {/* Recent jobs */}
+      <div className="dash-grid-2">
         <AnimatedSection delay={0.2}>
           <AnimatedStaggerItem>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700 }}>My Recent Jobs</h3>
-              <Link href="/dashboard/my-jobs" style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>View all →</Link>
+            <div className="dash-section-header">
+              <div className="dash-section-title">My Recent Jobs</div>
+              <Link href="/dashboard/my-jobs" className="dash-section-link">View all →</Link>
             </div>
           </AnimatedStaggerItem>
           {jobsList.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {jobsList.slice(0, 5).map((job, i) => (
+              {jobsList.slice(0, 5).map((job: any, i: number) => (
                 <AnimatedStaggerItem key={job.id || i}>
-                  <Link href={'/jobs/' + job.id} className="card-base" style={{ padding: '0.85rem 1.1rem', textDecoration: 'none', display: 'block' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                      <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{job.title}</h4>
-                      <span className={'badge ' + (job.status === 'open' ? 'badge-success' : job.status === 'in_progress' || job.status === 'assigned' ? 'badge-info' : 'badge-neutral')} style={{ fontSize: '10px' }}>
-                        {job.status?.replace('_', ' ')}
-                      </span>
+                  <Link href={'/jobs/' + job.id} className="job-row">
+                    <div className="job-row__dot" style={{ background: job.status === 'open' ? 'var(--success)' : 'var(--info)' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="job-row__title">{job.title}</div>
+                      <div className="job-row__meta">
+                        {(job.bid_count || 0)} bid{(job.bid_count || 0) !== 1 ? 's' : ''} received
+                      </div>
                     </div>
-                    <div style={{ color: 'var(--fg-secondary)', fontSize: 'var(--text-xs)', marginTop: '0.2rem' }}>
-                      {(job.bid_count || 0) + ' bid' + ((job.bid_count || 0) !== 1 ? 's' : '') + ' received'}
+                    <div className={'badge ' + (job.status === 'open' ? 'badge-success' : job.status === 'in_progress' || job.status === 'assigned' ? 'badge-info' : 'badge-neutral')} style={{ fontSize: '10px' }}>
+                      {job.status?.replace('_', ' ')}
                     </div>
                   </Link>
                 </AnimatedStaggerItem>
@@ -476,29 +447,30 @@ function ClientDashboard({ profile, notifications, myJobs }) {
           )}
         </AnimatedSection>
 
-        {/* Activity feed — timeline style */}
         <AnimatedSection delay={0.25}>
           <AnimatedStaggerItem>
-            <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, marginBottom: '0.75rem' }}>Activity Feed</h3>
+            <div className="dash-section-header">
+              <div className="dash-section-title">Activity Feed</div>
+            </div>
           </AnimatedStaggerItem>
           {notifications.length > 0 ? (
             <AnimatedStaggerItem>
-              <div style={{ position: 'relative', paddingLeft: '1.25rem' }}>
-                {/* Timeline line */}
-                <div style={{ position: 'absolute', left: 5, top: 6, bottom: 6, width: 1, background: 'var(--border)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {notifications.slice(0, 8).map((n, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
-                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: eventColor(n.type), flexShrink: 0, marginTop: 3, marginLeft: '-1.25rem', position: 'relative', zIndex: 1, border: '2px solid var(--bg)' }} />
-                      <div style={{ minWidth: 0 }}>
-                        {n.title && <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{n.title}</div>}
-                        <div style={{ color: 'var(--fg-secondary)', fontSize: 'var(--text-sm)' }}>{n.message || n.description}</div>
-                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)', marginTop: '0.15rem' }}>
-                          {n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}
+              <div className="card-base" style={{ padding: '1.25rem' }}>
+                <div className="feed-line">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {notifications.slice(0, 8).map((n: any, i: number) => (
+                      <div key={i} className="feed-item">
+                        <div className="feed-dot" style={{ borderColor: eventColor(n.type) }} />
+                        <div style={{ minWidth: 0 }}>
+                          {n.title && <div className="feed-title">{n.title}</div>}
+                          <div className="feed-desc">{n.message || n.description}</div>
+                          <div className="feed-time">
+                            {n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </AnimatedStaggerItem>

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import io from 'socket.io-client';
 import api from '../../../lib/api';
+import { apiService } from '../../../lib/apiService';
 import { SOCKET_URL } from '../../../lib/backendConfig';
 import imageCompression from 'browser-image-compression';
 import ReportBlockMenu from '../../../components/ReportBlockMenu';
@@ -192,14 +193,9 @@ export default function ChatPage() {
     if (pendingAttachment) {
       setUploadingFile(pendingAttachment);
       try {
-        const uploadData = new FormData();
-        uploadData.append('file', pendingAttachment);
+        const response = await apiService.upload.single(pendingAttachment);
 
-        const response = await api.post('/upload', uploadData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-
-        const fileUrl = response.data.url;
+        const fileUrl = response.url;
         const isImage = pendingAttachment.type.startsWith('image/');
         const isVideo = pendingAttachment.type.startsWith('video/');
         let messageType = 'document';
@@ -279,28 +275,14 @@ export default function ChatPage() {
   let lastDate: string | null = null;
 
   return (
-    <div className="page" style={{ display: 'flex', justifyContent: 'center', background: 'var(--bg)' }}>
-      <div
-        className="card-elevated"
-        style={{
-          width: '100%', maxWidth: 720,
-          display: 'flex', flexDirection: 'column',
-          height: '100vh', borderRadius: 0, border: 'none',
-          position: 'relative',
-        }}
-      >
+    <div className="page chat-layout">
+      <div className="chat-main" style={{ margin: '0 auto', maxWidth: 800 }}>
         {/* ── HEADER ── */}
-        <div
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            padding: '0.6rem 1rem', background: 'var(--surface)',
-            borderBottom: '1px solid var(--border)', flexShrink: 0, zIndex: 10,
-          }}
-        >
+        <div className="chat-header">
           <Link
             href="/dashboard/messages"
             className="btn btn-ghost btn-sm"
-            style={{ fontSize: '1.2rem', padding: '0.3rem 0.4rem' }}
+            style={{ fontSize: '1.2rem', padding: '0.3rem 0.4rem', marginRight: '0.5rem' }}
           >
             ←
           </Link>
@@ -316,11 +298,11 @@ export default function ChatPage() {
           >
             {(threadDetails?.other_user_name || '?').charAt(0).toUpperCase()}
           </div>
-          <div style={{ flex: 1, minWidth: 0, marginLeft: '0.4rem' }}>
-            <div style={{ fontWeight: 600, fontSize: 'var(--text-md)', lineHeight: '1.2' }}>
+          <div style={{ flex: 1, minWidth: 0, marginLeft: '0.6rem' }}>
+            <div className="chat-header__name">
               {threadDetails?.other_user_name || 'Conversation'}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-secondary)', marginTop: '0.1rem' }}>
+            <div className="chat-header__job">
               {otherUserTyping ? (
                 <span style={{ color: 'var(--accent)' }}>typing...</span>
               ) : (
@@ -351,7 +333,7 @@ export default function ChatPage() {
         </AnimatePresence>
 
         {/* ── MESSAGES ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-md)' }}>
+        <div className="chat-messages">
           {hasMore && (
             <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
               <button
@@ -382,41 +364,16 @@ export default function ChatPage() {
                 >
                   {/* Date divider */}
                   {showDivider && (
-                    <div style={{ display: 'flex', justifyContent: 'center', margin: '0.8rem 0' }}>
-                      <span
-                        style={{
-                          fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)',
-                          background: 'var(--surface)', padding: '0.3rem 0.8rem',
-                          borderRadius: 8, border: '1px solid var(--border)',
-                        }}
-                      >
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }}>
+                      <span className="chat-date-divider">
                         {formatDateDivider(msg.sent_at)}
                       </span>
                     </div>
                   )}
 
                   {/* Bubble row */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: isMine ? 'flex-end' : 'flex-start',
-                    width: '100%', marginBottom: '3px',
-                  }}>
-                    <motion.div
-                      style={{
-                        maxWidth: '80%',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: 16,
-                        borderTopRightRadius: isMine ? 4 : 16,
-                        borderTopLeftRadius: isMine ? 16 : 4,
-                        background: isMine ? 'linear-gradient(135deg, var(--accent-dark, #009466), var(--accent))' : 'var(--surface)',
-                        color: isMine ? '#fff' : 'var(--fg)',
-                        border: isMine ? 'none' : '1px solid var(--border)',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                        position: 'relative',
-                      }}
-                      whileHover={{ scale: 1.01 }}
-                      transition={{ duration: 0.12 }}
-                    >
+                  <div className={`chat-bubble-wrap ${isMine ? 'chat-bubble-wrap--mine' : ''}`}>
+                    <div className="chat-bubble">
                       {/* Content */}
                       {msg.message_type === 'image' ? (
                         (() => {
@@ -482,21 +439,18 @@ export default function ChatPage() {
                           </button>
                         </div>
                       ) : (
-                        <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, marginRight: '1rem', wordBreak: 'break-word' }}>{msg.content}</span>
+                        <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{msg.content}</span>
                       )}
 
-                      {/* Meta row */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.2rem', marginTop: '-0.15rem', alignSelf: 'flex-end' }}>
-                        <span style={{ fontSize: '0.6rem', color: isMine ? 'rgba(255,255,255,0.55)' : 'var(--fg-tertiary)' }}>
-                          {formatTime(msg.sent_at)}
-                        </span>
+                      <div className="chat-time">
+                        {formatTime(msg.sent_at)}
                         {isMine && (
-                          <span style={{ fontSize: '0.7rem', color: (msg.read_at || msg.read) ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                          <span style={{ marginLeft: 4, color: (msg.read_at || msg.read) ? '#fff' : 'rgba(255,255,255,0.4)' }}>
                             ✓✓
                           </span>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -505,15 +459,11 @@ export default function ChatPage() {
 
           {/* Typing indicator */}
           {otherUserTyping && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginBottom: '3px' }}>
+            <div className="chat-bubble-wrap">
               <motion.div
+                className="chat-bubble"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={{
-                  background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 16, borderTopLeftRadius: 4,
-                  padding: '0.5rem 0.75rem', boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: 20 }}>
                   {[0, 1, 2].map((i) => (
@@ -560,38 +510,25 @@ export default function ChatPage() {
         </div>
 
         {/* ── INPUT ── */}
-        <form
-          onSubmit={handleSendMessage}
-          style={{
-            display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
-            padding: '0.6rem 1rem', background: 'var(--bg)',
-            borderTop: '1px solid var(--border)', flexShrink: 0,
-          }}
-        >
+        <form onSubmit={handleSendMessage} className="chat-input-bar">
           <input type="file" id="chatImageUpload" accept="*" style={{ display: 'none' }} onChange={handleFileUpload} />
-          <button type="button" onClick={handleFileClick} className="btn btn-ghost btn-sm" style={{ fontSize: '1.3rem', padding: '0 0.4rem' }}>
+          <button type="button" onClick={handleFileClick} className="btn btn-ghost btn-sm" style={{ fontSize: '1.3rem', padding: '0 0.4rem', color: 'var(--fg-secondary)' }}>
             📎
           </button>
-          <div style={{ flex: 1, background: 'var(--surface)', borderRadius: 999, border: '1.5px solid var(--border)', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', minHeight: 44 }}>
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => handleTyping(e.target.value)}
-              style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-base)', color: 'var(--fg)' }}
-              placeholder="Type a message"
-            />
-          </div>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => handleTyping(e.target.value)}
+            className="chat-input"
+            placeholder="Type a message..."
+          />
           <motion.button
             type="submit"
             disabled={(!newMessage.trim() && !pendingAttachment) || sending}
-            className="btn btn-accent"
-            style={{
-              width: 44, height: 44, borderRadius: '50%', padding: 0, fontSize: '1.2rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}
+            className="chat-send-btn"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            disabledStyle={{ opacity: 0.35 }}
+            style={{ opacity: (!newMessage.trim() && !pendingAttachment) || sending ? 0.5 : 1 }}
           >
             ➤
           </motion.button>

@@ -137,237 +137,192 @@ function EditProfilePage() {
   };
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-        style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--accent)' }}
-      />
+    <div className="page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="spinner" />
     </div>
   );
 
-  const FieldLabel = ({ htmlFor, children }) => (
-    <label htmlFor={htmlFor} style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg-secondary)', marginBottom: '0.35rem' }}>{children}</label>
-  );
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: FAUCET_EASING }}
-      style={{ maxWidth: 640, margin: '0 auto', padding: '1rem 0' }}
-    >
-      <motion.div className="card glass" style={{ padding: '2.5rem 2rem' }}>
-        <motion.h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--fg)', margin: '0 0 0.5rem', letterSpacing: '-0.02em' }}>
-          Edit Profile
-        </motion.h1>
-        <motion.p style={{ color: 'var(--fg-tertiary)', fontSize: '0.9rem', marginBottom: '1.75rem' }}>
-          Update your personal and professional information
-        </motion.p>
+    <div className="page">
+      <div className="wrap" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
+        <div className="profile-edit-layout">
+          <aside className="profile-edit-sidebar">
+            <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 800, marginBottom: '1rem' }}>Settings</h3>
+            <div className="profile-edit-nav-item" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}>Public Profile</div>
+            <div className="profile-edit-nav-item">Account Security</div>
+            <div className="profile-edit-nav-item">Notifications</div>
+            <div className="profile-edit-nav-item">Payment Methods</div>
+          </aside>
 
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -8, height: 0 }}
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', borderRadius: 'var(--radius)', padding: '0.65rem 1rem', fontSize: '0.83rem', marginBottom: '1.5rem' }}
-            >
-              {error}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Avatar */}
-          <motion.div
-            style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <motion.div
-              style={{
-                width: 72, height: 72, borderRadius: '50%', overflow: 'hidden',
-                border: '2px solid var(--accent-alpha)', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'var(--surface2)', fontSize: '2rem',
-              }}
-              whileHover={{ scale: 1.05, borderColor: 'var(--accent)' }}
-            >
-              {formData.profile_picture_url ? (
-                <img src={formData.profile_picture_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span>👤</span>
-              )}
-            </motion.div>
-            <div>
-              <motion.label
-                className="btn btn-outline"
-                style={{ padding: '0.5rem 1rem', fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex' }}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                {isUploading ? 'Uploading...' : 'Change Photo'}
-                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
-              </motion.label>
-              <p style={{ fontSize: '0.72rem', color: 'var(--fg-tertiary)', marginTop: '0.4rem' }}>Square image, max 2MB</p>
-            </div>
-          </motion.div>
-
-          {/* Full Name */}
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-            <FieldLabel htmlFor="full_name">Full Name</FieldLabel>
-            <input id="full_name" name="full_name" type="text" value={formData.full_name} onChange={handleChange} className="field" placeholder="e.g. John Doe" />
-          </motion.div>
-
-          {/* Bio + Gender */}
-          <motion.div style={{ display: 'flex', gap: '1rem' }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <div style={{ flex: 1 }}>
-              <FieldLabel htmlFor="bio">Bio</FieldLabel>
-              <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} className="field" rows={4} placeholder="Tell us about yourself..." />
-            </div>
-            <div style={{ flex: 1 }}>
-              <FieldLabel htmlFor="gender">Gender</FieldLabel>
-              <select id="gender" name="gender" value={formData.gender} onChange={handleChange} className="field">
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-              </select>
-            </div>
-          </motion.div>
-
-          {/* State + City */}
-          <motion.div style={{ display: 'flex', gap: '1rem' }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-            <div style={{ flex: 1 }}>
-              <FieldLabel htmlFor="state">State</FieldLabel>
-              <select id="state" name="state" value={formData.state} onChange={handleChange} className="field">
-                <option value="">Select State</option>
-                {Object.keys(NIGERIAN_STATES).map(st => (
-                  <option key={st} value={st}>{st}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <FieldLabel htmlFor="city">LGA / City</FieldLabel>
-              <select id="city" name="city" value={formData.city} onChange={handleChange} className="field" disabled={!formData.state}>
-                <option value="">Select LGA</option>
-                {selectedStateLgas.map((lga: string) => (
-                  <option key={lga} value={lga}>{lga}</option>
-                ))}
-                {formData.state && !selectedStateLgas.length && <option value="Other">Other</option>}
-              </select>
-            </div>
-          </motion.div>
-
-          {/* Provider-only fields */}
-          {userType === 'provider' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15 }}
-            >
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-                <FieldLabel htmlFor="title">Professional Title</FieldLabel>
-                <input id="title" name="title" type="text" value={formData.title} onChange={handleChange} className="field" placeholder="e.g. Senior Full-Stack Developer" />
-              </motion.div>
-
-              <motion.div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-                <div style={{ flex: 1 }}>
-                  <FieldLabel htmlFor="hourlyRate">Expected Rate (₦)</FieldLabel>
-                  <input id="hourlyRate" name="hourlyRate" type="number" step="0.01" value={formData.hourlyRate} onChange={handleChange} className="field" placeholder="0.00" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <FieldLabel htmlFor="ratePeriod">Rate Period</FieldLabel>
-                  <select id="ratePeriod" name="ratePeriod" value={formData.ratePeriod} onChange={handleChange} className="field">
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <FieldLabel htmlFor="availability">Availability</FieldLabel>
-                  <select id="availability" name="availability" value={formData.availability} onChange={handleChange} className="field">
-                    <option value="full_time">Full-Time</option>
-                    <option value="part_time">Part-Time</option>
-                    <option value="as_needed">As Needed</option>
-                    <option value="unavailable">Unavailable</option>
-                  </select>
-                </div>
-              </motion.div>
-
-              {/* Skills */}
-              <motion.div style={{ marginTop: '1.5rem' }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg-secondary)', marginBottom: '0.5rem' }}>Skills</label>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <input
-                    type="text"
-                    value={customSkill}
-                    onChange={(e) => setCustomSkill(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill(); } }}
-                    className="field"
-                    placeholder="Add a custom skill..."
-                    style={{ flex: 1 }}
-                  />
-                  <motion.button type="button" onClick={handleAddCustomSkill} className="btn btn-outline" style={{ padding: '0.5rem 1rem' }} whileHover={{ y: -1 }} whileTap={{ scale: 0.96 }}>
-                    + Add
-                  </motion.button>
-                </div>
+          <div className="profile-edit-main">
+            <h1 className="page-title" style={{ marginBottom: '1.5rem' }}>Edit Profile</h1>
+            
+            <AnimatePresence>
+              {error && (
                 <motion.div
-                  style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.25 }}
+                  initial={{ opacity: 0, y: -8, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -8, height: 0 }}
+                  className="pl-alert pl-alert-error"
                 >
-                  {availableSkills.map((skill: any) => {
-                    const selected = formData.skillIds.includes(skill.id);
-                    return (
-                      <motion.label
-                        key={skill.id}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', cursor: 'pointer',
-                          background: selected ? 'var(--accent-alpha)' : 'transparent',
-                          padding: '0.4rem 0.8rem', borderRadius: '6px',
-                          border: selected ? '1px solid var(--accent)' : '1px solid var(--border)',
-                        }}
-                        whileHover={{ y: -1 }}
-                        animate={{ background: selected ? 'var(--accent-alpha)' : 'transparent' }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          onChange={(e) => {
-                            if (e.target.checked) setFormData({ ...formData, skillIds: [...formData.skillIds, skill.id] });
-                            else setFormData({ ...formData, skillIds: formData.skillIds.filter(id => id !== skill.id) });
-                          }}
-                          style={{ display: 'none' }}
-                        />
-                        {skill.name}
-                      </motion.label>
-                    );
-                  })}
-                  {availableSkills.length === 0 && <span style={{ color: 'var(--fg-tertiary)', fontSize: '0.85rem' }}>No skills available. Add a custom skill above.</span>}
+                  {error}
                 </motion.div>
-              </motion.div>
-            </motion.div>
-          )}
+              )}
+            </AnimatePresence>
 
-          {/* Submit */}
-          <motion.button type="submit" disabled={isUploading} className="btn btn-accent" style={{ width: '100%', padding: '0.85rem' }} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}>
-            {isUploading ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  style={{ display: 'inline-block', width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }}
-                />
-                Saving…
-              </span>
-            ) : 'Save Changes'}
-          </motion.button>
-        </form>
-      </motion.div>
-    </motion.div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="profile-edit-section">
+                <h2 className="profile-edit-section-title">Personal Information</h2>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', overflow: 'hidden',
+                    border: '2px solid var(--border)', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--surface2)', fontSize: '2rem',
+                  }}>
+                    {formData.profile_picture_url ? (
+                      <img src={formData.profile_picture_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span>👤</span>
+                    )}
+                  </div>
+                  <div>
+                    <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                      {isUploading ? 'Uploading...' : 'Change Photo'}
+                      <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
+                    </label>
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)', marginTop: '0.4rem' }}>Square image, max 2MB</p>
+                  </div>
+                </div>
+
+                <div className="field-group">
+                  <label className="field-label" htmlFor="full_name">Full Name</label>
+                  <input id="full_name" name="full_name" type="text" value={formData.full_name} onChange={handleChange} className="field" placeholder="e.g. John Doe" />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="state">State</label>
+                    <select id="state" name="state" value={formData.state} onChange={handleChange} className="field">
+                      <option value="">Select State</option>
+                      {Object.keys(NIGERIAN_STATES).map(st => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="city">LGA / City</label>
+                    <select id="city" name="city" value={formData.city} onChange={handleChange} className="field" disabled={!formData.state}>
+                      <option value="">Select LGA</option>
+                      {selectedStateLgas.map((lga: string) => (
+                        <option key={lga} value={lga}>{lga}</option>
+                      ))}
+                      {formData.state && !selectedStateLgas.length && <option value="Other">Other</option>}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="profile-edit-section">
+                <h2 className="profile-edit-section-title">Professional Details</h2>
+                
+                {userType === 'provider' && (
+                  <div className="field-group">
+                    <label className="field-label" htmlFor="title">Professional Title</label>
+                    <input id="title" name="title" type="text" value={formData.title} onChange={handleChange} className="field" placeholder="e.g. Senior Full-Stack Developer" />
+                  </div>
+                )}
+
+                <div className="field-group">
+                  <label className="field-label" htmlFor="bio">Bio</label>
+                  <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} className="field" rows={4} placeholder="Tell us about yourself..." />
+                </div>
+
+                {userType === 'provider' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="hourlyRate">Expected Rate (₦)</label>
+                      <input id="hourlyRate" name="hourlyRate" type="number" step="0.01" value={formData.hourlyRate} onChange={handleChange} className="field" placeholder="0.00" />
+                    </div>
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="ratePeriod">Rate Period</label>
+                      <select id="ratePeriod" name="ratePeriod" value={formData.ratePeriod} onChange={handleChange} className="field">
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="availability">Availability</label>
+                      <select id="availability" name="availability" value={formData.availability} onChange={handleChange} className="field">
+                        <option value="full_time">Full-Time</option>
+                        <option value="part_time">Part-Time</option>
+                        <option value="as_needed">As Needed</option>
+                        <option value="unavailable">Unavailable</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {userType === 'provider' && (
+                  <div className="field-group" style={{ marginTop: '1.5rem' }}>
+                    <label className="field-label">Skills</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <input
+                        type="text"
+                        value={customSkill}
+                        onChange={(e) => setCustomSkill(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill(); } }}
+                        className="field"
+                        placeholder="Add a custom skill..."
+                        style={{ flex: 1 }}
+                      />
+                      <button type="button" onClick={handleAddCustomSkill} className="btn btn-outline">
+                        + Add
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
+                      {availableSkills.map((skill: any) => {
+                        const selected = formData.skillIds.includes(skill.id);
+                        return (
+                          <label
+                            key={skill.id}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: 'var(--text-sm)', cursor: 'pointer',
+                              background: selected ? 'var(--accent-alpha)' : 'transparent',
+                              padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)',
+                              border: selected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={(e) => {
+                                if (e.target.checked) setFormData({ ...formData, skillIds: [...formData.skillIds, skill.id] });
+                                else setFormData({ ...formData, skillIds: formData.skillIds.filter(id => id !== skill.id) });
+                              }}
+                              style={{ display: 'none' }}
+                            />
+                            {skill.name}
+                          </label>
+                        );
+                      })}
+                      {availableSkills.length === 0 && <span style={{ color: 'var(--fg-tertiary)', fontSize: 'var(--text-sm)' }}>No skills available. Add a custom skill above.</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" disabled={isUploading} className="btn btn-accent">
+                  {isUploading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
