@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <style>{`
         .admin-layout { display: flex; min-height: calc(100vh - var(--navbar-h)); background: var(--bg); }
         .admin-sidebar {
-          width: var(--sidebar-w); flex-shrink: 0; background: var(--surface);
+          width: var(--sidebar-w); flex-shrink: 0; background: var(--bg);
           border-right: 1px solid var(--border); position: sticky;
           top: var(--navbar-h); height: calc(100vh - var(--navbar-h));
           overflow-y: auto; display: flex; flex-direction: column; padding: 1.5rem 0;

@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .dash-sidebar {
           width: var(--sidebar-w);
           flex-shrink: 0;
-          background: var(--surface);
+          background: var(--bg);
           border-right: 1px solid var(--border);
           position: sticky;
           top: var(--navbar-h);
