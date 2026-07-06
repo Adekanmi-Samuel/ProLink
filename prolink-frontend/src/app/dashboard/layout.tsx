@@ -164,7 +164,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           padding: 0.1rem 0.4rem; border-radius: 999px; margin-left: auto;
         }
         .dash-content {
-          flex: 1; min-width: 0; padding: 2rem;
+          flex: 1; min-width: 0; padding: calc(var(--navbar-h) + 2rem) 2rem 2rem;
         }
         .dash-mobile-topbar {
           display: none;
