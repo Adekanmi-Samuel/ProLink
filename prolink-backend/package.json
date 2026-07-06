@@ -1,0 +1,41 @@
+{
+  "name": "prolink-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "start:prod": "node server.js",
+    "dev": "npx prisma generate && nodemon server.js",
+    "build": "npx prisma generate && npx prisma migrate deploy",
+    "postinstall": "npx prisma generate",
+    "seed": "node prisma/seed-categories.js"
+  },
+  "dependencies": {
+    "@prisma/adapter-neon": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "bad-words": "^3.0.4",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "node-cron": "^4.5.0",
+    "nodemailer": "^9.0.1",
+    "pg": "^8.16.3",
+    "prisma": "7.8.0",
+    "socket.io": "^4.8.1",
+    "streamifier": "^0.1.1",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

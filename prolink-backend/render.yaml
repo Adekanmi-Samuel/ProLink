@@ -1,0 +1,100 @@
+version: "1"
+services:
+  - type: web
+    name: prolink-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health/liveness
+    envVars:
+      # ========================================
+      # Database (REQUIRED - set in Render dashboard)
+      # ========================================
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+
+      # ========================================
+      # Security (REQUIRED - set in Render dashboard)
+      # ========================================
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_API_SECRET
+        sync: false
+
+      # ========================================
+      # Email/SMTP (REQUIRED - set in Render dashboard)
+      # ========================================
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_NOTIFICATIONS_USER
+        sync: false
+      - key: SMTP_NOTIFICATIONS_PASS
+        sync: false
+
+      # ========================================
+      # Cloudinary (OPTIONAL - for file uploads)
+      # Uncomment and set when you have Cloudinary credentials
+      # ========================================
+      # - key: CLOUDINARY_CLOUD_NAME
+      #   sync: false
+      # - key: CLOUDINARY_API_KEY
+      #   sync: false
+      # - key: CLOUDINARY_API_SECRET
+      #   sync: false
+
+      # ========================================
+      # Paystack (OPTIONAL - for payments)
+      # Uncomment and set when you have Paystack credentials
+      # ========================================
+      # - key: PAYSTACK_SECRET_KEY
+      #   sync: false
+      # - key: PAYSTACK_PUBLIC_KEY
+      #   sync: false
+
+      # ========================================
+      # Environment (auto-set by Render)
+      # ========================================
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+
+      # ========================================
+      # Frontend Origin (REQUIRED for CORS - set in Render dashboard)
+      # ========================================
+      - key: FRONTEND_ORIGIN
+        sync: false
+
+      # ========================================
+      # Database Pool (optional - has defaults)
+      # ========================================
+      - key: DB_POOL_MAX
+        value: "10"
+      - key: DB_POOL_MIN
+        value: "2"
+      - key: DB_IDLE_TIMEOUT
+        value: "30000"
+      - key: DB_CONNECTION_TIMEOUT
+        value: "10000"
+
+      # ========================================
+      # Redis (optional - for Socket.IO scaling)
+      # ========================================
+      # - key: REDIS_URL
+      #   sync: false
+
+      # ========================================
+      # Platform Settings
+      # ========================================
+      - key: PLATFORM_FEE_PERCENT
+        value: "10"
+      - key: MIN_BID_AMOUNT
+        value: "500"

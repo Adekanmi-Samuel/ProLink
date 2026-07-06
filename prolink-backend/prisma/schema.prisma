@@ -1,0 +1,431 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 Int             @id @default(autoincrement())
+  email              String          @unique @db.VarChar(255)
+  password_hash      String          @db.VarChar(255)
+  previous_passwords Json?           @default("[]")
+  user_type          String          @db.VarChar(20)
+  created_at         DateTime        @default(now())
+  status             String          @default("active") @db.VarChar(20)
+  verification_token String?         @db.VarChar(255)
+  reset_token        String?         @db.VarChar(255)
+  reset_token_expires DateTime?
+  stripe_account_id  String?         @db.VarChar(255)
+  stripe_customer_id String?         @db.VarChar(255)
+  email_verified     Boolean         @default(false)
+  otp_code           String?         @db.VarChar(10)
+  otp_expires_at     DateTime?
+  phone_number       String?         @unique @db.VarChar(30)
+  phone_verified     Boolean         @default(false)
+  member_id          String?         @unique @db.VarChar(50)
+  bids               Bid[]
+  blocks_received    Block[]         @relation("BlockedUser")
+  blocks_made        Block[]         @relation("Blocker")
+  client_threads     ChatThread[]    @relation("ClientThreads")
+  provider_threads   ChatThread[]    @relation("ProviderThreads")
+  disputes           Dispute[]
+  disputeEvidence    DisputeEvidence[]
+  jobs               Job[]           @relation("ClientJobs")
+  job_assignments    JobAssignment[]
+  sent_messages      Message[]
+  profile            Profile?
+  reports_received   Report[]        @relation("ReportedUser")
+  reports_made       Report[]        @relation("Reporter")
+  reviews_received   Review[]        @relation("Reviewee")
+  reviews_given      Review[]        @relation("Reviewer")
+  savedSearches      SavedSearch[]
+  savedJobs          SavedJob[]
+  notifications      Notification[]
+
+  @@index([user_type])
+  @@index([status])
+  @@index([email_verified])
+  @@index([otp_code])
+  @@index([reset_token])
+  @@map("User")
+}
+
+model Profile {
+  id                  Int             @id @default(autoincrement())
+  user_id             Int             @unique
+  full_name           String?         @db.VarChar(255)
+  bio                 String?
+  phone_number        String?         @db.VarChar(30)
+  profile_picture_url String?         @db.VarChar(255)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  rating_avg          Decimal         @default(0.0) @db.Decimal(3, 2)
+  review_count        Int             @default(0)
+  title               String?         @db.VarChar(255)
+  hourly_rate         Decimal?        @db.Decimal(10, 2)
+  availability        String?         @db.VarChar(50)
+  is_featured         Boolean         @default(false)
+  badges              String[]
+  job_success_score   Int?
+  response_time_hours Int?
+  bvn_verified        Boolean         @default(false)
+  cac_number          String?         @db.VarChar(50)
+  cac_status          String          @default("none") @db.VarChar(20)
+  nin_number          String?         @db.VarChar(50)
+  nin_status          String          @default("none") @db.VarChar(20)
+  city                String?         @db.VarChar(100)
+  state               String          @default("Lagos") @db.VarChar(100)
+  gender              String?         @db.VarChar(20)
+  rate_period         String          @default("weekly") @db.VarChar(20)
+  bank_account        BankAccount?
+  portfolio_items     PortfolioItem[]
+  user                User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  skills              ProfileSkill[]
+
+  @@index([user_id])
+  @@index([hourly_rate])
+  @@index([is_featured])
+  @@index([rating_avg])
+  @@index([state])
+  @@index([nin_status])
+  @@index([cac_status])
+  @@map("Profile")
+}
+
+model PortfolioItem {
+  id          Int      @id @default(autoincrement())
+  profile_id  Int
+  title       String   @db.VarChar(255)
+  description String?
+  image_url   String?  @db.VarChar(255)
+  created_at  DateTime @default(now())
+  project_url String?  @db.VarChar(255)
+  profile     Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("PortfolioItem")
+}
+
+model BankAccount {
+  id                     Int      @id @default(autoincrement())
+  profile_id             Int      @unique
+  bank_name              String   @db.VarChar(255)
+  bank_code              String   @db.VarChar(50)
+  account_number         String   @db.VarChar(50)
+  account_name           String   @db.VarChar(255)
+  paystack_recipient_code String? @db.VarChar(255)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+  profile                Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@map("BankAccount")
+}
+
+model Job {
+  id          Int            @id @default(autoincrement())
+  client_id   Int
+  title       String         @db.VarChar(255)
+  description String
+  budget      Decimal?       @db.Decimal(12, 2)
+  job_type    String         @default("digital") @db.VarChar(50)
+  payment_type String?       @db.VarChar(50)
+  status      String         @default("open") @db.VarChar(30)
+  posted_at   DateTime       @default(now())
+  category_id Int?
+  city        String?        @db.VarChar(100)
+  state       String?        @db.VarChar(100)
+  bids        Bid[]
+  threads     ChatThread[]
+  category    Category?      @relation(fields: [category_id], references: [id])
+  client      User           @relation("ClientJobs", fields: [client_id], references: [id], onDelete: Cascade)
+  assignment  JobAssignment?
+  skills      JobSkill[]
+  milestones  Milestone[]
+  reviews     Review[]
+  savedBy     SavedJob[]
+
+  @@index([client_id])
+  @@index([category_id])
+  @@index([status])
+  @@index([job_type])
+  @@index([posted_at])
+  @@index([state, city])
+  @@index([budget])
+  @@index([state, status])
+  @@map("Job")
+}
+
+model Bid {
+  id           Int      @id @default(autoincrement())
+  job_id       Int
+  provider_id  Int
+  amount       Decimal  @db.Decimal(12, 2)
+  proposal     String
+  submitted_at DateTime @default(now())
+  job          Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  provider     User     @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, provider_id])
+  @@index([job_id])
+  @@index([provider_id])
+  @@index([submitted_at])
+  @@map("Bid")
+}
+
+model JobAssignment {
+  id            Int      @id @default(autoincrement())
+  job_id        Int      @unique
+  provider_id   Int
+  agreed_amount Decimal? @db.Decimal(12, 2)
+  assigned_at   DateTime @default(now())
+  job           Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  provider      User     @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@index([provider_id])
+  @@map("JobAssignment")
+}
+
+model ChatThread {
+  id          Int       @id @default(autoincrement())
+  job_id      Int
+  client_id   Int
+  provider_id Int
+  created_at  DateTime  @default(now())
+  client      User      @relation("ClientThreads", fields: [client_id], references: [id], onDelete: Cascade)
+  job         Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  provider    User      @relation("ProviderThreads", fields: [provider_id], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@unique([job_id, client_id, provider_id])
+  @@index([client_id])
+  @@index([provider_id])
+  @@index([job_id])
+  @@index([created_at])
+  @@map("ChatThread")
+}
+
+model Message {
+  id           Int        @id @default(autoincrement())
+  thread_id    Int
+  sender_id    Int
+  content      String
+  message_type String     @default("text") @db.VarChar(30)
+  sent_at      DateTime   @default(now())
+  read_at      DateTime?
+  sender       User       @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  thread       ChatThread @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+
+  @@index([thread_id])
+  @@index([sender_id])
+  @@index([sent_at])
+  @@map("Message")
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  job_id      Int
+  reviewer_id Int
+  reviewee_id Int
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+  job         Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  reviewee    User     @relation("Reviewee", fields: [reviewee_id], references: [id], onDelete: Cascade)
+  reviewer    User     @relation("Reviewer", fields: [reviewer_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, reviewer_id, reviewee_id])
+  @@index([reviewee_id])
+  @@index([reviewer_id])
+  @@index([job_id])
+  @@map("Review")
+}
+
+model Report {
+  id               Int      @id @default(autoincrement())
+  reporter_id      Int
+  reported_user_id Int?
+  job_id           Int?
+  message_id       Int?
+  reason           String
+  status           String   @default("pending") @db.VarChar(20)
+  created_at       DateTime @default(now())
+  reported_user    User?    @relation("ReportedUser", fields: [reported_user_id], references: [id], onDelete: Cascade)
+  reporter         User     @relation("Reporter", fields: [reporter_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([created_at])
+  @@index([reporter_id])
+  @@map("Report")
+}
+
+model Block {
+  id         Int      @id @default(autoincrement())
+  blocker_id Int
+  blocked_id Int
+  created_at DateTime @default(now())
+  blocked    User     @relation("BlockedUser", fields: [blocked_id], references: [id], onDelete: Cascade)
+  blocker    User     @relation("Blocker", fields: [blocker_id], references: [id], onDelete: Cascade)
+
+  @@unique([blocker_id, blocked_id])
+  @@map("Block")
+}
+
+model Milestone {
+  id                Int       @id @default(autoincrement())
+  job_id            Int
+  title             String    @db.VarChar(255)
+  amount            Decimal   @db.Decimal(12, 2)
+  status            String    @default("pending") @db.VarChar(30)
+  stripe_pi_id      String?   @db.VarChar(255)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  payment_reference String?   @db.VarChar(255)
+  disputes          Dispute[]
+  job               Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  submitted_at      DateTime?           // NEW — when provider last submitted, drives auto-release timer
+  revision_notes    String?             // NEW — client's feedback when requesting a revision
+  platformRevenue   PlatformRevenue?
+
+  @@index([job_id])
+  @@index([status])
+  @@index([payment_reference])
+  @@map("Milestone")
+}
+
+model PlatformRevenue {
+  id           Int      @id @default(autoincrement())
+  milestone_id Int      @unique
+  gross_amount Decimal  @db.Decimal(12,2)
+  fee_percent  Decimal  @db.Decimal(5,2)
+  fee_amount   Decimal  @db.Decimal(12,2)
+  collected_at DateTime @default(now())
+  milestone    Milestone @relation(fields: [milestone_id], references: [id])
+  @@map("PlatformRevenue")
+}
+
+model Dispute {
+  id           Int       @id @default(autoincrement())
+  milestone_id Int
+  initiator_id Int
+  reason       String
+  status       String    @default("open") @db.VarChar(20)
+  admin_notes  String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  initiator    User             @relation(fields: [initiator_id], references: [id], onDelete: Cascade)
+  milestone    Milestone        @relation(fields: [milestone_id], references: [id], onDelete: Cascade)
+  response_deadline DateTime?         // NEW — set at creation, 3 days out
+  split_percentage  Int?              // NEW — provider's share (0-100) when resolution is a split
+  evidence           DisputeEvidence[] // NEW relation
+
+  @@index([milestone_id])
+  @@index([status])
+  @@index([initiator_id])
+  @@map("Dispute")
+}
+
+model DisputeEvidence {
+  id           Int      @id @default(autoincrement())
+  dispute_id   Int
+  submitted_by Int
+  note         String?
+  file_url     String?
+  created_at   DateTime @default(now())
+  dispute      Dispute  @relation(fields: [dispute_id], references: [id], onDelete: Cascade)
+  submitter    User     @relation(fields: [submitted_by], references: [id], onDelete: Cascade)
+
+  @@index([dispute_id])
+  @@map("DisputeEvidence")
+}
+
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique @db.VarChar(255)
+  slug       String   @unique @db.VarChar(255)
+  icon       String?  @db.VarChar(255)
+  created_at DateTime @default(now())
+  jobs       Job[]
+  skills     Skill[]
+
+  @@map("Category")
+}
+
+model Skill {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique @db.VarChar(255)
+  slug        String         @unique @db.VarChar(255)
+  category_id Int?
+  created_at  DateTime       @default(now())
+  jobs        JobSkill[]
+  profiles    ProfileSkill[]
+  category    Category?      @relation(fields: [category_id], references: [id])
+
+  @@index([category_id])
+  @@map("Skill")
+}
+
+model JobSkill {
+  job_id   Int
+  skill_id Int
+  job      Job   @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  skill    Skill @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+
+  @@id([job_id, skill_id])
+  @@index([skill_id])
+  @@map("JobSkill")
+}
+
+model ProfileSkill {
+  profile_id Int
+  skill_id   Int
+  profile    Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  skill      Skill   @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+
+  @@id([profile_id, skill_id])
+  @@index([skill_id])
+  @@map("ProfileSkill")
+}
+
+model SavedSearch {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  title      String   @db.VarChar(255)
+  query      String?
+  filters    Json?
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("SavedSearch")
+}
+
+model SavedJob {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  job_id    Int
+  created_at DateTime @default(now())
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, job_id])
+  @@index([user_id])
+  @@index([job_id])
+  @@map("SavedJob")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  type       String
+  content    String
+  is_read    Boolean  @default(false)
+  link_url   String?
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([user_id, is_read])
+  @@map("Notification")
+}
