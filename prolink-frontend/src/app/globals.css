@@ -3188,3 +3188,26 @@ input:-webkit-autofill:active{
 }
 .chat-date-divider::before { left: 0; }
 .chat-date-divider::after { right: 0; }
+
+/* =============================================================
+   ROLE-BASED IDENTITY STYLES
+   ============================================================= */
+
+/* Admin Identity - Purple/Indigo */
+.navbar-link-admin.navbar-link-active { color: #8b5cf6 !important; background: rgba(139, 92, 246, 0.1); }
+.navbar-link-admin:hover { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
+.navbar-avatar-admin { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); border-color: #8b5cf6; }
+.navbar-avatar-admin:hover { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); }
+
+/* Provider Identity - Gold/Amber */
+.navbar-link-provider.navbar-link-active { color: #f59e0b !important; background: rgba(245, 158, 11, 0.1); }
+.navbar-link-provider:hover { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+.navbar-avatar-provider { color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; }
+.navbar-avatar-provider:hover { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); }
+
+/* Client Identity - Blue/Info */
+.navbar-link-client.navbar-link-active { color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1); }
+.navbar-link-client:hover { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.navbar-avatar-client { color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
+.navbar-avatar-client:hover { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+

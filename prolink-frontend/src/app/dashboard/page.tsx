@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import api from '../../lib/api';
 import withAuth from '../../components/withAuth';
@@ -37,6 +38,7 @@ function DashboardPage() {
   const [myJobs, setMyJobs] = useState<any[]>([]);
   const [openToWork, setOpenToWork] = useState(false);
   const [openToWorkLoading, setOpenToWorkLoading] = useState(false);
+  const router = useRouter();
 
   const { socket } = useSocket();
 
@@ -64,6 +66,12 @@ function DashboardPage() {
         const notifRes = await api.get('/notifications?limit=8');
         setNotifications(notifRes.data?.notifications || notifRes.data || []);
       } catch { /* noop */ }
+      
+      // Redirect admins immediately
+      if (profileRes.data.user_type === 'admin') {
+        router.push('/admin');
+        return;
+      }
     } catch (err: any) {
       setError(err?.message || String(err));
     } finally {
@@ -136,6 +144,12 @@ function DashboardPage() {
   }
 
   const isProvider = profile.user_type === 'provider';
+  const isAdmin = profile.user_type === 'admin';
+
+  if (isAdmin) {
+    // Return empty while redirecting
+    return null;
+  }
 
   return (
     <div className="page">

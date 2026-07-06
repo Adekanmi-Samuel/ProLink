@@ -83,7 +83,8 @@ export default function Navbar() {
 
   const isProvider = user?.user_type === 'provider';
   const isClient = user?.user_type === 'client';
-  const initials = user?.full_name ? user.full_name.split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase() : '?';
+  const isAdmin = user?.user_type === 'admin';
+  const initials = user?.full_name ? user.full_name.split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : '?';
 
   const loggedOutNav = [
     { href: '/jobs', label: 'Find Work' },
@@ -100,8 +101,13 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/chat', label: 'Messages' },
   ];
+  const adminNav = [
+    { href: '/admin', label: 'Admin Panel' },
+    { href: '/admin/verifications', label: 'Verifications' },
+    { href: '/admin/disputes', label: 'Disputes' },
+  ];
 
-  const currentNavLinks = !user ? loggedOutNav : isProvider ? providerNav : clientNav;
+  const currentNavLinks = !user ? loggedOutNav : isAdmin ? adminNav : isProvider ? providerNav : clientNav;
 
   const dropdownLinks = [
     { href: '/profile/edit', label: 'Edit Profile' },
@@ -110,7 +116,9 @@ export default function Navbar() {
     { href: '/dashboard/settings', label: 'Settings' },
   ];
 
-  const filteredDropdownLinks = isClient
+  const filteredDropdownLinks = isAdmin
+    ? [{ href: '/admin', label: 'Admin Panel' }, { href: '/profile/edit', label: 'Edit Profile' }]
+    : isClient
     ? dropdownLinks.filter(l => l.href !== '/dashboard/verification')
     : dropdownLinks;
 
@@ -136,7 +144,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`navbar-link${isActive(link.href) ? ' navbar-link-active' : ''}`}
+                  className={`navbar-link${isActive(link.href) ? ' navbar-link-active' : ''} ${isAdmin ? 'navbar-link-admin' : isProvider ? 'navbar-link-provider' : 'navbar-link-client'}`}
                 >
                   {link.label}
                 </Link>
@@ -188,7 +196,7 @@ export default function Navbar() {
                     </AnimatePresence>
                   </div>
                   <div ref={dropdownRef} style={{ position: 'relative' }}>
-                    <motion.div onClick={() => setAvatarDropdown(v => !v)} className="navbar-avatar" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <motion.div onClick={() => setAvatarDropdown(v => !v)} className={`navbar-avatar ${isAdmin ? 'navbar-avatar-admin' : isProvider ? 'navbar-avatar-provider' : 'navbar-avatar-client'}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       {initials}
                     </motion.div>
                     <AnimatePresence>
@@ -198,7 +206,12 @@ export default function Navbar() {
                             <div className="avatar-dropdown-header">
                               <div className="avatar-dropdown-header-avatar">{initials}</div>
                               <div>
-                                <div className="avatar-dropdown-header-name">{user.full_name}</div>
+                                <div className="avatar-dropdown-header-name" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  {user.full_name}
+                                  {isAdmin && <span className="badge badge-accent" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>ADMIN</span>}
+                                  {isProvider && <span className="badge badge-gold" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>PROVIDER</span>}
+                                  {isClient && <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>CLIENT</span>}
+                                </div>
                                 <div className="avatar-dropdown-header-email">{user.email}</div>
                               </div>
                             </div>
