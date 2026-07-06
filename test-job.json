@@ -1,0 +1,7 @@
+{
+  "title": "Test Job",
+  "description": "Test description",
+  "job_type": "fixed",
+  "budget": 1000,
+  "category_id": 1
+}

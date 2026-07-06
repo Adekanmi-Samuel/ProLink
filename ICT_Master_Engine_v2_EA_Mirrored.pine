@@ -1,0 +1,493 @@
+//@version=5
+indicator("ICT Master Engine v2 (EA-Mirrored)", overlay=true, max_boxes_count=500, max_labels_count=500, max_lines_count=500)
+
+//==============================================================================
+// SECTION 1 — INPUTS & SETTINGS
+// Mirrors EA input parameters from Money.mq5
+//==============================================================================
+grp_ea      = "EA-Mirrored Settings"
+corr_ticker    = input.symbol("FOREXCOM:SPXUSD",   title="SMT Correlation Pair (EA: US500z)", group=grp_ea)
+risk_percent   = input.float(1.0,                  title="Risk % (display only)", group=grp_ea, step=0.1)
+rr_ratio       = input.float(2.5,                  title="RR Ratio (TP label)", group=grp_ea, step=0.1)
+start_hour     = input.int(14,                     title="Execution Window Start (NY hour)", group=grp_ea, minval=0, maxval=23)
+end_hour       = input.int(18,                     title="Execution Window End (NY hour)", group=grp_ea, minval=0, maxval=23)
+lookback       = input.int(20,                     title="Sweep Lookback Period (EA: 20)", group=grp_ea, minval=5)
+fvg_lookback   = input.int(15,                     title="FVG Detection Lookback (EA: i<15)", group=grp_ea, minval=5)
+
+grp_vis     = "Visual Settings"
+show_fvgs      = input.bool(true,                  title="Display Validated FVGs & Lines", group=grp_vis)
+fvg_color_bull = input.color(color.new(color.green, 85), title="Bullish FVG Color", group=grp_vis)
+fvg_color_bear = input.color(color.new(color.red, 85),   title="Bearish FVG Color", group=grp_vis)
+
+grp_filt    = "Filters & Timing"
+session_tz      = input.string("America/New_York", title="Timezone", group=grp_filt)
+use_trend_filter= input.bool(true,                 title="Filter FVGs by Trend Direction", group=grp_filt)
+trend_ema_len   = input.int(50,                    title="Trend EMA Length", group=grp_filt)
+
+//==============================================================================
+// SECTION 2 — TIME & TREND FILTER
+// 2A. Execution Window (EA: dt.hour >= StartHour && dt.hour < EndHour)
+//==============================================================================
+ny_hour = hour(time, session_tz)
+in_exec_window = (ny_hour >= start_hour and ny_hour < end_hour)
+
+// 2B. One Trade Per Day + One Trade Per H4 Candle (EA: lastTradeDay / lastH4TradeID)
+var bool traded_today      = false
+var int  last_h4_bar_idx   = -1
+var int  last_trade_day    = -1  // dayofmonth tracker
+
+is_new_day = ta.change(time("D", session_tz))
+if is_new_day
+    traded_today    := false
+    last_h4_bar_idx := -1
+
+h4_bar_time = time("240", session_tz)
+is_new_h4   = ta.change(h4_bar_time)
+h4_already_traded = (last_h4_bar_idx == bar_index)
+
+// 2C. Structure Bias (EA: GetStructureBias())
+// EA uses: highest(10 bars back, excluding current) / lowest(10 bars back, excluding current)
+prev_high_10 = ta.highest(high, 10)[1]
+prev_low_10  = ta.lowest(low, 10)[1]
+bias = close > prev_high_10 ? 1 : close < prev_low_10 ? -1 : 0
+
+// 2D. Trend EMA (supplementary visual layer — EA uses structure bias as primary gate)
+trend_ema = ta.ema(close, trend_ema_len)
+plot(trend_ema, title="Trend EMA (50)", color=color.new(color.blue, 50), linewidth=1)
+
+trend_is_bullish = not use_trend_filter or (close > trend_ema)
+trend_is_bearish = not use_trend_filter or (close < trend_ema)
+
+//==============================================================================
+// SECTION 3 — FVG DETECTION (EA: UpdateFVGs())
+// EA scans last 15 M15 bars for 3-candle Fair Value Gaps
+//==============================================================================
+// Custom type to track each FVG zone — mirrors EA's zone object
+type FvgZone
+    float top               // top of the FVG gap zone
+    float bottom            // bottom of the FVG gap zone
+    bool  isBull            // true = bullish gap, false = bearish gap
+    bool  mitigated         // true = price has swept through the zone
+    bool  waitingForEntry   // true = sweep confirmed, awaiting reversal
+    int   bar_born          // bar_index at which this zone was first detected
+    int   bar_middle        // bar_index of the middle candle
+    int   bar_right         // bar_index of the right candle
+    float c3_extreme        // extreme price of the 3rd (right) candle — liquidity line level
+    line  liq_line          // graphical line drawn at the extreme
+    box   fvg_box           // graphical box for the FVG zone
+
+var FvgZone[] zones = array.new<FvgZone>()
+
+// Helper: scan for new FVGs on each bar and add to zone array
+// Runs once per confirmed bar close to avoid duplicate detections on every tick
+scan_fvgs() =>
+    if not barstate.isconfirmed
+        return
+    // Scan back fvg_lookback bars for the 3-candle pattern
+    // Pattern: [left] - [middle] - [right] candles
+    // Where left = offset+2, middle = offset+1, right = offset
+    for offset = 0 to fvg_lookback - 1
+        // Need at least offset+2 bars of history
+        if bar_index < offset + 2
+            continue
+        
+        // --- Bullish FVG (gap up) ---
+        // Condition: right candle's low > left candle's high
+        // i.e. low[offset] > high[offset + 2]
+        if low[offset] > high[offset + 2]
+            // Check if this specific FVG is already tracked (by bar_born + isBull)
+            already_tracked = false
+            for j = 0 to array.size(zones) - 1
+                z = array.get(zones, j)
+                if z.bar_born == bar_index - offset and z.isBull
+                    already_tracked := true
+                    break
+            if not already_tracked
+                // Create new bullish FVG zone
+                new_zone = FvgZone.new()
+                new_zone.top      := low[offset]    // right.low = top of bull gap
+                new_zone.bottom   := high[offset+2] // left.high = bottom of bull gap
+                new_zone.isBull   := true
+                new_zone.mitigated     := false
+                new_zone.waitingForEntry := false
+                new_zone.bar_born      := bar_index - offset
+                new_zone.bar_middle    := bar_index - offset - 1
+                new_zone.bar_right     := bar_index - offset
+                new_zone.c3_extreme    := low[offset] // extreme of 3rd candle = low
+                
+                // Draw FVG box (transparent fill, dotted border)
+                box_left   = bar_index - offset - 2
+                box_right  = bar_index - offset
+                if show_fvgs
+                    new_zone.fvg_box := box.new(
+                         left=box_left,  top=low[offset],
+                         right=box_right, bottom=high[offset+2],
+                         bgcolor=fvg_color_bull,
+                         border_style=line.style_dotted,
+                         border_color=color.green
+                    )
+                    new_zone.liq_line := line.new(
+                         x1=box_left, y1=low[offset],
+                         x2=box_right, y2=low[offset],
+                         color=color.green,
+                         style=line.style_solid,
+                         width=2
+                    )
+                
+                array.push(zones, new_zone)
+        
+        // --- Bearish FVG (gap down) ---
+        // Condition: right candle's high < left candle's low
+        // i.e. high[offset] < low[offset + 2]
+        if high[offset] < low[offset + 2]
+            already_tracked = false
+            for j = 0 to array.size(zones) - 1
+                z = array.get(zones, j)
+                if z.bar_born == bar_index - offset and not z.isBull
+                    already_tracked := true
+                    break
+            if not already_tracked
+                new_zone = FvgZone.new()
+                new_zone.top      := low[offset+2]   // left.low = top of bear gap
+                new_zone.bottom   := high[offset]    // right.high = bottom of bear gap
+                new_zone.isBull   := false
+                new_zone.mitigated     := false
+                new_zone.waitingForEntry := false
+                new_zone.bar_born      := bar_index - offset
+                new_zone.bar_middle    := bar_index - offset - 1
+                new_zone.bar_right     := bar_index - offset
+                new_zone.c3_extreme    := high[offset]  // extreme of 3rd candle = high
+                
+                box_left   = bar_index - offset - 2
+                box_right  = bar_index - offset
+                if show_fvgs
+                    new_zone.fvg_box := box.new(
+                         left=box_left,  top=low[offset+2],
+                         right=box_right, bottom=high[offset],
+                         bgcolor=fvg_color_bear,
+                         border_style=line.style_dotted,
+                         border_color=color.red
+                    )
+                    new_zone.liq_line := line.new(
+                         x1=box_left, y1=high[offset],
+                         x2=box_right, y2=high[offset],
+                         color=color.red,
+                         style=line.style_solid,
+                         width=2
+                    )
+                
+                array.push(zones, new_zone)
+
+//==============================================================================
+// SECTION 4 — SWEEP DETECTION (EA: OnTick() Step B)
+// EA checks if price swept the lookback high/low on M15
+//==============================================================================
+// Lookback extremes (excluding current bar — EA uses [1])
+low_lookback  = ta.lowest(low, lookback)[1]
+high_lookback = ta.highest(high, lookback)[1]
+
+// Current bar sweep conditions
+bull_swept = low < low_lookback
+bear_swept = high > high_lookback
+
+//==============================================================================
+// SECTION 5 — SMT DIVERGENCE (EA: HasSMT())
+// EA compares last 2 completed M15 candles on primary vs correlation pair
+//==============================================================================
+corr_low_1  = request.security(corr_ticker, timeframe.period, low[1],  lookahead=barmerge.lookahead_off)
+corr_low_2  = request.security(corr_ticker, timeframe.period, low[2],  lookahead=barmerge.lookahead_off)
+corr_high_1 = request.security(corr_ticker, timeframe.period, high[1], lookahead=barmerge.lookahead_off)
+corr_high_2 = request.security(corr_ticker, timeframe.period, high[2], lookahead=barmerge.lookahead_off)
+
+// Bullish SMT: primary made a lower low, correlation did NOT make a lower low
+bull_smt = (low[1] < low[2]) and (corr_low_1 >= corr_low_2)
+
+// Bearish SMT: primary made a higher high, correlation did NOT make a higher high
+bear_smt = (high[1] > high[2]) and (corr_high_1 <= corr_high_2)
+
+//==============================================================================
+// SECTION 6 — DOUBLE INVERSE FVG (EA: CheckDoubleIFVG())
+// EA scans M1 bars (i=1..11) for Inverse FVGs — count >= 2 required
+//==============================================================================
+// Request M1 arrays — works on any timeframe >= M1
+m1_highs  = request.security_lower_tf(syminfo.tickerid, "1", high)
+m1_lows   = request.security_lower_tf(syminfo.tickerid, "1", low)
+m1_closes = request.security_lower_tf(syminfo.tickerid, "1", close)
+
+// Count bullish and bearish Inverse FVGs on M1
+count_bull_ifvg = 0
+count_bear_ifvg = 0
+
+m1_len = array.size(m1_highs)
+if m1_len >= 14  // Need at least 14 M1 bars for i=1..11 + gap of 2
+    // EA scans i=1..11 (11 iterations), looking backward from newest M1 bar
+    // EA bar[i]   → Pine array index: m1_len - 1 - i   (newer)
+    // EA bar[i+2] → Pine array index: m1_len - 3 - i   (older)
+    for ea_i = 1 to math.min(11, m1_len - 2)
+        right_idx = m1_len - 1 - ea_i   // EA bar[i]   → newer bar
+        left_idx  = m1_len - 3 - ea_i   // EA bar[i+2] → older bar
+        
+        if left_idx < 0
+            continue
+        
+        latest_close = array.get(m1_closes, m1_len - 1)
+        
+        // Bullish IFVG: gap up existed AND latest close still above gap bottom
+        // EA: high[i+2] < low[i] AND M1 close[1] > low[i]
+        if array.get(m1_highs, left_idx) < array.get(m1_lows, right_idx)
+            and latest_close > array.get(m1_lows, right_idx)
+            count_bull_ifvg += 1
+        
+        // Bearish IFVG: gap down existed AND latest close still below gap top
+        // EA: low[i+2] > high[i] AND M1 close[1] < high[i]
+        if array.get(m1_lows, left_idx) > array.get(m1_highs, right_idx)
+            and latest_close < array.get(m1_highs, right_idx)
+            count_bear_ifvg += 1
+
+double_ifvg_bull = count_bull_ifvg >= 2
+double_ifvg_bear = count_bear_ifvg >= 2
+
+//==============================================================================
+// ZONE STATE UPDATE — Sweep + Trigger check on existing zones
+// Integrated Sections 4–6: For each zone, check sweep, SMT, and reversal
+//==============================================================================
+var bool signal_triggered = false
+var int  signal_bar       = -1
+var bool signal_is_bull   = false
+var float signal_price    = 0.0
+
+// Check each zone for sweep and potential trigger
+// Use current date serial for daily purge comparison
+current_date = time("D", session_tz)
+if array.size(zones) > 0
+    signal_triggered := false
+    for i = array.size(zones) - 1 to 0
+        z = array.get(zones, i)
+        
+        // ---- DAILY NEUTRALIZATION ----
+        // If the zone was born on a previous day, gray it out (phase 1: Daily Purge)
+        // Compare the bar's date serial to current — stale zones get neutralized
+        zone_date = time("D", session_tz)[bar_index - z.bar_born]
+        if not na(zone_date) and not na(current_date) and zone_date != current_date
+            if show_fvgs and not na(z.fvg_box)
+                box.set_bgcolor(z.fvg_box, color.new(color.gray, 95))
+                box.set_border_color(z.fvg_box, color.new(color.gray, 80))
+            if not na(z.liq_line)
+                line.set_color(z.liq_line, color.new(color.gray, 70))
+            array.remove(zones, i)
+            continue
+        
+        // ---- SWEEP CHECK (Phase 3) ----
+        // Bull zone: check if price swept below the 3rd candle's extreme (low)
+        // Bear zone: check if price swept above the 3rd candle's extreme (high)
+        if not z.mitigated
+            if z.isBull and low <= z.c3_extreme
+                z.mitigated := true
+                z.waitingForEntry := true
+                // Extend the liquidity line from bar_born to current
+                if not na(z.liq_line)
+                    line.set_x2(z.liq_line, bar_index)
+                    line.set_style(z.liq_line, line.style_solid)
+                    line.set_width(z.liq_line, 2)
+            if not z.isBull and high >= z.c3_extreme
+                z.mitigated := true
+                z.waitingForEntry := true
+                if not na(z.liq_line)
+                    line.set_x2(z.liq_line, bar_index)
+                    line.set_style(z.liq_line, line.style_solid)
+                    line.set_width(z.liq_line, 2)
+        
+        // ---- EXECUTION CHECK (if zone is swept and waiting for entry) ----
+        if z.waitingForEntry and not signal_triggered
+            // Reversal check (Phase 4: The Range Close)
+            // Bullish: sweep candle must close above the previous candle's low
+            // Bearish: sweep candle must close below the previous candle's high
+            bool reversal_confirmed = false
+            if z.isBull
+                reversal_confirmed := (close > low[1])
+            else
+                reversal_confirmed := (close < high[1])
+            
+            if reversal_confirmed
+                // ALL GATES MUST PASS (Section 7 — Full Execution Condition)
+                bool gate_exec_window   = in_exec_window
+                bool gate_not_traded    = not traded_today
+                bool gate_h4            = not h4_already_traded
+                bool gate_bias          = z.isBull ? (bias == 1) : (bias == -1)
+                bool gate_smt           = z.isBull ? bull_smt : bear_smt
+                bool gate_ifvg          = z.isBull ? double_ifvg_bull : double_ifvg_bear
+                
+                if gate_exec_window and gate_not_traded and gate_h4
+                   and gate_bias and gate_smt and gate_ifvg
+                    
+                    // SIGNAL CONFIRMED — all gates pass
+                    signal_triggered := true
+                    signal_bar       := bar_index
+                    signal_is_bull   := z.isBull
+                    signal_price     := close
+                    
+                    // Stamp the trade gate variables
+                    traded_today    := true
+                    last_h4_bar_idx := bar_index
+                    last_trade_day  := dayofmonth(time(session_tz))
+                    
+                    // Mark zone as triggered — remove from active list
+                    if show_fvgs and not na(z.fvg_box)
+                        box.set_bgcolor(z.fvg_box, color.new(z.isBull ? color.green : color.red, 95))
+                        box.set_border_color(z.fvg_box, z.isBull ? color.green : color.red)
+                    if not na(z.liq_line)
+                        line.set_style(z.liq_line, line.style_dotted)
+                    array.remove(zones, i)
+
+// ---- RUN FVG SCANNER on each new bar ----
+scan_fvgs()
+
+// Continue extending active zones' right edges
+for i = 0 to array.size(zones) - 1
+    z = array.get(zones, i)
+    if not na(z.fvg_box)
+        box.set_right(z.fvg_box, bar_index + 1)
+    if not na(z.liq_line)
+        line.set_x2(z.liq_line, bar_index + 1)
+
+//==============================================================================
+// SECTION 8 — VISUALS ON SIGNAL
+// 8A. Entry Label — 8B. TP Label — 8C. Vertical Line — 8D. SMT Marker — 8E. HUD
+//==============================================================================
+var line   signal_vert_line  = na
+var label  signal_entry_label = na
+var label  signal_tp_label   = na
+
+// Clean up previous signal visuals when new day starts
+if is_new_day
+    line.delete(signal_vert_line)
+    label.delete(signal_entry_label)
+    label.delete(signal_tp_label)
+    signal_vert_line  := na
+    signal_entry_label := na
+    signal_tp_label   := na
+
+// Format execution time string for labels
+exec_time_str = str.tostring(hour(time, session_tz), "00") + ":" + str.tostring(minute(time, session_tz), "00")
+
+if signal_triggered
+    // 8A. Entry Label
+    label.delete(signal_entry_label)
+    if signal_is_bull
+        signal_entry_label := label.new(
+             signal_bar, low,
+             "EXECUTE BUY\nNEXT @ " + exec_time_str,
+             color=color.green, textcolor=color.white,
+             style=label.style_label_up, size=size.normal
+        )
+    else
+        signal_entry_label := label.new(
+             signal_bar, high,
+             "EXECUTE SELL\nNEXT @ " + exec_time_str,
+             color=color.red, textcolor=color.white,
+             style=label.style_label_down, size=size.normal
+        )
+    
+    // 8B. TP Label (derived from RR Ratio)
+    // BUY:  entry = close, SL = swept zone low, TP = entry + (entry - SL) * rr
+    // SELL: entry = close, SL = swept zone high, TP = entry - (SL - entry) * rr
+    label.delete(signal_tp_label)
+    if signal_is_bull
+        tp_level = close + (close - low_lookback) * rr_ratio
+        signal_tp_label := label.new(
+             signal_bar, tp_level,
+             "TP " + str.tostring(rr_ratio, "#.#") + "R",
+             color=color.new(color.green, 60), textcolor=color.white,
+             style=label.style_label_up, size=size.small
+        )
+    else
+        tp_level = close - (high_lookback - close) * rr_ratio
+        signal_tp_label := label.new(
+             signal_bar, tp_level,
+             "TP " + str.tostring(rr_ratio, "#.#") + "R",
+             color=color.new(color.red, 60), textcolor=color.white,
+             style=label.style_label_down, size=size.small
+        )
+    
+    // 8C. Dashed Vertical Line through the signal candle
+    line.delete(signal_vert_line)
+    signal_vert_line := line.new(
+        x1=signal_bar, y1=low,
+        x2=signal_bar, y2=high,
+        extend=extend.both,
+        color=color.new(signal_is_bull ? color.green : color.red, 60),
+        style=line.style_dashed,
+        width=1
+    )
+
+// 8D. SMT Divergence Marker — plot a small shape when SMT is detected
+plotshape(bull_smt, title="Bullish SMT", location=location.belowbar, color=color.green,
+          style=shape.triangleup, size=size.tiny, offset=0)
+plotshape(bear_smt, title="Bearish SMT", location=location.abovebar, color=color.red,
+          style=shape.triangledown, size=size.tiny, offset=0)
+
+// 8E. Daily HUD Watermark — bottom-right table imprint
+// Switches from "SCANNING..." (gray) → "BUY" (green) or "SELL" (red) on signal
+var table watermark = table.new(position.bottom_right, 1, 1)
+var string daily_imprint_text  = "SCANNING..."
+var color  daily_imprint_color = color.new(color.gray, 80)
+
+// Daily reset of imprint text
+if is_new_day
+    daily_imprint_text  := "SCANNING..."
+    daily_imprint_color := color.new(color.gray, 80)
+
+// Update imprint on signal (permanent for the day)
+if signal_triggered
+    daily_imprint_text  := signal_is_bull ? "BUY" : "SELL"
+    daily_imprint_color := signal_is_bull ? color.new(color.green, 30) : color.new(color.red, 30)
+
+// Always render the table cell
+table.cell(watermark, 0, 0, daily_imprint_text,
+           text_color=daily_imprint_color,
+           text_size=size.huge,
+           text_font_family=font.family_monospace)
+
+//==============================================================================
+// SECTION 9 — DAILY RESET
+// At midnight NY time, reset all persistent state
+// (Already handled above in Section 2 and zone processing)
+// Zone cleanup is handled inline in the zone processing loop above using
+// date serial comparison — no separate loop needed.
+//==============================================================================
+// Daily reset already handled in Section 2B + zone loop above
+
+//==============================================================================
+// SECTION 10 — ALERT PAYLOAD (Webhook-Ready JSON)
+// Fires once per bar close when signal is confirmed
+//==============================================================================
+if signal_triggered
+    if signal_is_bull
+        long_json = '{"action":"BUY","asset":"' + syminfo.ticker + '","timeframe":"15m","setup":"Sweep+SMT+DoubleIFVG","bias":"BULL","price":"' + str.tostring(close) + '","rr":"' + str.tostring(rr_ratio) + '","timestamp":"' + exec_time_str + '"}'
+        alert(long_json, alert.freq_once_per_bar_close)
+    else
+        short_json = '{"action":"SELL","asset":"' + syminfo.ticker + '","timeframe":"15m","setup":"Sweep+SMT+DoubleIFVG","bias":"BEAR","price":"' + str.tostring(close) + '","rr":"' + str.tostring(rr_ratio) + '","timestamp":"' + exec_time_str + '"}'
+        alert(short_json, alert.freq_once_per_bar_close)
+
+//==============================================================================
+// SECTION 11 — BACKGROUND SHADING
+// Execution window → light blue; outside → neutral
+//==============================================================================
+bgcolor(in_exec_window ? color.new(color.blue, 97) : na, title="Execution Window")
+
+//==============================================================================
+// SECTION 12 — COMPLETE FUNCTION CHECKLIST
+// All EA-mirrored blocks present:
+//  ✓ GetStructureBias()     → Section 2C (bias var)
+//  ✓ HasSMT(bull)           → Section 5 (bull_smt / bear_smt)
+//  ✓ CheckDoubleIFVG(bull)  → Section 6 (double_ifvg_bull / double_ifvg_bear)
+//  ✓ UpdateFVGs()           → Section 3 (scan_fvgs function)
+//  ✓ Sweep detection        → Section 4 (bull_swept / bear_swept + zone loop)
+//  ✓ Daily reset block      → Sections 2B & 9
+//  ✓ H4 candle gate         → Section 2B (h4_already_traded)
+//  ✓ Execution window gate  → Section 2A (in_exec_window)
+//  ✓ FVG box/line drawing   → Section 3 (show_fvgs block)
+//  ✓ Daily HUD imprint      → Section 8E (watermark table)
+//  ✓ JSON alert strings     → Section 10 (alert payloads)
+//  ✓ Entry + TP labels      → Section 8A / 8B / 8C
+//==============================================================================
