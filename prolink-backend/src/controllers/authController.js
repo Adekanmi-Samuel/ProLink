@@ -46,7 +46,7 @@ const login = async (req, res) => {
     
     res.json({ token });
   } catch (err) {
-    if (err.message === 'Invalid Credentials') {
+    if (err.message === 'Invalid email or password' || err.message.startsWith('Account temporarily locked')) {
       return res.status(401).json({ error: err.message });
     }
     console.error(err.message);
@@ -136,6 +136,14 @@ const resetPassword = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+  try {
+    if (req.user && req.user.id) {
+      await authService.logoutUser(req.user.id);
+    }
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
+
   const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   res.cookie('token', '', {
     httpOnly: true,

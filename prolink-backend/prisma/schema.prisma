@@ -25,6 +25,9 @@ model User {
   phone_number       String?         @unique @db.VarChar(30)
   phone_verified     Boolean         @default(false)
   member_id          String?         @unique @db.VarChar(50)
+  failed_login_attempts Int          @default(0)
+  locked_until       DateTime?
+  token_version      Int             @default(0)
   bids               Bid[]
   blocks_received    Block[]         @relation("BlockedUser")
   blocks_made        Block[]         @relation("Blocker")

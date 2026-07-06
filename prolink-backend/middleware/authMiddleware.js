@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../src/config/prisma');
 
-module.exports = function(req, res, next) {
+module.exports = async function(req, res, next) {
   let actualToken = null;
   
   const authHeader = req.header('Authorization');
@@ -25,6 +26,18 @@ module.exports = function(req, res, next) {
 
   try {
     const decoded = jwt.verify(actualToken, process.env.JWT_SECRET);
+    
+    // Check token version to ensure session hasn't been revoked
+    if (decoded.user && decoded.user.token_version !== undefined) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.user.id },
+        select: { token_version: true }
+      });
+      if (!user || user.token_version !== decoded.user.token_version) {
+        return res.status(401).json({ msg: 'Session expired. Please log in again.' });
+      }
+    }
+
     req.user = decoded.user;
     next();
   } catch (err) {

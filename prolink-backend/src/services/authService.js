@@ -5,7 +5,7 @@ const prisma = require('../config/prisma');
 const emailService = require('./emailService');
 const smsService = require('./smsService');
 
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 
 const normalizePhone = (phone) => {
   if (!phone) return null;
@@ -30,7 +30,7 @@ const registerUser = async ({ email, password, user_type, full_name, phone_numbe
     if (existingPhone) throw new Error('Phone number is already registered.');
   }
 
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);
   const password_hash = await bcrypt.hash(password, salt);
   
   const otp_code = generateOTP();
@@ -49,7 +49,7 @@ const registerUser = async ({ email, password, user_type, full_name, phone_numbe
       member_id,
       email_verified: process.env.NODE_ENV === 'development' ? true : false
     },
-    select: { id: true, email: true, phone_number: true, user_type: true },
+    select: { id: true, email: true, phone_number: true, user_type: true, token_version: true },
   });
 
   // Every user gets an empty profile row created alongside them
@@ -63,7 +63,7 @@ const registerUser = async ({ email, password, user_type, full_name, phone_numbe
   });
 
   const token = jwt.sign(
-    { user: { id: newUser.id, user_type: newUser.user_type } },
+    { user: { id: newUser.id, user_type: newUser.user_type, token_version: newUser.token_version } },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -79,13 +79,41 @@ const registerUser = async ({ email, password, user_type, full_name, phone_numbe
 
 const loginUser = async ({ email, password }) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error('Invalid Credentials');
+  if (!user) throw new Error('Invalid email or password');
+
+  // Check lockout
+  if (user.locked_until && user.locked_until > new Date()) {
+    throw new Error('Account temporarily locked. Please try again later.');
+  }
 
   const isMatch = await bcrypt.compare(password, user.password_hash);
-  if (!isMatch) throw new Error('Invalid Credentials');
+  if (!isMatch) {
+    // Increment failed attempts
+    const attempts = user.failed_login_attempts + 1;
+    let locked_until = null;
+    if (attempts >= 5) {
+      locked_until = new Date(Date.now() + 15 * 60 * 1000); // lock for 15 mins
+    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failed_login_attempts: attempts, locked_until }
+    });
+    if (locked_until) {
+      throw new Error('Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.');
+    }
+    throw new Error('Invalid email or password');
+  }
+
+  // Reset failed attempts on success
+  if (user.failed_login_attempts > 0) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failed_login_attempts: 0, locked_until: null }
+    });
+  }
 
   const token = jwt.sign(
-    { user: { id: user.id, user_type: user.user_type } },
+    { user: { id: user.id, user_type: user.user_type, token_version: user.token_version } },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -113,7 +141,7 @@ const resendVerificationOTP = async (userId) => {
 
 const forgotPassword = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error('User not found'); // We can choose to suppress this in controller for security
+  if (!user) return; // Prevent user enumeration by returning silently
 
   const resetToken = crypto.randomBytes(32).toString('hex');
   const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
@@ -149,7 +177,7 @@ const resetPassword = async (token, newPassword) => {
     if (isMatch) throw new Error('You cannot reuse a recently used password.');
   }
 
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);
   const password_hash = await bcrypt.hash(newPassword, salt);
 
   // Add the current password hash to history, keep last 5
@@ -161,9 +189,17 @@ const resetPassword = async (token, newPassword) => {
       password_hash,
       previous_passwords: updatedHistory,
       reset_token: null,
-      reset_token_expires: null
+      reset_token_expires: null,
+      token_version: { increment: 1 } // Invalidate old tokens
     }
   });
 };
 
-module.exports = { registerUser, loginUser, resendVerificationOTP, forgotPassword, resetPassword };
+const logoutUser = async (userId) => {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { token_version: { increment: 1 } }
+  });
+};
+
+module.exports = { registerUser, loginUser, resendVerificationOTP, forgotPassword, resetPassword, logoutUser };
