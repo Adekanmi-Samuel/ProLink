@@ -21,27 +21,23 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Only connect if the user has an auth token — skip if on login/signup
-    const token = typeof window !== 'undefined' ? localStorage.getItem('prolink_token') : null;
-    const hasCookie = typeof window !== 'undefined'
-      && document.cookie.split(';').some(c => c.trim().startsWith('token='));
-
-    if (!token && !hasCookie) {
-      console.log('Socket: No auth token found, skipping connection');
-      return;
+    // Skip socket connection on login/signup pages
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/verify-email') || path.startsWith('/forgot-password') || path.startsWith('/reset-password')) {
+        return;
+      }
     }
 
-    // Create socket connection — auth is handled by httpOnly cookie (withCredentials)
+    // Create socket connection - auth is handled by httpOnly cookie (withCredentials)
     const socketInstance = io(SOCKET_URL, {
       withCredentials: true,
-      autoConnect: false, // We'll manage connection manually
+      autoConnect: false,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
-      auth: token ? { token } : undefined,
+      transports: ['websocket', 'polling'],
     });
 
-    // Try connecting — if server rejects, we just get connect_error
     socketInstance.connect();
 
     socketInstance.on('connect', () => {
@@ -49,8 +45,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setIsConnected(true);
     });
 
-    socketInstance.on('disconnect', () => {
-      console.log('Global Socket disconnected');
+    socketInstance.on('disconnect', (reason) => {
+      console.log('Global Socket disconnected:', reason);
       setIsConnected(false);
     });
 

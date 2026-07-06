@@ -3,52 +3,23 @@ import { API_BASE_URL } from './backendConfig';
 
 console.log('[api] baseURL=', API_BASE_URL);
 
-// Token storage — in-memory + localStorage fallback for page reloads
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
-  if (token) {
-    localStorage.setItem('prolink_token', token);
-  } else {
-    localStorage.removeItem('prolink_token');
-  }
-};
-
-// Restore token from localStorage on load
-if (typeof window !== 'undefined') {
-  const storedToken = localStorage.getItem('prolink_token');
-  if (storedToken) authToken = storedToken;
-}
-
+// Create axios instance with cookie-based authentication
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // keep as fallback for cookie-based flows
+  withCredentials: true, // Uses httpOnly cookie for authentication
 });
 
-// Attach the token to every outgoing request as an Authorization header
+// Request interceptor - no need to add Authorization header since we use cookies
 api.interceptors.request.use(
   (config) => {
-    // Read from localStorage on every request (Next.js app router bundles pages separately,
-    // so module-level state is NOT shared between login -> dashboard navigation)
-    const token = authToken || (typeof window !== 'undefined' ? localStorage.getItem('prolink_token') : null);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// This interceptor checks every response from the server for security errors.
+// Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
-    // If the response contains a token from login/register, save it
-    if (response.data?.token) {
-      setAuthToken(response.data.token);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     const safeError = {
       message: error?.message,
@@ -57,12 +28,10 @@ api.interceptors.response.use(
     };
     console.error('[api] response error', safeError);
 
-    // If 401 — token is invalid/expired, clear it and redirect
+    // If 401 — token is invalid/expired, redirect to login
     if (error.response && error.response.status === 401) {
-      setAuthToken(null);
-      document.cookie = 'token=; Max-Age=0; path=/';
       const endpoint = error.config?.url || '';
-      if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+      if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register') && !endpoint.includes('/auth/verify')) {
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup') && window.location.pathname !== '/') {
           window.location.href = '/login';
         }
@@ -75,12 +44,10 @@ api.interceptors.response.use(
 export default api;
 
 /**
- * Check if the user has a stored auth token (localStorage or cookie).
- * Use before making authenticated API calls to avoid unnecessary 401s.
+ * Check if the user has an auth cookie set.
+ * Note: We can't read httpOnly cookie value, but we can check if it exists.
  */
-export const hasAuthToken = (): boolean => {
+export const hasAuthCookie = (): boolean => {
   if (typeof window === 'undefined') return false;
-  if (localStorage.getItem('prolink_token')) return true;
-  // Check if the httpOnly cookie 'token' is set (value is inaccessible but existence works)
   return document.cookie.split(';').some(c => c.trim().startsWith('token='));
 };

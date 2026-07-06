@@ -185,11 +185,65 @@ const deleteJob = async (req, res) => {
   }
 };
 
+// Admin Dashboard Stats
+const getAdminStats = async (req, res) => {
+  try {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const [
+      totalUsers,
+      totalClients,
+      totalProviders,
+      totalJobs,
+      activeJobs,
+      totalDisputes,
+      pendingVerifications,
+      revenueData
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { user_type: 'client' } }),
+      prisma.user.count({ where: { user_type: 'provider' } }),
+      prisma.job.count(),
+      prisma.job.count({ where: { status: 'open' } }),
+      prisma.dispute.count({ where: { status: 'open' } }),
+      prisma.profile.count({
+        where: {
+          OR: [{ nin_status: 'pending' }, { cac_status: 'pending' }]
+        }
+      }),
+      prisma.platformRevenue.aggregate({
+        _sum: { fee_amount: true },
+        where: { collected_at: { gte: firstDayOfMonth } }
+      })
+    ]);
+
+    const totalRevenueResult = await prisma.platformRevenue.aggregate({
+      _sum: { fee_amount: true }
+    });
+
+    res.json({
+      users: { total: totalUsers, clients: totalClients, providers: totalProviders },
+      jobs: { total: totalJobs, active: activeJobs },
+      disputes: { pending: totalDisputes },
+      verifications: { pending: pendingVerifications },
+      revenue: {
+        total: totalRevenueResult._sum.fee_amount || 0,
+        thisMonth: revenueData._sum.fee_amount || 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+};
+
 module.exports = {
   getPendingVerifications,
   reviewVerification,
   getUsers,
   updateUserStatus,
   getJobs,
-  deleteJob
+  deleteJob,
+  getAdminStats
 };

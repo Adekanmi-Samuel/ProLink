@@ -10,6 +10,9 @@ router.use(authMiddleware);
 router.use(apiLimiter);
 router.use(requireAdmin);
 
+// Dashboard Stats
+router.get('/stats', adminController.getAdminStats);
+
 // Verifications
 router.get('/verifications', adminController.getPendingVerifications);
 router.post('/verifications/review', adminController.reviewVerification);

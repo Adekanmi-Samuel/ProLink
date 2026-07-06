@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import io from 'socket.io-client';
+import { useSocket } from '../../../lib/SocketContext';
 import api from '../../../lib/api';
 import { apiService } from '../../../lib/apiService';
 import { SOCKET_URL } from '../../../lib/backendConfig';
@@ -39,6 +39,7 @@ function avatarColor(name) {
 export default function ChatPage() {
   const { threadId } = useParams();
   const router = useRouter();
+  const { socket } = useSocket();
   const socketRef = useRef<any>(null);
   const messagesEndRef = useRef<any>(null);
   const typingTimeoutRef = useRef<any>(null);
@@ -87,14 +88,7 @@ export default function ChatPage() {
   }, [currentUser]);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('prolink_token')
-      : null;
-    const socket = io(SOCKET_URL, {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-      auth: token ? { token } : undefined,
-    });
+    if (!socket) return;
     socketRef.current = socket;
 
     const fetchData = async () => {
@@ -153,9 +147,9 @@ export default function ChatPage() {
     socket.on('connect', () => setConnectionError(''));
 
     return () => {
-      socket.disconnect();
+      // Don't disconnect the global socket - it's managed by SocketProvider
     };
-  }, [threadId, router]);
+  }, [threadId, router, socket]);
 
   const loadOlderMessages = async () => {
     if (!hasMore || loadingOlder || !nextCursor) return;
