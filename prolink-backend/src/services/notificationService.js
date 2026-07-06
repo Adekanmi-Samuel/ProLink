@@ -1,12 +1,35 @@
 const prisma = require('../config/prisma');
 const { getIo } = require('../socket');
 
+const sendNtfyPush = async (userId, title, content) => {
+  try {
+    const topic = `prolink_user_${userId}`;
+    // ntfy.sh is a free push notification service
+    if (typeof fetch !== 'undefined') {
+      await fetch(`https://ntfy.sh/${topic}`, {
+        method: 'POST',
+        body: content,
+        headers: {
+          'Title': title,
+          'Tags': 'bell'
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send ntfy push notification:', err);
+  }
+};
+
 const createNotification = async (userId, type, content, linkUrl = null) => {
   const notification = await prisma.notification.create({
     data: { user_id: userId, type, content, link_url: linkUrl }
   });
   const io = getIo();
   if (io) io.to(`user_${userId}`).emit('notification', notification);
+  
+  // Dispatch push notification to ntfy
+  sendNtfyPush(userId, `ProLink: ${type.replace('_', ' ')}`, content);
+  
   return notification;
 };
 

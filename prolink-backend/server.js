@@ -132,14 +132,17 @@ app.use(httpLogger);
 const ALLOWED_DOMAINS = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://prolink-eight.vercel.app',
-  'https://prolink-hmprfjeme-adekanmi-samuels-projects.vercel.app',
-  /\.vercel\.app$/,
 ];
 
-const allowedOrigins = process.env.FRONTEND_ORIGIN
-  ? [process.env.FRONTEND_ORIGIN, ...ALLOWED_DOMAINS]
-  : ALLOWED_DOMAINS;
+// Add FRONTEND_ORIGIN from env if set
+if (process.env.FRONTEND_ORIGIN) {
+  ALLOWED_DOMAINS.push(process.env.FRONTEND_ORIGIN);
+}
+
+// Also allow any Vercel preview deployments
+ALLOWED_DOMAINS.push(/\.vercel\.app$/);
+
+const allowedOrigins = ALLOWED_DOMAINS;
 
 app.use(cors({
   origin: function(origin, callback) {
