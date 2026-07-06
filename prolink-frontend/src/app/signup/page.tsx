@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 import { NIGERIAN_STATES } from '../../lib/states';
+import { useTheme } from '../../components/ThemeProvider';
 
 /* ── Password strength checker ── */
 function getStrength(pw) {
@@ -51,6 +52,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState(1);
   const router = useRouter();
+  const { theme } = useTheme();
 
   const [role, setRole] = useState('');
   const [fullName, setFullName] = useState('');
@@ -96,7 +98,7 @@ export default function SignupPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 1.25rem 2rem', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
       {/* Warm ambient orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className={`absolute inset-0 pointer-events-none overflow-hidden${theme === 'light' ? ' light' : ''}`}>
         <div className="orb orb-peach" style={{ width: '500px', height: '500px', top: '-10%', right: '-5%' }} />
         <div className="orb orb-cream" style={{ width: '450px', height: '450px', bottom: '-10%', left: '-5%' }} />
         <div className="orb orb-blush" style={{ width: '300px', height: '300px', top: '50%', left: '60%' }} />

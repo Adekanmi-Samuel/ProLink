@@ -250,7 +250,7 @@ export default function SavedJobsPage() {
           >
             <span className="jobs-empty__icon">🔖</span>
             <h2 className="jobs-empty__title">No saved jobs yet</h2>
-            <p className="jobs-empty__text">Start browsing and save jobs you're interested in to see them here.</p>
+            <p className="jobs-empty__text">Start browsing and save jobs you&apos;re interested in to see them here.</p>
             <Link href="/jobs" className="pl-btn pl-btn-primary">
               🔍 Find Work to Save
             </Link>

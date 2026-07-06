@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../lib/api';
+import { useTheme } from '../../components/ThemeProvider';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ function LoginForm() {
   const [errorMsg, setErrorMsg] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (searchParams.get('registered') === '1') {
@@ -45,7 +47,7 @@ function LoginForm() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.25rem', position: 'relative', background: 'var(--bg)', overflow: 'hidden' }}>
       {/* Cool ambient orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className={`absolute inset-0 pointer-events-none overflow-hidden${theme === 'light' ? ' light' : ''}`}>
         <div className="orb orb-peach" style={{ width: '500px', height: '500px', top: '-10%', right: '-5%' }} />
         <div className="orb orb-cream" style={{ width: '450px', height: '450px', bottom: '-10%', left: '-5%' }} />
         <div className="orb orb-blush" style={{ width: '300px', height: '300px', top: '50%', left: '60%' }} />

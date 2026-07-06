@@ -111,16 +111,8 @@ export default function Navbar() {
 
   const dropdownLinks = [
     { href: '/profile/edit', label: 'Edit Profile' },
-    { href: '/dashboard/wallet', label: 'Wallet' },
-    { href: '/dashboard/verification', label: 'Verification' },
-    { href: '/dashboard/settings', label: 'Settings' },
+    { href: '/dashboard', label: 'Dashboard' },
   ];
-
-  const filteredDropdownLinks = isAdmin
-    ? [{ href: '/admin', label: 'Admin Panel' }, { href: '/profile/edit', label: 'Edit Profile' }]
-    : isClient
-    ? dropdownLinks.filter(l => l.href !== '/dashboard/verification')
-    : dropdownLinks;
 
   if (!mounted) return null;
 
@@ -129,7 +121,6 @@ export default function Navbar() {
   return (
     <>
       <motion.header
-        className="navbar-main"
         variants={navbarVariants}
         initial="hidden"
         animate="visible"
@@ -217,7 +208,7 @@ export default function Navbar() {
                             </div>
                           )}
                           <div className="avatar-dropdown-divider" />
-                          {filteredDropdownLinks.map((link) => (
+                          {dropdownLinks.map((link) => (
                             <Link key={link.href} href={link.href} className="avatar-dropdown-item" onClick={() => setAvatarDropdown(false)}>{link.label}</Link>
                           ))}
                           <div className="avatar-dropdown-divider avatar-dropdown-divider-sm" />

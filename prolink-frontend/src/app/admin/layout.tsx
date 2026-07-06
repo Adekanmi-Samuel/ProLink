@@ -74,12 +74,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         .admin-table th, .verify-table th, .admin-table td, .verify-table td { padding: 0.65rem 0.85rem; text-align: left; font-size: 0.85rem; }
         .admin-table th, .verify-table th { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-tertiary); position: sticky; top: 0; background: var(--surface-hover); }
         .admin-table td, .verify-table td { font-size: 0.85rem; }
-        .admin-layout__toggle {
-          display: none; position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 60;
-          background: var(--accent); color: #fff !important; border: none;
-          border-radius: 999px; padding: 0.75rem 1.25rem; font-size: 0.82rem;
-          font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-          font-family: inherit; gap: 0.4rem; align-items: center; text-decoration: none;
+        .dash-mobile-topbar {
+          display: none;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 0;
+          margin-bottom: 1.25rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .dash-mobile-topbar__toggle {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 0.5rem;
+          cursor: pointer;
+          color: var(--fg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .dash-mobile-topbar__toggle:hover {
+          background: var(--accent-alpha);
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .dash-mobile-topbar__title {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--fg);
+          font-family: var(--font-heading), sans-serif;
+          flex: 1;
         }
         .admin-layout__overlay {
           display: none; position: fixed; inset: 0;
@@ -88,24 +113,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         @media (max-width: 768px) {
           .admin-sidebar { position: fixed; top: var(--navbar-h); left: 0; z-index: 50; width: 280px; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
           .admin-sidebar--open { transform: translateX(0); }
-          .admin-layout__toggle { display: flex; }
+          .dash-mobile-topbar { display: flex; }
           .admin-layout__overlay { display: block; }
-          .admin-content { padding: 1.25rem 1rem 5rem; }
+          .admin-content { padding: calc(1.25rem + var(--navbar-h)) 1rem 5rem; }
         }
       `}</style>
 
-      <motion.button
-        className="admin-layout__toggle"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="Toggle sidebar"
-      >
-        <motion.span animate={{ rotate: sidebarOpen ? 90 : 0 }} transition={{ duration: 0.25, ease: FAUCET_EASING }}>
-          {sidebarOpen ? '✕' : '☰'}
-        </motion.span>
-        Admin
-      </motion.button>
+
 
       <AnimatePresence>
         {sidebarOpen && (
@@ -141,6 +155,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <motion.main className="admin-content" key={pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: FAUCET_EASING }}>
+        <div className="dash-mobile-topbar" style={{ marginBottom: '1.5rem' }}>
+          <button
+            className="dash-mobile-topbar__toggle"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open admin nav"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="15" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <span className="dash-mobile-topbar__title">Admin Panel</span>
+        </div>
         {children}
       </motion.main>
     </div>

@@ -111,14 +111,34 @@ function DashboardPage() {
   if (loading) {
     return (
       <div className="page">
-        <div className="loading-wrap">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-          >
-            <div className="spinner" />
-          </motion.div>
+        <div className="wrap" style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'var(--space-3xl)' }}>
+          {/* Stat cards row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            {[1,2,3,4].map(i => (
+              <div key={i} className="skeleton skeleton-card" style={{ height: 100 }} />
+            ))}
+          </div>
+          {/* Two column below */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="skeleton skeleton-title" style={{ width: '40%', height: 24, marginBottom: '0.5rem' }} />
+              {[1,2,3].map(i => (
+                <div key={i} className="skeleton skeleton-card" style={{ height: 72 }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="skeleton skeleton-title" style={{ width: '40%', height: 24, marginBottom: '0.5rem' }} />
+              {[1,2,3,4,5].map(i => (
+                <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.5rem', borderRadius: 'var(--radius)', background: 'var(--surface)' }}>
+                  <div className="skeleton skeleton-avatar" style={{ width: 40, height: 40, borderRadius: '50%' }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div className="skeleton skeleton-text" style={{ width: '70%', height: 12, borderRadius: 4 }} />
+                    <div className="skeleton skeleton-text" style={{ width: '45%', height: 12, borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -221,32 +241,31 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }: any
       <AnimatedSection delay={0.1} stagger={0.08}>
         <div className="stat-grid-4">
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--gold">
-              <div className="stat-card__value">
-                {totalEarned === '0' ? <span style={{ color: 'var(--fg-tertiary)' }}>—</span> : <><span className="naira">₦</span>{totalEarned}</>}
-              </div>
-              <div className="stat-card__label">Total Earned</div>
-              {totalEarned === '0' && <div className="stat-card__sub">Complete your first job to start earning</div>}
+            <div className="stat-card">
+              <span className="stat-number gold">
+                {totalEarned === '0' ? '—' : <><span className="naira">₦</span>{totalEarned}</>}
+              </span>
+              <span className="stat-label">Total Earned</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--green">
-              <div className="stat-card__value">
-                {thisMonth === '0' ? <span style={{ color: 'var(--fg-tertiary)' }}>—</span> : <><span className="naira">₦</span>{thisMonth}</>}
-              </div>
-              <div className="stat-card__label">This Month</div>
+            <div className="stat-card">
+              <span className="stat-number gold">
+                {thisMonth === '0' ? '—' : <><span className="naira">₦</span>{thisMonth}</>}
+              </span>
+              <span className="stat-label">This Month</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--blue">
-              <div className="stat-card__value">{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-card__label">Active Contracts</div>
+            <div className="stat-card">
+              <span className="stat-number">{activeContracts || '—'}</span>
+              <span className="stat-label">Active Contracts</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--copper">
-              <div className="stat-card__value">{bidWinRate}</div>
-              <div className="stat-card__label">Bid Win Rate</div>
+            <div className="stat-card">
+              <span className="stat-number">{bidWinRate}</span>
+              <span className="stat-label">Bid Win Rate</span>
             </div>
           </AnimatedStaggerItem>
         </div>
@@ -366,29 +385,29 @@ function ClientDashboard({ profile, notifications, myJobs }: any) {
       <AnimatedSection delay={0.1} stagger={0.08}>
         <div className="stat-grid-4">
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--blue">
-              <div className="stat-card__value">{openJobs.length || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-card__label">Active Jobs</div>
+            <div className="stat-card">
+              <span className="stat-number">{openJobs.length || '—'}</span>
+              <span className="stat-label">Active Jobs</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--copper">
-              <div className="stat-card__value">{totalBids || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-card__label">Bids to Review</div>
+            <div className="stat-card">
+              <span className="stat-number">{totalBids || '—'}</span>
+              <span className="stat-label">Bids to Review</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--green">
-              <div className="stat-card__value">{activeContracts || <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}</div>
-              <div className="stat-card__label">Contracts Ongoing</div>
+            <div className="stat-card">
+              <span className="stat-number">{activeContracts || '—'}</span>
+              <span className="stat-label">Contracts Ongoing</span>
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="stat-card stat-card--gold">
-              <div className="stat-card__value">
-                {spentThisMonth > 0 ? <><span className="naira">₦</span>{spentThisMonth.toLocaleString()}</> : <span style={{ color: 'var(--fg-tertiary)' }}>—</span>}
-              </div>
-              <div className="stat-card__label">Spent (Total)</div>
+            <div className="stat-card">
+              <span className="stat-number gold">
+                {spentThisMonth > 0 ? <><span className="naira">₦</span>{spentThisMonth.toLocaleString()}</> : '—'}
+              </span>
+              <span className="stat-label">Spent (Total)</span>
             </div>
           </AnimatedStaggerItem>
         </div>

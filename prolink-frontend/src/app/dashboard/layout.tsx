@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { LayoutDashboard, Search, FileText, Briefcase, MessageSquare, Wallet, User, Plus } from 'lucide-react';
 import api from '../../lib/api';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
@@ -58,26 +59,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const userLoaded = !!user;
 
   const providerLinks = [
-    { href: '/dashboard', label: 'Overview', icon: '📊' },
-    { href: '/jobs', label: 'Find Work', icon: '🔍' },
-    { href: '/dashboard/saved-jobs', label: 'Saved Jobs', icon: '🔖' },
-    { href: '/dashboard/my-bids', label: 'My Proposals', icon: '📝' },
-    { href: '/dashboard/contracts', label: 'Active Contracts', icon: '📋' },
-    { href: '/dashboard/portfolio', label: 'Portfolio', icon: '🖼️' },
-    { href: '/dashboard/messages', label: 'Messages', icon: '💬' },
-    { href: '/dashboard/wallet', label: 'Wallet & Earnings', icon: '💰' },
-    { href: '/dashboard/verification', label: 'Verification', icon: '🛡️' },
-    { href: '/profile/edit', label: 'Settings', icon: '⚙️' },
+    { href: '/dashboard',              label: 'Overview',        icon: <LayoutDashboard size={16}/> },
+    { href: '/jobs',                   label: 'Find Work',       icon: <Search size={16}/> },
+    { href: '/dashboard/my-bids',      label: 'My Proposals',    icon: <FileText size={16}/> },
+    { href: '/dashboard/contracts',    label: 'Contracts',       icon: <Briefcase size={16}/> },
+    { href: '/dashboard/messages',     label: 'Messages',        icon: <MessageSquare size={16}/> },
+    { href: '/dashboard/wallet',       label: 'Earnings',        icon: <Wallet size={16}/> },
+    { href: '/profile/edit',           label: 'Profile',         icon: <User size={16}/> },
   ];
 
   const clientLinks = [
-    { href: '/dashboard', label: 'Overview', icon: '📊' },
-    { href: '/jobs/new', label: 'Post a Job', icon: '➕' },
-    { href: '/dashboard/my-jobs', label: 'My Jobs', icon: '📋' },
-    { href: '/talent', label: 'Find Talent', icon: '🔎' },
-    { href: '/dashboard/messages', label: 'Messages', icon: '💬' },
-    { href: '/dashboard/wallet', label: 'Wallet & Billing', icon: '💳' },
-    { href: '/profile/edit', label: 'Settings', icon: '⚙️' },
+    { href: '/dashboard',              label: 'Overview',        icon: <LayoutDashboard size={16}/> },
+    { href: '/jobs/new',               label: 'Post a Job',      icon: <Plus size={16}/> },
+    { href: '/dashboard/my-jobs',      label: 'My Jobs',         icon: <Briefcase size={16}/> },
+    { href: '/dashboard/messages',     label: 'Messages',        icon: <MessageSquare size={16}/> },
+    { href: '/dashboard/wallet',       label: 'Billing',         icon: <Wallet size={16}/> },
+    { href: '/profile/edit',           label: 'Profile',         icon: <User size={16}/> },
   ];
 
   // Admin users get a link
@@ -169,13 +166,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .dash-content {
           flex: 1; min-width: 0; padding: 2rem;
         }
-        .dash-layout__toggle {
-          display: none; position: fixed; bottom: 1.25rem; right: 1.25rem;
-          z-index: 60; background: var(--accent); color: #fff !important;
-          border: none; border-radius: 999px; padding: 0.75rem 1.25rem;
-          font-size: 0.82rem; font-weight: 700; cursor: pointer;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-          font-family: inherit; align-items: center; gap: 0.4rem; text-decoration: none;
+        .dash-mobile-topbar {
+          display: none;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 0;
+          margin-bottom: 1.25rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .dash-mobile-topbar__toggle {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 0.5rem;
+          cursor: pointer;
+          color: var(--fg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .dash-mobile-topbar__toggle:hover {
+          background: var(--accent-alpha);
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .dash-mobile-topbar__title {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--fg);
+          font-family: var(--font-heading), sans-serif;
+          flex: 1;
+        }
+        .dash-mobile-topbar__badge {
+          background: var(--danger);
+          color: #fff;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 0.2rem 0.6rem;
+          border-radius: 999px;
+          text-decoration: none;
         }
         .dash-layout__overlay {
           display: none; position: fixed; inset: 0;
@@ -188,28 +218,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
           }
           .dash-sidebar--open { transform: translateX(0); }
-          .dash-layout__toggle { display: flex; }
+          .dash-mobile-topbar { display: flex; }
+          .dash-sidebar__close { display: block !important; }
           .dash-layout__overlay { display: block; }
-          .dash-content { padding: 1.25rem 1rem 5rem; }
+          .dash-content { padding: calc(1.25rem + var(--navbar-h)) 1rem 5rem; }
+        }
+        @media (min-width: 769px) {
+          .dash-mobile-topbar { display: none !important; }
         }
       `}</style>
 
-      {/* Mobile toggle */}
-      <motion.button
-        className="dash-layout__toggle"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="Toggle sidebar"
-      >
-        <motion.span
-          animate={{ rotate: sidebarOpen ? 90 : 0 }}
-          transition={{ duration: 0.25, ease: FAUCET_EASING }}
-        >
-          {sidebarOpen ? '✕' : '☰'}
-        </motion.span>
-        Menu
-      </motion.button>
+
 
       {/* Overlay for mobile */}
       <AnimatePresence>
@@ -245,6 +264,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
           </div>
+          <button
+            className="dash-sidebar__close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            style={{ marginLeft: 'auto', background: 'none', border: 'none',
+                     cursor: 'pointer', color: 'var(--fg-tertiary)', padding: '0.25rem',
+                     borderRadius: 'var(--radius)', display: 'none' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
         <nav className="dash-sidebar__nav">
@@ -289,6 +322,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: FAUCET_EASING }}
       >
+        {/* Mobile nav bar — only visible on mobile (desktop sidebar handles nav) */}
+        <div className="dash-mobile-topbar">
+          <button
+            className="dash-mobile-topbar__toggle"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="15" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <span className="dash-mobile-topbar__title">
+            {pathname === '/dashboard' ? 'Dashboard'
+              : pathname.includes('messages') ? 'Messages'
+              : pathname.includes('wallet') ? 'Wallet'
+              : pathname.includes('contracts') ? 'Contracts'
+              : pathname.includes('my-jobs') ? 'My Jobs'
+              : pathname.includes('my-bids') ? 'My Proposals'
+              : pathname.includes('portfolio') ? 'Portfolio'
+              : pathname.includes('verification') ? 'Verification'
+              : 'Dashboard'}
+          </span>
+          {unreadCount > 0 && (
+            <Link href="/dashboard/messages" className="dash-mobile-topbar__badge">
+              {unreadCount} unread
+            </Link>
+          )}
+        </div>
         {children}
       </motion.main>
     </div>
