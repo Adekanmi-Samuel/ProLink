@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { LayoutDashboard, Search, FileText, Briefcase, MessageSquare, Wallet, User, Plus } from 'lucide-react';
+import { LayoutDashboard, Search, FileText, Briefcase, MessageSquare, Wallet, User, Plus, Bookmark } from 'lucide-react';
 import api from '../../lib/api';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
@@ -61,6 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const providerLinks = [
     { href: '/dashboard',              label: 'Overview',        icon: <LayoutDashboard size={16}/> },
     { href: '/jobs',                   label: 'Find Work',       icon: <Search size={16}/> },
+    { href: '/dashboard/saved-jobs',   label: 'Saved Jobs',      icon: <Bookmark size={16}/> },
     { href: '/dashboard/my-bids',      label: 'My Proposals',    icon: <FileText size={16}/> },
     { href: '/dashboard/contracts',    label: 'Contracts',       icon: <Briefcase size={16}/> },
     { href: '/dashboard/messages',     label: 'Messages',        icon: <MessageSquare size={16}/> },

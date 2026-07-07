@@ -142,7 +142,12 @@ export default function JobDetailPage() {
       setBidSubmitted(true);
       setBidForm({ amount: '', estimatedTime: '', proposal: '' });
     } catch (error: any) {
-      setErrorMsg(error.response?.data?.msg || 'Failed to submit. Please try again.');
+      const apiError = error.response?.data;
+      if (apiError?.errors?.length > 0) {
+        setErrorMsg(apiError.errors[0].message);
+      } else {
+        setErrorMsg(apiError?.msg || apiError?.error || 'Failed to submit. Please try again.');
+      }
     } finally {
       setBidSubmitting(false);
     }
