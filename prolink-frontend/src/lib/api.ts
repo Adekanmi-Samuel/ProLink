@@ -9,9 +9,17 @@ const api = axios.create({
   withCredentials: true, // Uses httpOnly cookie for authentication
 });
 
-// Request interceptor - intentionally empty as we now rely entirely on the httpOnly cookie
+// Request interceptor - inject token from localStorage as fallback
 api.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 
@@ -31,6 +39,8 @@ api.interceptors.response.use(
       const endpoint = error.config?.url || '';
       if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register') && !endpoint.includes('/auth/verify')) {
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup') && window.location.pathname !== '/') {
+          // Clear local token on 401
+          localStorage.removeItem('token');
           window.location.href = '/login';
         }
       }
@@ -43,5 +53,7 @@ export default api;
 
 export const hasAuthCookie = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return document.cookie.split(';').some(c => c.trim().startsWith('token='));
+  const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('token='));
+  const hasLocalToken = !!localStorage.getItem('token');
+  return hasCookie || hasLocalToken;
 };

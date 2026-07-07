@@ -35,7 +35,10 @@ function LoginForm() {
         password,
         remember_me: rememberMe,
       });
-      // We rely solely on the httpOnly cookie sent by the backend for authentication
+      // Store token in localStorage as fallback
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
       router.push('/dashboard');
     } catch (error) {
       setErrorMsg(error.response?.data?.error || 'Invalid credentials. Please try again.');

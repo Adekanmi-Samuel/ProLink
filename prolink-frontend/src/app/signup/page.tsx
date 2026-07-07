@@ -77,11 +77,14 @@ export default function SignupPage() {
     if (!canContinueStep1 || !canContinueStep2) return;
     setLoading(true);
     try {
-      await api.post('/auth/register', {
+      const response = await api.post('/auth/register', {
         email, password, full_name: fullName, phone_number: phone, state,
         city: lga || undefined,
         user_type: role, referral_code: referralCode || undefined,
       });
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
       toast.success('Account created! Welcome to ProLink.');
       router.push('/verify-email');
     } catch (err) {

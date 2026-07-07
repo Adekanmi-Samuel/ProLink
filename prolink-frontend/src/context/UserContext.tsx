@@ -48,6 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Clear token
     if (typeof window !== 'undefined') {
       document.cookie = 'token=; Max-Age=0; path=/';
+      localStorage.removeItem('token');
     }
     window.location.href = '/login';
   };
