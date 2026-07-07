@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import api from '../lib/api';
+import api, { hasAuthCookie } from '../lib/api';
 
 type Theme = 'dark' | 'light';
 
@@ -67,7 +67,6 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   // Fetch user type for role-based theming (only if logged in)
   useEffect(() => {
     const applyTheme = async () => {
-      const { hasAuthCookie } = require('../lib/api');
       const hasCookie = hasAuthCookie();
       if (!hasCookie) {
         setThemeInjected(true);

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../lib/api';
+import api, { hasAuthCookie } from '../lib/api';
 import { useTheme } from './ThemeProvider';
 import { navbarVariants, dropdownVariants, transitions } from '../lib/motion';
 
@@ -26,7 +26,6 @@ export default function Navbar() {
   /* ── Auth state ── */
   const fetchUser = useCallback(async () => {
     // Rely on httpOnly cookie or local token presence
-    const { hasAuthCookie } = require('../lib/api');
     const hasCookie = hasAuthCookie();
       
     if (!hasCookie) { setUser(null); setNotifCount(0); return; }

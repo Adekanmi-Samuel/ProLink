@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import api, { hasAuthCookie } from '@/lib/api';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -19,7 +19,6 @@ export default function VerificationBanner() {
       return;
     }
     const fetchUser = async () => {
-      const { hasAuthCookie } = require('../lib/api');
       const hasCookie = hasAuthCookie();
       if (!hasCookie) return;
 
