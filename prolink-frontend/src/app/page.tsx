@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Code2, Smartphone, Palette, PenLine, Share2, Video,
-  TrendingUp, HeadphonesIcon, Wrench,
+  TrendingUp, Headphones, Wrench,
   ShieldCheck, Lock, Scale,
   ChevronRight, Star, ArrowUpRight, Sparkles, BadgeCheck
 } from 'lucide-react';
@@ -33,7 +33,7 @@ const CATEGORIES = [
   { icon: Share2, name: 'Social Media', jobs: '270+' },
   { icon: Video, name: 'Video & Photo', jobs: '155+' },
   { icon: TrendingUp, name: 'Digital Marketing', jobs: '195+' },
-  { icon: HeadphonesIcon, name: 'Virtual Assistant', jobs: '220+' },
+  { icon: Headphones, name: 'Virtual Assistant', jobs: '220+' },
   { icon: Wrench, name: 'Home & Repairs', jobs: '95+' },
   { icon: Sparkles, name: 'Event Planning', jobs: '130+' },
 ];

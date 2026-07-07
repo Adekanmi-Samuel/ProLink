@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require('../../db');
 
 // Get personal analytics for the logged-in user
 exports.getUserAnalytics = async (req, res, next) => {

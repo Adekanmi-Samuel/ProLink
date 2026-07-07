@@ -87,7 +87,22 @@
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
       "Bash(cmd /c \"taskkill /F /IM node.exe && timeout 2\")",
       "Skill(code-review)",
-      "Bash(xargs grep -l \"AuthContext\\\\|AuthProvider\")"
+      "Bash(xargs grep -l \"AuthContext\\\\|AuthProvider\")",
+      "Bash(vercel list *)",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(vercel logs *)",
+      "Bash(vercel inspect *)",
+      "Bash(wget -q -O - --timeout=10 \"http://localhost:3000\")",
+      "Bash(python3 *)",
+      "Bash(vercel --prod)",
+      "Bash(pkill -f \"next\")",
+      "Bash(vercel link *)",
+      "Bash(powershell.exe *)",
+      "Bash(vercel pull *)",
+      "Bash(vercel env *)",
+      "Bash(vercel promote *)",
+      "Bash(vercel project *)"
     ]
   }
 }
