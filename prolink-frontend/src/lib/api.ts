@@ -9,9 +9,15 @@ const api = axios.create({
   withCredentials: true, // Uses httpOnly cookie for authentication
 });
 
-// Request interceptor - no need to add Authorization header since we use cookies
+// Request interceptor - attach token from localStorage if available
 api.interceptors.request.use(
   (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('prolink_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -43,11 +49,9 @@ api.interceptors.response.use(
 
 export default api;
 
-/**
- * Check if the user has an auth cookie set.
- * Note: We can't read httpOnly cookie value, but we can check if it exists.
- */
 export const hasAuthCookie = (): boolean => {
   if (typeof window === 'undefined') return false;
+  const hasToken = !!localStorage.getItem('prolink_token');
+  if (hasToken) return true;
   return document.cookie.split(';').some(c => c.trim().startsWith('token='));
 };

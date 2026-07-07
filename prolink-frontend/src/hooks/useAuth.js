@@ -55,6 +55,9 @@ export const useAuth = () => {
       console.error('Failed to logout on backend', error);
     }
     document.cookie = 'token=; Max-Age=0; path=/';
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('prolink_token');
+    }
     setUser(null);
     setIsAuthenticated(false);
     router.push('/login');
