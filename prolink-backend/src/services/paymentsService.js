@@ -99,11 +99,7 @@ const mockFundMilestone = async (milestoneId) => {
 const releaseFunds = async (milestoneId) => {
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
-    include: {
-      job: {
-        select: { provider_id: true }
-      }
-    }
+    include: { job: { include: { assignment: true } } }
   });
 
   if (!milestone) {
@@ -147,7 +143,7 @@ const releaseFunds = async (milestoneId) => {
   const providerBankAccount = await prisma.bankAccount.findFirst({
     where: {
       profile: {
-        user_id: milestone.job.provider_id
+        user_id: milestone.job.assignment?.provider_id
       }
     },
     select: { paystack_recipient_code: true }
@@ -206,13 +202,13 @@ const transferToProvider = async (milestoneId, amount) => {
 
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
-    include: { job: { select: { provider_id: true } } }
+    include: { job: { include: { assignment: true } } }
   });
 
   if (!milestone) throw new Error('Milestone not found');
 
   const providerBankAccount = await prisma.bankAccount.findFirst({
-    where: { profile: { user_id: milestone.job.provider_id } },
+    where: { profile: { user_id: milestone.job.assignment?.provider_id } },
     select: { paystack_recipient_code: true }
   });
 
