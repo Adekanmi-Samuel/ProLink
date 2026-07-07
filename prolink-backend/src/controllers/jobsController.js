@@ -1,19 +1,25 @@
 const jobsService = require('../services/jobsService');
 const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
+const { jobSchema, bidSchema } = require('../validators/jobValidator');
 
 const createJob = async (req, res) => {
   try {
     const clientId = req.user.id;
-    const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = req.body;
-    if (!title || !description || !job_type) {
-      return res.status(400).json({ msg: 'Please provide a title, description, and job type.' });
+    
+    // Validate request body
+    const parseResult = jobSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ msg: parseResult.error.errors[0].message });
     }
+    
+    const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = parseResult.data;
+    
     const job = await jobsService.createJob(clientId, { title, description, budget, job_type, payment_type, category_id, state, city, skillIds });
     
     const io = req.app.get('io');
     if (io) {
-      io.to('global_updates').emit('job_update', {
+      io.to('global_updates').emit('global_notification', {
         id: job.id,
         title: 'New Job Posted',
         message: `${title} (${job_type}) for \u20A6${budget}`
@@ -109,8 +115,11 @@ const prisma = require('../config/prisma');
 
 const submitBid = async (req, res) => {
   try {
-    const { amount, proposal } = req.body;
-    if (!amount || !proposal) return res.status(400).json({ msg: 'Amount and proposal are required.' });
+    const parseResult = bidSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ msg: parseResult.error.errors[0].message });
+    }
+    const { amount, proposal } = parseResult.data;
     const bid = await jobsService.submitBid(parseInt(req.params.id), req.user.id, { amount, proposal });
     
     // Fetch job to get client_id
@@ -170,7 +179,10 @@ const submitBid = async (req, res) => {
 const hireProvider = async (req, res) => {
   try {
     const { providerId, agreedAmount } = req.body;
-    const assignment = await jobsService.hireProvider(parseInt(req.params.id), req.user.id, { providerId, agreedAmount });
+    if (!providerId) return res.status(400).json({ msg: 'providerId is required.' });
+    if (!agreedAmount || isNaN(Number(agreedAmount))) return res.status(400).json({ msg: 'Valid agreedAmount is required.' });
+    
+    const assignment = await jobsService.hireProvider(parseInt(req.params.id), req.user.id, { providerId: parseInt(providerId), agreedAmount: Number(agreedAmount) });
     
     const io = req.app.get('io');
     if (io) {

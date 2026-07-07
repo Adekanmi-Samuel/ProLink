@@ -34,7 +34,8 @@ const paystackWebhook = async (req, res) => {
     
     // Validate Paystack signature
     if (secret && secret !== 'mock') {
-      const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+      const payload = req.rawBody || JSON.stringify(req.body);
+      const hash = crypto.createHmac('sha512', secret).update(payload).digest('hex');
       if (hash !== req.headers['x-paystack-signature']) {
         return res.status(400).send('Invalid signature');
       }

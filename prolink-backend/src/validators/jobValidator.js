@@ -4,7 +4,11 @@ const { z } = require('zod');
 const jobSchema = z.object({
   title: z.string().min(5, 'Job title must be at least 5 characters').max(255),
   description: z.string().min(20, 'Description must be at least 20 characters'),
-  budget: z.string().or(z.number()).optional(),
+  budget: z.preprocess((val) => {
+    if (typeof val === 'string' && val !== '') return Number(val);
+    if (val === null || val === '') return undefined;
+    return val;
+  }, z.number().min(5000, 'Budget must be at least ₦5,000').optional()),
   job_type: z.enum(['digital', 'in-person']).default('digital'),
   payment_type: z.enum(['fixed', 'milestone']).optional(),
   category_id: z.number().int().positive().optional(),
@@ -14,9 +18,8 @@ const jobSchema = z.object({
 });
 
 // Bid validation schema
+// job_id comes from URL params, provider_id comes from auth middleware
 const bidSchema = z.object({
-  job_id: z.number().int().positive('Job ID must be a positive number'),
-  provider_id: z.number().int().positive('Provider ID must be a positive number'),
   amount: z.string().or(z.number()).transform(val => String(val)),
   proposal: z.string().min(20, 'Proposal must be at least 20 characters').max(5000),
 });

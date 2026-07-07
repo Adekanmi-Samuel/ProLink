@@ -26,6 +26,8 @@ export default function JobsPage() {
     state: '',
     city: ''
   });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
   // Track which jobs are currently being saved/unsaved
   const [savingJobId, setSavingJobId] = useState<number | null>(null);
@@ -62,10 +64,17 @@ export default function JobsPage() {
   }, []);
 
   useEffect(() => {
-    fetchJobs();
+    setPage(1);
+    fetchJobs(true);
   }, [filters]);
 
-  const fetchJobs = async () => {
+  useEffect(() => {
+    if (page > 1) {
+      fetchJobs(false);
+    }
+  }, [page]);
+
+  const fetchJobs = async (reset = false) => {
     setLoading(true);
     setJobsError('');
     try {
@@ -77,12 +86,17 @@ export default function JobsPage() {
       if (filters.jobType) params.append('jobType', filters.jobType);
       if (filters.state) params.append('state', filters.state);
       if (filters.city) params.append('city', filters.city);
+      params.append('page', String(reset ? 1 : page));
 
       const response = await api.get(`/search/jobs?${params.toString()}`);
-      const data = response.data?.jobs || response.data || []; setJobs(Array.isArray(data) ? data : []);
+      const newJobs = response.data?.jobs || response.data || [];
+      const paginationInfo = response.data?.pagination;
+      
+      setJobs(prev => reset ? newJobs : [...prev, ...newJobs]);
+      setHasMore(paginationInfo?.hasMore ?? false);
     } catch (error) {
       console.error('Failed to fetch jobs', error);
-      setJobs([]);
+      if (reset) setJobs([]);
       setJobsError('We could not load jobs right now. Please try again.');
     } finally {
       setLoading(false);
@@ -340,6 +354,16 @@ export default function JobsPage() {
           ) : displayJobs.length > 0 ? (
             <div className="jobs-list">
               {jobCards}
+              {hasMore && activeTab === 'search' && !loading && (
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                  <button 
+                    onClick={() => setPage(p => p + 1)} 
+                    className="pl-btn pl-btn-secondary"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="jobs-empty">

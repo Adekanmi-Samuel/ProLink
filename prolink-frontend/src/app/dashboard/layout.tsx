@@ -209,7 +209,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dash-layout__overlay {
           display: none; position: fixed; inset: 0;
-          background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 49;
+          background: transparent; backdrop-filter: none; z-index: 49;
         }
         @media (max-width: 768px) {
           .dash-sidebar {

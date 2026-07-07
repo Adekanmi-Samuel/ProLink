@@ -114,6 +114,9 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
   ];
 
+  // Check if we're on a dashboard page (which has its own sidebar)
+  const isDashboard = pathname.startsWith('/dashboard');
+
   if (!mounted) return null;
 
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/');
@@ -236,9 +239,9 @@ export default function Navbar() {
           </div>
       </motion.header>
 
-      {/* Mobile drawer (shared between both themes) */}
+      {/* Mobile drawer (shared between both themes) - hide on dashboard pages which have their own sidebar */}
       <AnimatePresence>
-        {mobileMenu && (
+        {!isDashboard && mobileMenu && (
           <>
             <motion.div
               className="mobile-overlay"

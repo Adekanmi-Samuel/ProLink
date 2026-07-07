@@ -8,6 +8,13 @@ const { refreshProviderTrustMetrics } = require('../utils/trustMetrics');
 const createMilestone = async (req, res) => {
   try {
     const { jobId, title, amount } = req.body;
+    if (!jobId || !title || !amount) {
+      return res.status(400).json({ msg: 'jobId, title, and amount are required' });
+    }
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ msg: 'Milestone amount must be greater than 0' });
+    }
     
     // Verify user is the client of the job
     const job = await prisma.job.findUnique({ where: { id: parseInt(jobId) } });
@@ -15,7 +22,7 @@ const createMilestone = async (req, res) => {
       return res.status(403).json({ msg: 'Unauthorized or job not found' });
     }
 
-    const milestone = await milestonesService.createMilestone(parseInt(jobId), title, parseFloat(amount));
+    const milestone = await milestonesService.createMilestone(parseInt(jobId), title, parsedAmount);
     res.status(201).json(milestone);
   } catch (error) {
     console.error('Error creating milestone:', error);
