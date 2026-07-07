@@ -139,8 +139,8 @@ app.use(httpLogger);
 // Production domains hardcoded (safety net since .env not in git)
 const ALLOWED_DOMAINS = [
   'http://localhost:3000',
-  'http://localhost:3001',
   'https://prolink-eight.vercel.app',
+  /\.vercel\.app$/
 ];
 
 // Add FRONTEND_ORIGIN from env if set
