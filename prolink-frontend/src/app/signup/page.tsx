@@ -70,7 +70,7 @@ export default function SignupPage() {
   const nextStep = () => { setDirection(1); setStep(s => Math.min(s + 1, 3)); };
   const prevStep = () => { setDirection(-1); setStep(s => Math.max(s - 1, 1)); };
 
-  const canContinueStep1 = role && fullName.trim().length >= 2 && email.includes('@') && phone.length >= 8 && state;
+  const canContinueStep1 = role && fullName.trim().length >= 2 && email.includes('@') && phone.length >= 10 && state;
   const canContinueStep2 = password.length >= 8 && password === confirmPassword && agreedTerms;
 
   const handleSubmit = async () => {
