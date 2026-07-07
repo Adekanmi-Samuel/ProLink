@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const paymentsController = require('../controllers/paymentsController');
 const requireClient = require('../middleware/requireClient');
 const { apiLimiter, webhookLimiter } = require('../middleware/rateLimiter');

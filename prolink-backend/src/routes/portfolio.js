@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const requireProvider = require('../middleware/requireProvider');
 const portfolioController = require('../controllers/portfolioController');
 const { apiLimiter } = require('../middleware/rateLimiter');

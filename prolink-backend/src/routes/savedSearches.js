@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const savedSearchesController = require('../controllers/savedSearchesController');
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const { apiLimiter } = require('../middleware/rateLimiter');
 
 router.use(authMiddleware);

@@ -1,6 +1,6 @@
 const express = require('express');
 const jobsController = require('../controllers/jobsController');
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const requireVerified = require('../middleware/requireVerified');
 const requireClient = require('../middleware/requireClient');
 const requireProvider = require('../middleware/requireProvider');

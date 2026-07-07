@@ -1,6 +1,6 @@
 const express = require('express');
 const chatsController = require('../controllers/chatsController');
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const { validateRequest, asyncHandler } = require('../middleware/validationMiddleware');
 const { initiateChatsSchema, sendMessageSchema, paginationSchema } = require('../validators/chatValidator');
 const { apiLimiter } = require('../middleware/rateLimiter');

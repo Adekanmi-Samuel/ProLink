@@ -1,6 +1,6 @@
 const express = require('express');
 const moderationController = require('../controllers/moderationController');
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const { apiLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();

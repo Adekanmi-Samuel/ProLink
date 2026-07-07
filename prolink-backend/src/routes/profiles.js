@@ -1,6 +1,6 @@
 const express = require('express');
 const profilesController = require('../controllers/profilesController');
-const authMiddleware = require('../../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const { apiLimiter, searchLimiter } = require('../middleware/rateLimiter');
 const { validateRequest } = require('../middleware/validationMiddleware');
 const { updateProfileSchema, updatePictureSchema, saveBankAccountSchema } = require('../validators/profileValidator');
