@@ -86,7 +86,11 @@ export default function SignupPage() {
       toast.success('Account created! Welcome to ProLink.');
       router.push('/verify-email');
     } catch (err) {
-      const msg = err.response?.data?.msg || err.response?.data?.error || 'Registration failed. Please try again.';
+      const errData = err.response?.data;
+      let msg = errData?.msg || errData?.error || 'Registration failed. Please try again.';
+      if (errData?.details?.length > 0) {
+        msg = `${errData.details[0].path?.join('.') || 'Field'} is invalid: ${errData.details[0].message}`;
+      }
       toast.error(msg);
     } finally {
       setLoading(false);

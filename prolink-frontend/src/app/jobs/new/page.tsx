@@ -99,7 +99,11 @@ function NewJobPage() {
     } catch (error: any) {
       const errData = error.response?.data;
       const status = error.response?.status;
-      let errMsg = errData?.msg || errData?.error || 'Failed to post job. Please try again.';
+      let errMsg = errData?.msg || errData?.error || errData?.message || 'Failed to post job. Please try again.';
+      if (errData?.errors?.length > 0) {
+        errMsg = errData.errors[0].message;
+      }
+
       if (status === 403 && errData?.error?.includes('verify')) {
         errMsg = (
           <span>
