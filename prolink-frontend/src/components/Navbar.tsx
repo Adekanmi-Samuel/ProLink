@@ -25,10 +25,6 @@ export default function Navbar() {
 
   /* ── Auth state ── */
   const fetchUser = useCallback(async () => {
-    // Rely on httpOnly cookie or local token presence
-    const hasCookie = hasAuthCookie();
-      
-    if (!hasCookie) { setUser(null); setNotifCount(0); return; }
     try {
       const res = await api.get('/profiles/me');
       setUser(res.data);

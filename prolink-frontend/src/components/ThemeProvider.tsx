@@ -67,12 +67,6 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   // Fetch user type for role-based theming (only if logged in)
   useEffect(() => {
     const applyTheme = async () => {
-      const hasCookie = hasAuthCookie();
-      if (!hasCookie) {
-        setThemeInjected(true);
-        return;
-      }
-
       try {
         const { data } = await api.get('/profiles/me');
         document.body.classList.remove('theme-client', 'theme-provider');

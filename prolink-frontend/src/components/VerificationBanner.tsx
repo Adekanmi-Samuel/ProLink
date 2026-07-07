@@ -19,9 +19,6 @@ export default function VerificationBanner() {
       return;
     }
     const fetchUser = async () => {
-      const hasCookie = hasAuthCookie();
-      if (!hasCookie) return;
-
       try {
         const response = await api.get('/profiles/me');
         setUser(response.data);
