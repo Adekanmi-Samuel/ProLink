@@ -1,5 +1,5 @@
 const profilesService = require('../services/profilesService');
-
+const prisma = require('../config/prisma');
 const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -26,7 +26,7 @@ const getProfileById = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { fullName, bio, phoneNumber, title, hourlyRate, availability, skillIds, state, city, gender, ratePeriod } = req.body;
+    const { fullName, bio, phoneNumber, title, hourlyRate, availability, skillIds, state, city, gender, ratePeriod } = req.validatedBody || req.body;
     await profilesService.updateProfile(userId, {
       full_name: fullName,
       bio,
@@ -49,7 +49,7 @@ const updateProfile = async (req, res) => {
 const updatePicture = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { profile_picture_url } = req.body;
+    const { profile_picture_url } = req.validatedBody || req.body;
     if (!profile_picture_url) return res.status(400).json({ msg: 'URL required' });
 
     // Get old picture URL for cleanup
@@ -105,7 +105,7 @@ const getBankAccount = async (req, res) => {
 
 const saveBankAccount = async (req, res) => {
   try {
-    const { bank_name, bank_code, account_number, account_name } = req.body;
+    const { bank_name, bank_code, account_number, account_name } = req.validatedBody || req.body;
     if (!bank_name || !bank_code || !account_number || !account_name) {
       return res.status(400).json({ msg: 'All bank details are required.' });
     }

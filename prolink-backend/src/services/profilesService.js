@@ -160,9 +160,11 @@ const saveBankAccount = async (userId, data) => {
         recipientCode = result.data.recipient_code;
       } else {
         console.warn('Paystack recipient creation failed:', result.message);
+        throw new Error(result.message || 'Invalid bank account details');
       }
     } catch (err) {
       console.warn('Paystack recipient creation error:', err.message);
+      throw new Error(err.message || 'Could not verify bank account with Paystack.');
     }
   }
 

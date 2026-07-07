@@ -15,8 +15,8 @@ const sendMessageSchema = z.object({
 
 // Pagination query validation
 const paginationSchema = z.object({
-  limit: z.number().int().positive().max(100).default(50),
-  cursor: z.number().int().nonnegative().optional(),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  cursor: z.coerce.number().int().nonnegative().optional(),
 });
 
 module.exports = {
