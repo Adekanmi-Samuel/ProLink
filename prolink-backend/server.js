@@ -120,8 +120,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Body parsing with size limits
-app.use(express.json({ limit: '1mb' }));
+// Body parsing with size limits and rawBody for webhook validation
+app.use(express.json({ 
+  limit: '1mb',
+  verify: (req, res, buf) => {
+    // Only capture rawBody for webhook routes to save memory
+    if (req.originalUrl && req.originalUrl.includes('/webhook')) {
+      req.rawBody = buf.toString();
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // HTTP request logging
