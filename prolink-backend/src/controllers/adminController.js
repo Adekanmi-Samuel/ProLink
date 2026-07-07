@@ -212,15 +212,19 @@ const getAdminStats = async (req, res) => {
           OR: [{ nin_status: 'pending' }, { cac_status: 'pending' }]
         }
       }),
-      prisma.platformRevenue.aggregate({
-        _sum: { fee_amount: true },
-        where: { collected_at: { gte: firstDayOfMonth } }
+      prisma.milestone.findMany({
+        where: { status: { in: ['paid', 'approved'] }, updated_at: { gte: firstDayOfMonth } },
+        select: { amount: true }
       })
     ]);
 
-    const totalRevenueResult = await prisma.platformRevenue.aggregate({
-      _sum: { fee_amount: true }
+    const allCompletedMilestones = await prisma.milestone.findMany({
+      where: { status: { in: ['paid', 'approved'] } },
+      select: { amount: true }
     });
+
+    const thisMonthRevenue = revenueData.reduce((sum, m) => sum + (Number(m.amount) * 0.10), 0);
+    const totalRevenue = allCompletedMilestones.reduce((sum, m) => sum + (Number(m.amount) * 0.10), 0);
 
     res.json({
       users: { total: totalUsers, clients: totalClients, providers: totalProviders },
@@ -228,8 +232,8 @@ const getAdminStats = async (req, res) => {
       disputes: { pending: totalDisputes },
       verifications: { pending: pendingVerifications },
       revenue: {
-        total: totalRevenueResult._sum.fee_amount || 0,
-        thisMonth: revenueData._sum.fee_amount || 0
+        total: totalRevenue || 0,
+        thisMonth: thisMonthRevenue || 0
       }
     });
   } catch (error) {

@@ -296,8 +296,14 @@ const resolveSplitPayment = async (milestoneId, providerPercentage) => {
 };
 
 const refundClient = async (milestoneId) => {
-  // In a real Paystack setup, we would initiate a refund to the client here.
-  // For now, mark the milestone as refunded.
+  const milestone = await prisma.milestone.findUnique({
+    where: { id: milestoneId },
+    select: { amount: true }
+  });
+  if (!milestone) throw new Error('Milestone not found');
+
+  await refundPortionToClient(milestoneId, parseFloat(milestone.amount));
+
   return await prisma.milestone.update({
     where: { id: milestoneId },
     data: { status: 'refunded' }
