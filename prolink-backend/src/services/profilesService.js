@@ -13,6 +13,13 @@ const getMyProfile = async (userId) => {
     prisma.profileSkill.findMany({ where: { profile_id: profile.id }, include: { skill: true } })
   ]);
 
+  const trust_score = 
+    (profile.nin_status === 'verified' ? 30 : 0) +
+    (profile.cac_status === 'verified' ? 20 : 0) +
+    (user ? (user.email_verified ? 10 : 0) : 0) +
+    (user ? (user.phone_verified ? 10 : 0) : 0) +
+    (profile.job_success_score ? (profile.job_success_score / 100) * 30 : 0);
+
   return {
     user_id: profile.user_id,
     full_name: profile.full_name,
@@ -23,16 +30,23 @@ const getMyProfile = async (userId) => {
     hourly_rate: profile.hourly_rate ? parseFloat(profile.hourly_rate) : null,
     rate_period: profile.rate_period,
     availability: profile.availability,
-    email: user.email,
-    user_type: user.user_type,
-    email_verified: user.email_verified,
-    phone_verified: user.phone_verified,
-    status: user.status,
+    email: user ? user.email : null,
+    user_type: user ? user.user_type : null,
+    email_verified: user ? user.email_verified : false,
+    phone_verified: user ? user.phone_verified : false,
+    status: user ? user.status : null,
     nin_status: profile.nin_status,
     cac_status: profile.cac_status,
     state: profile.state,
     city: profile.city,
     gender: profile.gender,
+    rating_avg: profile.rating_avg,
+    review_count: profile.review_count,
+    badges: profile.badges,
+    job_success_score: profile.job_success_score,
+    response_time_hours: profile.response_time_hours,
+    is_featured: profile.is_featured,
+    trust_score: Math.round(trust_score),
     portfolio: portfolioItems,
     skills: profileSkills.map(s => ({ id: s.skill.id, name: s.skill.name })),
   };
@@ -42,10 +56,21 @@ const getProfileById = async (profileId) => {
   const profile = await prisma.profile.findUnique({ where: { user_id: profileId } });
   if (!profile) return null;
 
-  const [portfolioItems, profileSkills] = await Promise.all([
+  const [user, portfolioItems, profileSkills] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: profileId },
+      select: { email_verified: true, phone_verified: true }
+    }),
     prisma.portfolioItem.findMany({ where: { profile_id: profile.id } }),
     prisma.profileSkill.findMany({ where: { profile_id: profile.id }, include: { skill: true } })
   ]);
+
+  const trust_score = 
+    (profile.nin_status === 'verified' ? 30 : 0) +
+    (profile.cac_status === 'verified' ? 20 : 0) +
+    (user ? (user.email_verified ? 10 : 0) : 0) +
+    (user ? (user.phone_verified ? 10 : 0) : 0) +
+    (profile.job_success_score ? (profile.job_success_score / 100) * 30 : 0);
 
   return {
     user_id: profile.user_id,
@@ -63,6 +88,9 @@ const getProfileById = async (profileId) => {
     job_success_score: profile.job_success_score,
     response_time_hours: profile.response_time_hours,
     is_featured: profile.is_featured,
+    nin_status: profile.nin_status,
+    cac_status: profile.cac_status,
+    trust_score: Math.round(trust_score),
     portfolio: portfolioItems,
     skills: profileSkills.map(s => ({ id: s.skill.id, name: s.skill.name })),
   };

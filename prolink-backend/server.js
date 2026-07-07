@@ -214,6 +214,7 @@ const uploadRoutes = require('./src/routes/uploadRoutes');
 const notificationRoutes = require('./src/routes/notifications');
 const statsRoutes = require('./src/routes/stats');
 const savedJobsRoutes = require('./src/routes/savedJobs');
+const analyticsRoutes = require('./src/routes/analyticsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
@@ -235,6 +236,7 @@ app.use('/api/verification', verificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Serve uploaded files (local fallback for when Cloudinary is not configured)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

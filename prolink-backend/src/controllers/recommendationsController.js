@@ -32,17 +32,48 @@ const recommendJobsForProvider = async (req, res) => {
         category: true,
         skills: { include: { skill: true } }
       },
-      take: 10
+      take: 50 // Fetch more to allow for smart sorting
     });
     
-    // Flatten skills to consistent format
-    const result = jobs.map(job => ({
-      ...job,
-      skills: job.skills?.map(s => s.skill) ?? [],
-      client_name: job.client?.profile?.full_name,
-      client_avatar: job.client?.profile?.profile_picture_url,
-      client_rating: job.client?.profile?.rating_avg,
-    }));
+    // Smart Scoring Algorithm
+    const scoredJobs = jobs.map(job => {
+      let score = 0;
+      
+      const jobSkillIds = job.skills.map(s => s.skill_id);
+      
+      // 1. Skill overlap score (High weight)
+      const matchingSkills = skillIds.filter(id => jobSkillIds.includes(id)).length;
+      if (jobSkillIds.length > 0) {
+        score += (matchingSkills / jobSkillIds.length) * 50; 
+      }
+      
+      // 2. Client Rating score (Medium weight)
+      if (job.client?.profile?.rating_avg) {
+        score += (job.client.profile.rating_avg / 5) * 30;
+      }
+      
+      // 3. Recency score (Medium weight)
+      const daysOld = (new Date() - new Date(job.posted_at)) / (1000 * 60 * 60 * 24);
+      score += Math.max(0, 20 - daysOld); // Up to 20 points for very recent jobs
+      
+      // 4. Budget score (Small weight, just a bump for higher budget)
+      if (job.budget) {
+        score += Math.min(10, parseFloat(job.budget) / 1000);
+      }
+
+      return {
+        ...job,
+        match_score: Math.round(score),
+        skills: job.skills?.map(s => s.skill) ?? [],
+        client_name: job.client?.profile?.full_name,
+        client_avatar: job.client?.profile?.profile_picture_url,
+        client_rating: job.client?.profile?.rating_avg,
+      };
+    });
+
+    // Sort by score descending and take top 10
+    scoredJobs.sort((a, b) => b.match_score - a.match_score);
+    const result = scoredJobs.slice(0, 10);
     
     res.json(result);
   } catch (error) {
