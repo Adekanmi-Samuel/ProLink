@@ -19,8 +19,8 @@ export default function VerificationBanner() {
       return;
     }
     const fetchUser = async () => {
-      const hasCookie = typeof window !== 'undefined'
-        && document.cookie.split(';').some(c => c.trim().startsWith('token='));
+      const { hasAuthCookie } = require('../lib/api');
+      const hasCookie = hasAuthCookie();
       if (!hasCookie) return;
 
       try {

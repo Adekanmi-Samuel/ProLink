@@ -25,9 +25,9 @@ export default function Navbar() {
 
   /* ── Auth state ── */
   const fetchUser = useCallback(async () => {
-    // Rely on httpOnly cookie presence
-    const hasCookie = typeof window !== 'undefined'
-      && document.cookie.split(';').some(c => c.trim().startsWith('token='));
+    // Rely on httpOnly cookie or local token presence
+    const { hasAuthCookie } = require('../lib/api');
+    const hasCookie = hasAuthCookie();
       
     if (!hasCookie) { setUser(null); setNotifCount(0); return; }
     try {

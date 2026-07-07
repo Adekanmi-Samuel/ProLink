@@ -67,10 +67,9 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   // Fetch user type for role-based theming (only if logged in)
   useEffect(() => {
     const applyTheme = async () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const hasCookie = typeof window !== 'undefined'
-        && document.cookie.split(';').some(c => c.trim().startsWith('token='));
-      if (!token && !hasCookie) {
+      const { hasAuthCookie } = require('../lib/api');
+      const hasCookie = hasAuthCookie();
+      if (!hasCookie) {
         setThemeInjected(true);
         return;
       }
