@@ -99,7 +99,12 @@ export default function FooterSection() {
             <AnimatedStaggerItem className="sm:col-span-2 lg:col-span-3">
               <div>
                 <div className="eyebrow mb-4">Contact</div>
-                <p className="text-sm mb-5" style={{ color: 'var(--fg-secondary)' }}>hello@prolink.ng</p>
+                <p className="text-sm mb-2" style={{ color: 'var(--fg-secondary)' }}>hello@prolink.ng</p>
+                <p className="text-sm mb-5" style={{ color: 'var(--fg-secondary)' }}>
+                  <a href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                    WhatsApp Support
+                  </a>
+                </p>
                 <div className="flex gap-3">
                   {SOCIALS.map((s) => (
                     <motion.a

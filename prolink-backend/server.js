@@ -250,13 +250,10 @@ require('./src/events/EventBus');
 const cacheService = require('./src/cache/CacheService');
 
 // Start scheduled jobs (auto-release stale milestones)
-// Cron jobs don't run on Vercel serverless
-if (!process.env.VERCEL) {
-  try {
-    require('./src/jobs/autoReleaseMilestones');
-  } catch (cronErr) {
-    console.warn('[CRON] Auto-release job failed to start:', cronErr.message);
-  }
+try {
+  require('./src/jobs/autoReleaseMilestones');
+} catch (cronErr) {
+  console.warn('[CRON] Auto-release job failed to start:', cronErr.message);
 }
 
 // Global error handler (must be last)

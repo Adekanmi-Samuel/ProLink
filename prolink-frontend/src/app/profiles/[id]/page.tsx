@@ -80,7 +80,20 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="profile-card__actions">
+            <div className="profile-card__actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <button 
+                onClick={() => {
+                  const token = localStorage.getItem('token');
+                  if (!token) {
+                    window.location.href = `/login?redirect=/dashboard/messages?to=${profileData.user_id}`;
+                  } else {
+                    window.location.href = `/dashboard/messages?to=${profileData.user_id}`;
+                  }
+                }}
+                className="pl-btn pl-btn-primary"
+              >
+                Message Provider
+              </button>
               <ReportBlockMenu userId={profileData.user_id} />
             </div>
           </div>

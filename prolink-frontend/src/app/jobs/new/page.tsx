@@ -29,17 +29,22 @@ function NewJobPage() {
   const [errorType, setErrorType] = useState('');
   const [categories, setCategories] = useState([]);
   const [availableSkills, setAvailableSkills] = useState([]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
       try {
-        const res = await api.get('/taxonomy/categories');
-        setCategories(res.data);
+        const [catRes, profileRes] = await Promise.all([
+          api.get('/taxonomy/categories'),
+          api.get('/profiles/me')
+        ]);
+        setCategories(catRes.data);
+        setProfile(profileRes.data);
       } catch (err) {
-        console.error('Failed to load categories', err);
+        console.error('Failed to load initial data', err);
       }
     };
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
@@ -137,6 +142,28 @@ function NewJobPage() {
         <h1 style={{ fontFamily: 'var(--font-heading), sans-serif', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--fg)' }}>Post a New Job</h1>
         <p style={{ color: 'var(--fg-secondary)', fontSize: '0.92rem', marginTop: '0.3rem' }}>Find the perfect talent for your project securely through Escrow.</p>
       </motion.div>
+
+      {/* Email Verification Banner */}
+      {profile && !profile.email_verified && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            background: 'var(--warning-bg)', border: '1.5px solid var(--warning)',
+            color: 'var(--warning-text)', borderRadius: 'var(--radius)', padding: '1rem',
+            fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center'
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Please verify your email address</div>
+            <div style={{ opacity: 0.9 }}>You must verify your email before you can post a job on ProLink.</div>
+          </div>
+          <button onClick={() => router.push('/verify-email')} className="btn btn-warning btn-sm" style={{ whiteSpace: 'nowrap' }}>
+            Verify Now
+          </button>
+        </motion.div>
+      )}
 
       {/* Progress */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
@@ -357,7 +384,7 @@ function NewJobPage() {
                     value={formData.budget} onChange={handleChange}
                     placeholder="e.g., 50000"
                   />
-                  <span className="field-hint" style={{ marginTop: '0.4rem' }}>Minimum budget is &#x20A6;5,000.</span>
+                  <span className="field-hint" style={{ marginTop: '0.4rem' }}>Minimum budget is &#x20A6;5,000. Platform fee: 10%. Escrow ensures safe payment.</span>
                 </div>
               </div>
             </motion.div>
@@ -373,7 +400,7 @@ function NewJobPage() {
               <div />
             )}
             
-            <motion.button type="submit" className="btn btn-accent" disabled={loading} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+            <motion.button type="submit" className="btn btn-accent" disabled={loading || (profile && !profile.email_verified)} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
               {loading ? 'Processing...' : step < 3 ? 'Continue →' : 'Publish Job'}
             </motion.button>
           </div>

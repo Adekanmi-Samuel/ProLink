@@ -283,12 +283,19 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }: any
                 Earnings will appear here after your first completed job
               </div>
             ) : (
-              <div className="earnings-bars">
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="earnings-bar" style={{ height: `${20 + Math.random() * 80}%` }}>
-                    <div className="earnings-bar__label">Day {i+1}</div>
-                  </div>
-                ))}
+              <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--fg-tertiary)', paddingBottom: '1.5rem' }}>
+                  <span>₦50k</span>
+                  <span>₦25k</span>
+                  <span>₦0</span>
+                </div>
+                <div className="earnings-bars" style={{ flex: 1 }}>
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="earnings-bar" style={{ height: `${20 + Math.random() * 80}%` }}>
+                      <div className="earnings-bar__label">Day {i+1}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

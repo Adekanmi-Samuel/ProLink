@@ -230,7 +230,7 @@ function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, s
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <div className="field-group">
           <label className="field-label">Phone</label>
-          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="0803 123 4567" className="field" required />
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="0803 123 4567" className="field" required pattern="^(\+234|0)[789][01]\d{8}$" title="Enter a valid Nigerian phone number (e.g. 08012345678)" />
         </div>
         <div className="field-group">
           <label className="field-label">State</label>
