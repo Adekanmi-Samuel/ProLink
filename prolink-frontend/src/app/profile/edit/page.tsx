@@ -113,7 +113,7 @@ function EditProfilePage() {
     setError('');
     try {
       const payload: any = {
-        full_name: formData.full_name,
+        fullName: formData.full_name,
         bio: formData.bio,
         profile_picture_url: formData.profile_picture_url,
         state: formData.state,
@@ -125,7 +125,7 @@ function EditProfilePage() {
         payload.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
         payload.ratePeriod = formData.ratePeriod;
         payload.availability = formData.availability;
-        payload.skills = formData.skillIds;
+        payload.skillIds = formData.skillIds;
       }
       await api.put('/profiles/me', payload);
       router.push('/dashboard');
