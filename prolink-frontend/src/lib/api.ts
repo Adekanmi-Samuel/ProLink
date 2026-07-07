@@ -9,17 +9,9 @@ const api = axios.create({
   withCredentials: true, // Uses httpOnly cookie for authentication
 });
 
-// Request interceptor - attach token from localStorage if available
+// Request interceptor - intentionally empty as we now rely entirely on the httpOnly cookie
 api.interceptors.request.use(
-  (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('prolink_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
+  (config) => config,
   (error) => Promise.reject(error)
 );
 
@@ -51,7 +43,5 @@ export default api;
 
 export const hasAuthCookie = (): boolean => {
   if (typeof window === 'undefined') return false;
-  const hasToken = !!localStorage.getItem('prolink_token');
-  if (hasToken) return true;
   return document.cookie.split(';').some(c => c.trim().startsWith('token='));
 };

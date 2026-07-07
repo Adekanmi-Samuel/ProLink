@@ -47,7 +47,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
     // Clear token
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('prolink_token');
       document.cookie = 'token=; Max-Age=0; path=/';
     }
     window.location.href = '/login';

@@ -25,9 +25,11 @@ export default function Navbar() {
 
   /* ── Auth state ── */
   const fetchUser = useCallback(async () => {
-    let token = null;
-    try { token = localStorage.getItem('prolink_token'); } catch { /* noop */ }
-    if (!token) { setUser(null); setNotifCount(0); return; }
+    // Rely on httpOnly cookie presence
+    const hasCookie = typeof window !== 'undefined'
+      && document.cookie.split(';').some(c => c.trim().startsWith('token='));
+      
+    if (!hasCookie) { setUser(null); setNotifCount(0); return; }
     try {
       const res = await api.get('/profiles/me');
       setUser(res.data);
@@ -36,8 +38,8 @@ export default function Navbar() {
         setNotifCount(n.data?.count || 0);
       } catch { setNotifCount(0); }
     } catch {
-      try { localStorage.removeItem('prolink_token'); } catch { /* noop */ }
       setUser(null);
+      setNotifCount(0);
     }
   }, []);
 
@@ -74,7 +76,6 @@ export default function Navbar() {
   }, [avatarDropdown, notifDropdown]);
 
   const handleSignOut = () => {
-    localStorage.removeItem('prolink_token');
     setUser(null);
     setAvatarDropdown(false);
     setMobileMenu(false);

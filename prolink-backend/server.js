@@ -140,6 +140,7 @@ app.use(httpLogger);
 const ALLOWED_DOMAINS = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://prolink-eight.vercel.app',
 ];
 
 // Add FRONTEND_ORIGIN from env if set
@@ -147,8 +148,8 @@ if (process.env.FRONTEND_ORIGIN) {
   ALLOWED_DOMAINS.push(process.env.FRONTEND_ORIGIN);
 }
 
-// Also allow any Vercel preview deployments
-ALLOWED_DOMAINS.push(/\.vercel\.app$/);
+// In production, strictly enforce FRONTEND_ORIGIN
+// ALLOWED_DOMAINS.push(/\.vercel\.app$/); // REMOVED FOR SECURITY (Issue #2)
 
 const allowedOrigins = ALLOWED_DOMAINS;
 

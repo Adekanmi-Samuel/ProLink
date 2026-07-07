@@ -29,11 +29,11 @@ const fetchWithRetry = async (url, options, maxRetries = 2) => {
 };
 
 // Instead of creating a transporter here, we'll send a POST request to Vercel
-async function sendViaVercel(toEmail, subject, text, html, isNotification = false) {
+async function sendViaVercel(toEmail, subject, text, html, isNotification = false, attachments = undefined) {
   // Use the live Vercel URL
   const vercelApiUrl = process.env.FRONTEND_ORIGIN 
     ? `${process.env.FRONTEND_ORIGIN}/api/send-email`
-    : 'https://prolink-eight.vercel.app/api/send-email';
+    : 'https://prolink-backend-nrswd26iy-adekanmi-samuels-projects.vercel.app/api/send-email';
 
   try {
     const response = await fetchWithRetry(vercelApiUrl, {
@@ -48,6 +48,7 @@ async function sendViaVercel(toEmail, subject, text, html, isNotification = fals
         html,
         secret: process.env.EMAIL_API_SECRET || 'PROLINK_INTERNAL_SECRET_888',
         isNotification, // so Vercel could switch accounts if we add that logic later
+        attachments,
       })
     });
     
@@ -324,6 +325,28 @@ async function sendBidReceivedEmail(toEmail, jobTitle, freelancerName, amount, j
 }
 
 
+async function sendInvoiceEmail(toEmail, invoiceId, jobTitle, amount, pdfBase64) {
+  const subject = `Your Receipt/Invoice for ${jobTitle} (#${invoiceId})`;
+  const text = `Please find attached your invoice for ${jobTitle} for the amount of NGN ${amount}.`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2>Invoice Attached 🧾</h2>
+      <p>Thank you for using ProLink. Please find attached your official invoice for:</p>
+      <h3 style="color: #059669;">${jobTitle}</h3>
+      <p>Total: <strong>₦${amount.toLocaleString()}</strong></p>
+    </div>
+  `;
+
+  const attachments = [{
+    filename: `ProLink_Invoice_${invoiceId}.pdf`,
+    content: pdfBase64,
+    encoding: 'base64'
+  }];
+
+  await sendViaVercel(toEmail, subject, text, html, true, attachments);
+}
+
+
 module.exports = {
   sendVerificationEmail,
   sendVerificationOTP,
@@ -338,5 +361,6 @@ module.exports = {
   sendFundsApprovedEmail,
   sendRevisionRequestedEmail,
   sendAutoReleaseEmail,
-  sendBidReceivedEmail
+  sendBidReceivedEmail,
+  sendInvoiceEmail
 };

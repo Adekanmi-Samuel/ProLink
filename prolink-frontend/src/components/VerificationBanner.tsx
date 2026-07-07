@@ -19,10 +19,9 @@ export default function VerificationBanner() {
       return;
     }
     const fetchUser = async () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('prolink_token') : null;
       const hasCookie = typeof window !== 'undefined'
         && document.cookie.split(';').some(c => c.trim().startsWith('token='));
-      if (!token && !hasCookie) return;
+      if (!hasCookie) return;
 
       try {
         const response = await api.get('/profiles/me');

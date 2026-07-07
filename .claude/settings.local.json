@@ -85,7 +85,9 @@
       "Bash(tasklist)",
       "Bash(findstr node *)",
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
-      "Bash(cmd /c \"taskkill /F /IM node.exe && timeout 2\")"
+      "Bash(cmd /c \"taskkill /F /IM node.exe && timeout 2\")",
+      "Skill(code-review)",
+      "Bash(xargs grep -l \"AuthContext\\\\|AuthProvider\")"
     ]
   }
 }

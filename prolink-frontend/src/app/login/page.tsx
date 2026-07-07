@@ -35,7 +35,7 @@ function LoginForm() {
         password,
         remember_me: rememberMe,
       });
-      localStorage.setItem('prolink_token', response.data.token);
+      // We rely solely on the httpOnly cookie sent by the backend for authentication
       router.push('/dashboard');
     } catch (error) {
       setErrorMsg(error.response?.data?.error || 'Invalid credentials. Please try again.');

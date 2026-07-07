@@ -1,5 +1,7 @@
 const prisma = require('../config/prisma');
 const crypto = require('crypto');
+const emailService = require('./emailService');
+const invoiceService = require('./invoiceService');
 
 // PAYSTACK INTEGRATION (WITH MOCK FALLBACK)
 
