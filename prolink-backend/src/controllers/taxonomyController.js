@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const getCategories = async (req, res) => {
+const getCategories = async (req, res, next) => {
   try {
     const categories = await prisma.category.findMany({
       orderBy: { name: 'asc' },
@@ -12,12 +12,11 @@ const getCategories = async (req, res) => {
     });
     res.json(categories);
   } catch (error) {
-    console.error('Error fetching categories:', error);
     res.status(500).json({ msg: 'Failed to fetch categories' });
   }
 };
 
-const getSkills = async (req, res) => {
+const getSkills = async (req, res, next) => {
   try {
     const { categoryId, q } = req.query;
     
@@ -37,12 +36,11 @@ const getSkills = async (req, res) => {
     
     res.json(skills);
   } catch (error) {
-    console.error('Error fetching skills:', error);
     res.status(500).json({ msg: 'Failed to fetch skills' });
   }
 };
 
-const createSkill = async (req, res) => {
+const createSkill = async (req, res, next) => {
   try {
     const { name, categoryId } = req.body;
     if (!name) return res.status(400).json({ msg: 'Skill name is required' });
@@ -67,7 +65,6 @@ const createSkill = async (req, res) => {
 
     res.json(skill);
   } catch (error) {
-    console.error('Error creating skill:', error);
     res.status(500).json({ msg: 'Failed to create skill' });
   }
 };

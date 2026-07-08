@@ -43,8 +43,8 @@ function StepIndicator({ step, steps }) {
 /* ── Variants for step transitions ── */
 const stepVariants = {
   enter: { opacity: 0, x: 24 },
-  center: { opacity: 1, x: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, x: -24, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
+  center: { opacity: 1, x: 0, transition: { duration: 0.35, ease: [0.22,  1,  0.36,  1] as any } },
+  exit: { opacity: 0, x: -24, transition: { duration: 0.2, ease: [0.22,  1,  0.36,  1] as any } },
 };
 
 export default function SignupPage() {
@@ -114,7 +114,7 @@ export default function SignupPage() {
         style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.6, ease: [0.22,  1,  0.36,  1] as any }}
       >
 
         <motion.div
@@ -122,7 +122,7 @@ export default function SignupPage() {
           style={{ padding: '2rem 1.75rem' }}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, delay: 0.15, ease: [0.22,  1,  0.36,  1] as any }}
         >
           <StepIndicator step={step} steps={[1, 2, 3]} />
 

@@ -16,11 +16,10 @@ export default function VerifyEmailPage() {
   const router = useRouter();
   const hasSent = useRef(false);
 
-  // Auto-send OTP on page load
+  // Only set the email state on mount, don't auto-send because it was sent during signup/login
   useEffect(() => {
     if (hasSent.current) return;
     hasSent.current = true;
-    sendCode();
     const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('signupEmail') || '' : '';
     setEmail(storedEmail);
   }, []);

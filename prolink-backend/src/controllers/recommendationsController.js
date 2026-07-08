@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const recommendJobsForProvider = async (req, res) => {
+const recommendJobsForProvider = async (req, res, next) => {
   try {
     const providerId = req.user.id;
     
@@ -77,12 +77,11 @@ const recommendJobsForProvider = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    console.error('Error fetching job recommendations:', error);
     res.status(500).json({ msg: 'Failed to fetch recommendations' });
   }
 };
 
-const recommendProvidersForJob = async (req, res) => {
+const recommendProvidersForJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     
@@ -125,7 +124,6 @@ const recommendProvidersForJob = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    console.error('Error fetching provider recommendations:', error);
     res.status(500).json({ msg: 'Failed to fetch recommendations' });
   }
 };

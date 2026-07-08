@@ -1,7 +1,7 @@
 const authService = require('../services/authService');
 const prisma = require('../config/prisma');
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const { email, password, user_type, full_name, phone_number, state, city, gender } = req.body;
     const { user, token } = await authService.registerUser({ email, password, user_type, full_name, phone_number, state, city, gender });
@@ -27,7 +27,7 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     
@@ -54,7 +54,7 @@ const login = async (req, res) => {
   }
 };
 
-const verify = async (req, res) => {
+const verify = async (req, res, next) => {
   try {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'Token is required' });
@@ -79,12 +79,11 @@ const verify = async (req, res) => {
 
     res.json({ message: 'Email verified successfully!' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-const resendVerification = async (req, res) => {
+const resendVerification = async (req, res, next) => {
   try {
     // Requires authMiddleware to know who is requesting
     const userId = req.user.id;
@@ -99,7 +98,7 @@ const resendVerification = async (req, res) => {
   }
 };
 
-const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -116,7 +115,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-const resetPassword = async (req, res) => {
+const resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'Token and new password are required' });
@@ -135,14 +134,13 @@ const resetPassword = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {
+const logout = async (req, res, next) => {
   try {
     if (req.user && req.user.id) {
       await authService.logoutUser(req.user.id);
     }
   } catch (err) {
-    console.error('Logout error:', err);
-  }
+    }
 
   const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   res.cookie('token', '', {

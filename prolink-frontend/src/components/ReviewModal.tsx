@@ -37,7 +37,7 @@ export default function ReviewModal({ jobId, onClose, onSuccess }: { jobId: numb
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.3, ease: [0.22,  1,  0.36,  1] as any }}
         >
           <button onClick={onClose} className="review-close-btn" aria-label="Close">✕</button>
           <h2 className="review-title">Leave a Review</h2>

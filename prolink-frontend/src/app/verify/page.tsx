@@ -65,14 +65,14 @@ function VerifyContent() {
         style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.6, ease: [0.22,  1,  0.36,  1] as any }}
       >
         <motion.div
           className="card-elevated"
           style={{ padding: '2.5rem 2rem', textAlign: 'center' }}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, delay: 0.15, ease: [0.22,  1,  0.36,  1] as any }}
         >
           {/* Icon */}
           <motion.div

@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const createSavedSearch = async (req, res) => {
+const createSavedSearch = async (req, res, next) => {
   try {
     const { title, query, filters } = req.body;
     const savedSearch = await prisma.savedSearch.create({
@@ -13,12 +13,11 @@ const createSavedSearch = async (req, res) => {
     });
     res.json(savedSearch);
   } catch (error) {
-    console.error('Error saving search:', error);
     res.status(500).json({ msg: 'Failed to save search' });
   }
 };
 
-const getSavedSearches = async (req, res) => {
+const getSavedSearches = async (req, res, next) => {
   try {
     const searches = await prisma.savedSearch.findMany({
       where: { user_id: req.user.id },
@@ -26,12 +25,11 @@ const getSavedSearches = async (req, res) => {
     });
     res.json(searches);
   } catch (error) {
-    console.error('Error fetching saved searches:', error);
     res.status(500).json({ msg: 'Failed to fetch saved searches' });
   }
 };
 
-const deleteSavedSearch = async (req, res) => {
+const deleteSavedSearch = async (req, res, next) => {
   try {
     const { id } = req.params;
     
@@ -43,7 +41,6 @@ const deleteSavedSearch = async (req, res) => {
     await prisma.savedSearch.delete({ where: { id: parseInt(id) } });
     res.json({ msg: 'Search deleted' });
   } catch (error) {
-    console.error('Error deleting saved search:', error);
     res.status(500).json({ msg: 'Failed to delete saved search' });
   }
 };

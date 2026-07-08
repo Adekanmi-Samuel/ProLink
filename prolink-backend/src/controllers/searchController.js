@@ -1,7 +1,7 @@
 const prisma = require('../config/prisma');
 const cache = require('../utils/cache');
 
-const searchJobs = async (req, res) => {
+const searchJobs = async (req, res, next) => {
   try {
     const { q, categoryId, minBudget, maxBudget, jobType, skillIds, state, city, page: pageParam, limit: limitParam } = req.query;
     
@@ -98,12 +98,11 @@ const searchJobs = async (req, res) => {
     cache.set(cacheKey, result, 30 * 1000); // 30 second TTL for search results
     res.json(result);
   } catch (error) {
-    console.error('Error searching jobs:', error);
     res.status(500).json({ msg: 'Failed to search jobs' });
   }
 };
 
-const searchProviders = async (req, res) => {
+const searchProviders = async (req, res, next) => {
   try {
     const { q, minRating, minRate, maxRate, availability, skillIds, state, city } = req.query;
 
@@ -205,7 +204,6 @@ const searchProviders = async (req, res) => {
     cache.set(cacheKey, result, 30 * 1000);
     res.json(result);
   } catch (error) {
-    console.error('Error searching providers:', error);
     res.status(500).json({ msg: 'Failed to search providers' });
   }
 };

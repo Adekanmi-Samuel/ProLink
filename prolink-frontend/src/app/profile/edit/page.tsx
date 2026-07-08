@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Camera, Save, ArrowLeft, Trash2, X, Plus } from 'lucide-react';
+import ProLinkLoader from '../../../components/ui/ProLinkLoader';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
@@ -136,15 +138,15 @@ function EditProfilePage() {
     }
   };
 
-  if (loading) return (
-    <div className="page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="spinner" />
-    </div>
-  );
-
-  return (
+  if (loading) {
+    return (
+      <div className="page" style={{ paddingTop: '80px', minHeight: '60vh' }}>
+        <ProLinkLoader />
+      </div>
+    );
+  } return (
     <div className="page">
-      <div className="wrap" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
+      <div className="wrap" style={{ paddingTop: '100px', paddingBottom: '3rem' }}>
         <div className="profile-edit-layout">
           <aside className="profile-edit-sidebar">
             <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 800, marginBottom: '1rem' }}>Settings</h3>

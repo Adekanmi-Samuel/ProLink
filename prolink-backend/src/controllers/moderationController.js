@@ -1,7 +1,7 @@
 const prisma = require('../config/prisma');
 const emailService = require('../services/emailService');
 
-const blockUser = async (req, res) => {
+const blockUser = async (req, res, next) => {
   try {
     const blockerId = req.user.id;
     const { blockedId } = req.body;
@@ -23,8 +23,7 @@ const blockUser = async (req, res) => {
         await emailService.sendBlockEmail(blocker.email, blockedProfile?.full_name || 'a user');
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send block email:', emailErr);
-    }
+      }
 
     res.status(201).json({ message: 'User blocked successfully', block });
   } catch (error) {
@@ -36,7 +35,7 @@ const blockUser = async (req, res) => {
   }
 };
 
-const unblockUser = async (req, res) => {
+const unblockUser = async (req, res, next) => {
   try {
     const blockerId = req.user.id;
     const { blockedId } = req.params;
@@ -50,12 +49,11 @@ const unblockUser = async (req, res) => {
 
     res.json({ message: 'User unblocked successfully' });
   } catch (error) {
-    console.error('Error unblocking user:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-const reportUser = async (req, res) => {
+const reportUser = async (req, res, next) => {
   try {
     const reporterId = req.user.id;
     const { reportedUserId, jobId, messageId, reason } = req.body;
@@ -83,12 +81,10 @@ const reportUser = async (req, res) => {
         await emailService.sendReportEmail(reporter.email, targetName, reason);
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send report email:', emailErr);
-    }
+      }
 
     res.status(201).json({ message: 'Report submitted successfully', report });
   } catch (error) {
-    console.error('Error reporting user:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

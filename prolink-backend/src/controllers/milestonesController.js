@@ -5,7 +5,7 @@ const prisma = require('../config/prisma');
 const { createNotification } = require('../services/notificationService');
 const { refreshProviderTrustMetrics } = require('../utils/trustMetrics');
 
-const createMilestone = async (req, res) => {
+const createMilestone = async (req, res, next) => {
   try {
     const { jobId, title, amount } = req.body;
     if (!jobId || !title || !amount) {
@@ -25,23 +25,21 @@ const createMilestone = async (req, res) => {
     const milestone = await milestonesService.createMilestone(parseInt(jobId), title, parsedAmount);
     res.status(201).json(milestone);
   } catch (error) {
-    console.error('Error creating milestone:', error);
     res.status(500).json({ msg: 'Failed to create milestone' });
   }
 };
 
-const getMilestones = async (req, res) => {
+const getMilestones = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const milestones = await milestonesService.getMilestonesByJob(parseInt(jobId));
     res.json(milestones);
   } catch (error) {
-    console.error('Error fetching milestones:', error);
     res.status(500).json({ msg: 'Failed to fetch milestones' });
   }
 };
 
-const submitMilestone = async (req, res) => {
+const submitMilestone = async (req, res, next) => {
   try {
     const { id } = req.params;
     
@@ -72,17 +70,15 @@ const submitMilestone = async (req, res) => {
         );
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send job submitted email:', emailErr);
-    }
+      }
 
     res.json(updated);
   } catch (error) {
-    console.error('Error submitting milestone:', error);
     res.status(500).json({ msg: 'Failed to submit milestone' });
   }
 };
 
-const approveMilestone = async (req, res) => {
+const approveMilestone = async (req, res, next) => {
   try {
     const { id } = req.params;
     
@@ -106,7 +102,6 @@ const approveMilestone = async (req, res) => {
     try {
       await paymentsService.releaseFunds(parseInt(id));
     } catch (payoutErr) {
-      console.error('[PAYOUT ERROR] Approved but payout failed:', payoutErr);
       // Leave status as 'approved' (not 'paid') so it's visibly stuck, not silently lost.
       return res.status(207).json({
         msg: 'Milestone approved, but payout to provider failed and needs admin attention.',
@@ -130,8 +125,7 @@ const approveMilestone = async (req, res) => {
           }
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send funds approved email:', emailErr);
-    }
+      }
 
     // Refresh trust metrics (job success score + badges) for the provider
     if (milestone.job.assignment?.provider_id) {
@@ -144,12 +138,11 @@ const approveMilestone = async (req, res) => {
 
     res.json(updated);
   } catch (error) {
-    console.error('Error approving milestone:', error);
     res.status(500).json({ msg: 'Failed to approve milestone' });
   }
 };
 
-const requestRevision = async (req, res) => {
+const requestRevision = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
@@ -177,18 +170,16 @@ const requestRevision = async (req, res) => {
         }
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send revision requested email:', emailErr);
-    }
+      }
 
     res.json(updated);
   } catch (error) {
-    console.error('Error requesting revision:', error);
     res.status(500).json({ msg: 'Failed to request revision' });
   }
 };
 
 
-const deleteMilestone = async (req, res) => {
+const deleteMilestone = async (req, res, next) => {
   try {
     const { id } = req.params;
     
@@ -209,7 +200,6 @@ const deleteMilestone = async (req, res) => {
     await milestonesService.deleteMilestone(parseInt(id));
     res.json({ msg: 'Milestone deleted successfully' });
   } catch (error) {
-    console.error('Error deleting milestone:', error);
     res.status(500).json({ msg: 'Failed to delete milestone' });
   }
 };

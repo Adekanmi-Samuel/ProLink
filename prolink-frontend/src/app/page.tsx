@@ -135,7 +135,7 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                    transition={{ duration: 0.35, ease: [0.4,  0,  0.2,  1] as any }}
                     className="display-text"
                   >
                     {HEADLINES[headlineIdx]}
@@ -234,7 +234,7 @@ export default function HomePage() {
                 className="relative rounded-3xl overflow-hidden card-float"
                 initial={{ opacity: 0, y: 30, rotate: -2 }}
                 animate={{ opacity: 1, y: 0, rotate: -2 }}
-                transition={{ duration: 0.6, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                transition={{ duration: 0.6, delay: 0.3, ease: [0.34,  1.56,  0.64,  1] as any }}
               >
                 {/* Gradient border */}
                 <div

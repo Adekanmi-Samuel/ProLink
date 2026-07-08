@@ -263,10 +263,10 @@ const initializeSocketHandlers = (io) => {
     });
 
     // =====================
-    // DISCONNECT EVENT
+    // DISCONNECTING EVENT
     // =====================
-    socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.id} (userId: ${socket.userId})`);
+    socket.on('disconnecting', () => {
+      console.log(`User disconnecting: ${socket.id} (userId: ${socket.userId})`);
 
       // Broadcast user offline to all rooms they were in
       socket.rooms.forEach((room) => {
@@ -277,6 +277,10 @@ const initializeSocketHandlers = (io) => {
           });
         }
       });
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`User disconnected: ${socket.id}`);
     });
 
     // =====================

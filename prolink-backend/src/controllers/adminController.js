@@ -1,7 +1,7 @@
 const prisma = require('../config/prisma');
 
 // Get all pending verifications (NIN and CAC)
-const getPendingVerifications = async (req, res) => {
+const getPendingVerifications = async (req, res, next) => {
   try {
     const pendingProfiles = await prisma.profile.findMany({
       where: {
@@ -23,13 +23,12 @@ const getPendingVerifications = async (req, res) => {
 
     res.json(pendingProfiles);
   } catch (error) {
-    console.error('Error fetching pending verifications:', error);
     res.status(500).json({ error: 'Failed to fetch pending verifications' });
   }
 };
 
 // Approve or reject a verification
-const reviewVerification = async (req, res) => {
+const reviewVerification = async (req, res, next) => {
   try {
     const { userId, type, action } = req.body; 
     // type: 'nin' | 'cac'
@@ -62,13 +61,12 @@ const reviewVerification = async (req, res) => {
 
     res.json({ message: `${type.toUpperCase()} verification ${status}`, profile: updatedProfile });
   } catch (error) {
-    console.error('Error reviewing verification:', error);
     res.status(500).json({ error: 'Failed to review verification' });
   }
 };
 
 // Get all users or search by email/name/type
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const { q, user_type, status, page, limit } = req.query;
     const take = Math.min(50, Math.max(1, parseInt(limit) || 20));
@@ -102,13 +100,12 @@ const getUsers = async (req, res) => {
 
     res.json({ users, pagination: { page: Math.max(1, parseInt(page) || 1), limit: take, total } });
   } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
 // Ban or suspend a user
-const updateUserStatus = async (req, res) => {
+const updateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -125,13 +122,12 @@ const updateUserStatus = async (req, res) => {
 
     res.json({ message: `User ${status} successfully`, user });
   } catch (error) {
-    console.error('Error updating user status:', error);
     res.status(500).json({ error: 'Failed to update user status' });
   }
 };
 
 // Get all jobs (admin view)
-const getJobs = async (req, res) => {
+const getJobs = async (req, res, next) => {
   try {
     const { q, status, page, limit } = req.query;
     const take = Math.min(50, Math.max(1, parseInt(limit) || 20));
@@ -165,13 +161,12 @@ const getJobs = async (req, res) => {
 
     res.json({ jobs, pagination: { page: Math.max(1, parseInt(page) || 1), limit: take, total } });
   } catch (error) {
-    console.error('Error fetching jobs:', error);
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 };
 
 // Admin: delete a job (soft)
-const deleteJob = async (req, res) => {
+const deleteJob = async (req, res, next) => {
   try {
     const { id } = req.params;
     await prisma.job.update({
@@ -180,13 +175,12 @@ const deleteJob = async (req, res) => {
     });
     res.json({ message: 'Job cancelled successfully' });
   } catch (error) {
-    console.error('Error deleting job:', error);
     res.status(500).json({ error: 'Failed to delete job' });
   }
 };
 
 // Admin Dashboard Stats
-const getAdminStats = async (req, res) => {
+const getAdminStats = async (req, res, next) => {
   try {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -237,7 +231,6 @@ const getAdminStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
     res.status(500).json({ error: 'Failed to fetch admin stats' });
   }
 };

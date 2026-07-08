@@ -2,7 +2,7 @@ const paymentsService = require('../services/paymentsService');
 const prisma = require('../config/prisma');
 const crypto = require('crypto');
 
-const initializePayment = async (req, res) => {
+const initializePayment = async (req, res, next) => {
   try {
     const { milestoneId } = req.body;
     
@@ -23,12 +23,11 @@ const initializePayment = async (req, res) => {
     const result = await paymentsService.initializePaystackCheckout(milestone.id, milestone.amount, req.user.email);
     res.json(result);
   } catch (error) {
-    console.error('Error initializing payment:', error);
     res.status(500).json({ msg: 'Failed to initialize payment' });
   }
 };
 
-const paystackWebhook = async (req, res) => {
+const paystackWebhook = async (req, res, next) => {
   try {
     const secret = process.env.PAYSTACK_SECRET_KEY;
     
@@ -46,12 +45,11 @@ const paystackWebhook = async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error('Webhook error:', error);
     res.sendStatus(500);
   }
 };
 
-const mockConfirmPayment = async (req, res) => {
+const mockConfirmPayment = async (req, res, next) => {
   try {
     const { reference } = req.body;
     await paymentsService.confirmMockPayment(reference);
@@ -61,7 +59,7 @@ const mockConfirmPayment = async (req, res) => {
   }
 };
 
-const mockFundMilestone = async (req, res) => {
+const mockFundMilestone = async (req, res, next) => {
   try {
     const { milestoneId } = req.body;
     await paymentsService.mockFundMilestone(parseInt(milestoneId));

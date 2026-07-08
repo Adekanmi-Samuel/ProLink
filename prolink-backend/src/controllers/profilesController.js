@@ -1,29 +1,27 @@
 const profilesService = require('../services/profilesService');
 const prisma = require('../config/prisma');
-const getMyProfile = async (req, res) => {
+const getMyProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const profile = await profilesService.getMyProfile(userId);
     if (!profile) return res.status(404).json({ msg: 'Profile not found' });
     res.json(profile);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getProfileById = async (req, res) => {
+const getProfileById = async (req, res, next) => {
   try {
     const profile = await profilesService.getProfileById(parseInt(req.params.id));
     if (!profile) return res.status(404).json({ msg: 'Profile not found' });
     res.json(profile);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { fullName, bio, phoneNumber, title, hourlyRate, availability, skillIds, state, city, gender, ratePeriod } = req.validatedBody || req.body;
@@ -41,12 +39,11 @@ const updateProfile = async (req, res) => {
     }, skillIds);
     res.json({ msg: 'Profile updated successfully.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const updatePicture = async (req, res) => {
+const updatePicture = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { profile_picture_url } = req.validatedBody || req.body;
@@ -76,34 +73,31 @@ const updatePicture = async (req, res) => {
 
     res.json({ msg: 'Profile picture updated.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getProfileReviews = async (req, res) => {
+const getProfileReviews = async (req, res, next) => {
   try {
     const { page, limit } = req.query;
     const result = await profilesService.getProfileReviews(parseInt(req.params.id), { page, limit });
     if (!result) return res.status(404).json({ msg: 'Profile not found' });
     res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getBankAccount = async (req, res) => {
+const getBankAccount = async (req, res, next) => {
   try {
     const bankAccount = await profilesService.getBankAccount(req.user.id);
     res.json(bankAccount || {});
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const saveBankAccount = async (req, res) => {
+const saveBankAccount = async (req, res, next) => {
   try {
     const { bank_name, bank_code, account_number, account_name } = req.validatedBody || req.body;
     if (!bank_name || !bank_code || !account_number || !account_name) {
@@ -112,22 +106,20 @@ const saveBankAccount = async (req, res) => {
     const bankAccount = await profilesService.saveBankAccount(req.user.id, { bank_name, bank_code, account_number, account_name });
     res.json({ msg: 'Bank details saved successfully', bankAccount });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getMyEarnings = async (req, res) => {
+const getMyEarnings = async (req, res, next) => {
   try {
     const earnings = await profilesService.getMyEarnings(req.user.id);
     res.json(earnings);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getEarningsChart = async (req, res) => {
+const getEarningsChart = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const sixMonthsAgo = new Date();
@@ -158,7 +150,6 @@ const getEarningsChart = async (req, res) => {
     const data = Object.entries(monthMap).map(([name, earnings]) => ({ name, earnings }));
     res.json(data);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to load chart data' });
   }
 };

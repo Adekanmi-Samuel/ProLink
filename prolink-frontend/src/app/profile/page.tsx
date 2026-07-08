@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../lib/api';
+import ProLinkLoader from '../../components/ui/ProLinkLoader';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
@@ -54,12 +55,8 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-          style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--accent)' }}
-        />
+      <div className="page" style={{ paddingTop: '80px', minHeight: '60vh' }}>
+        <ProLinkLoader />
       </div>
     );
   }

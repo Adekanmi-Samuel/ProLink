@@ -2,7 +2,7 @@ const disputesService = require('../services/disputesService');
 const emailService = require('../services/emailService');
 const prisma = require('../config/prisma');
 
-const createDispute = async (req, res) => {
+const createDispute = async (req, res, next) => {
   try {
     const { milestoneId, reason } = req.body;
     
@@ -35,17 +35,15 @@ const createDispute = async (req, res) => {
         await emailService.sendDisputeEmail(targetUser.email, dispute.id, isClient ? 'provider' : 'client', 'created');
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send dispute created email:', emailErr);
-    }
+      }
 
     res.status(201).json(dispute);
   } catch (error) {
-    console.error('Error creating dispute:', error);
     res.status(500).json({ msg: error.message || 'Failed to create dispute' });
   }
 };
 
-const getDisputes = async (req, res) => {
+const getDisputes = async (req, res, next) => {
   try {
     const disputes = await disputesService.getDisputes();
     res.json(disputes);
@@ -54,7 +52,7 @@ const getDisputes = async (req, res) => {
   }
 };
 
-const resolveDispute = async (req, res) => {
+const resolveDispute = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { resolution, adminNotes, splitPercentage } = req.body;
@@ -75,8 +73,7 @@ const resolveDispute = async (req, res) => {
         if (provider && provider.email) await emailService.sendDisputeEmail(provider.email, dispute.id, 'provider', 'resolved');
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send dispute resolved email:', emailErr);
-    }
+      }
 
     res.json(updated);
   } catch (error) {
@@ -84,7 +81,7 @@ const resolveDispute = async (req, res) => {
   }
 };
 
-const addEvidence = async (req, res) => {
+const addEvidence = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { note, fileUrl } = req.body;
@@ -104,23 +101,21 @@ const addEvidence = async (req, res) => {
     const evidence = await disputesService.addEvidence(parseInt(id), req.user.id, note, fileUrl);
     res.status(201).json(evidence);
   } catch (error) {
-    console.error('Error adding evidence:', error);
     res.status(500).json({ msg: 'Failed to add evidence' });
   }
 };
 
-const getDisputeDetail = async (req, res) => {
+const getDisputeDetail = async (req, res, next) => {
   try {
     const dispute = await disputesService.getDisputeDetail(parseInt(req.params.id));
     if (!dispute) return res.status(404).json({ msg: 'Dispute not found' });
     res.json(dispute);
   } catch (error) {
-    console.error('Error fetching dispute:', error);
     res.status(500).json({ msg: 'Failed to fetch dispute' });
   }
 };
 
-const getMyDisputes = async (req, res) => {
+const getMyDisputes = async (req, res, next) => {
   try {
     const disputes = await disputesService.getMyDisputes(req.user.id);
     res.json(disputes);

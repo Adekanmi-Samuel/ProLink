@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../lib/api';
+import api, { hasAuthCookie } from '../lib/api';
+import ProLinkLoader from './ui/ProLinkLoader';
 
 const withAuth = (WrappedComponent) => {
   // This is the component that will be returned
@@ -25,13 +26,9 @@ const withAuth = (WrappedComponent) => {
     }, [router]);
 
     if (isLoading) {
-      // Show a generic loading state while we check for the token
       return (
-        <div className="loading-page flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
-          <div className="navbar-logo" style={{ fontSize: '2rem', marginBottom: '1rem', opacity: 0.8, animation: 'pulse 2s infinite' }}>
-            <span className="navbar-logo-accent">Pro</span><span className="navbar-logo-fg">Link</span>
-          </div>
-          <div className="pl-spinner" style={{ width: 24, height: 24 }} />
+        <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+          <ProLinkLoader />
         </div>
       );
     }

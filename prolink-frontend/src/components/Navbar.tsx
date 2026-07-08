@@ -142,7 +142,7 @@ export default function Navbar() {
             </nav>
             <div className="navbar-right">
               <button onClick={toggleTheme} className="btn btn-ghost btn-icon mr-2" aria-label="Toggle theme">
-                <motion.div key={theme} initial={{ rotate: -20, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
+                <motion.div key={theme} initial={{ rotate: -20, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.25, ease: [0.22,  1,  0.36,  1] as any }}>
                   {theme === 'dark' ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                       <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />

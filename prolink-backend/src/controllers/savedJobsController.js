@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const saveJob = async (req, res) => {
+const saveJob = async (req, res, next) => {
   try {
     const { jobId } = req.body;
     const userId = req.user.id;
@@ -38,12 +38,11 @@ const saveJob = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    console.error('Error saving job:', error);
     res.status(500).json({ msg: 'Failed to save job' });
   }
 };
 
-const unsaveJob = async (req, res) => {
+const unsaveJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const userId = req.user.id;
@@ -62,12 +61,11 @@ const unsaveJob = async (req, res) => {
 
     res.json({ msg: 'Job unsaved' });
   } catch (error) {
-    console.error('Error unsaving job:', error);
     res.status(500).json({ msg: 'Failed to unsave job' });
   }
 };
 
-const getSavedJobs = async (req, res) => {
+const getSavedJobs = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { page = 1, limit = 20 } = req.query;
@@ -120,12 +118,11 @@ const getSavedJobs = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching saved jobs:', error);
     res.status(500).json({ msg: 'Failed to fetch saved jobs' });
   }
 };
 
-const checkSavedStatus = async (req, res) => {
+const checkSavedStatus = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const userId = req.user.id;
@@ -136,7 +133,6 @@ const checkSavedStatus = async (req, res) => {
 
     res.json({ isSaved: !!savedJob });
   } catch (error) {
-    console.error('Error checking saved status:', error);
     res.status(500).json({ msg: 'Failed to check saved status' });
   }
 };

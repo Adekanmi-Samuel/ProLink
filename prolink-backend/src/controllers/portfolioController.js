@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const addPortfolioItem = async (req, res) => {
+const addPortfolioItem = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { title, description, image_url, project_url } = req.body;
@@ -24,12 +24,11 @@ const addPortfolioItem = async (req, res) => {
 
     res.status(201).json({ msg: 'Portfolio item added', item });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const getMyPortfolio = async (req, res) => {
+const getMyPortfolio = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const profile = await prisma.profile.findUnique({ where: { user_id: userId } });
@@ -42,12 +41,11 @@ const getMyPortfolio = async (req, res) => {
 
     res.json(items);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
-const deletePortfolioItem = async (req, res) => {
+const deletePortfolioItem = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const itemId = parseInt(req.params.id);
@@ -65,8 +63,7 @@ const deletePortfolioItem = async (req, res) => {
     await prisma.portfolioItem.delete({ where: { id: itemId } });
     res.json({ msg: 'Item deleted' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 

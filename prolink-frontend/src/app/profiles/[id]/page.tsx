@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import api from '../../../lib/api';
 import ReportBlockMenu from '../../../components/ReportBlockMenu';
+import ProLinkLoader from '../../../components/ui/ProLinkLoader';
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -34,8 +35,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '6rem' }}>
-        <div className="pl-spinner" />
+      <div className="page" style={{ paddingTop: '80px', minHeight: '60vh' }}>
+        <ProLinkLoader />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import Link from 'next/link';
 import { NIGERIAN_STATES } from '../../lib/states';
 import gsap from 'gsap';
+import ProLinkLoader from '../../components/ui/ProLinkLoader';
 
 export default function JobsPage() {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -342,8 +343,8 @@ export default function JobsPage() {
           </div>
 
           {loading && activeTab === 'search' ? (
-            <div className="jobs-loading">
-              <div className="pl-spinner" />
+            <div className="jobs-loading" style={{ minHeight: '400px' }}>
+              <ProLinkLoader />
             </div>
           ) : jobsError && activeTab === 'search' ? (
             <div className="jobs-empty">

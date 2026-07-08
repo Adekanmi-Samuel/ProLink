@@ -3,7 +3,7 @@ const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 const { jobSchema, bidSchema } = require('../validators/jobValidator');
 
-const createJob = async (req, res) => {
+const createJob = async (req, res, next) => {
   try {
     const clientId = req.user.id;
     
@@ -28,12 +28,11 @@ const createJob = async (req, res) => {
 
     res.status(201).json({ msg: 'Job posted successfully!', job });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const getPublicJobs = async (req, res) => {
+const getPublicJobs = async (req, res, next) => {
   try {
     let userId = null;
     const authHeader = req.header('Authorization');
@@ -62,34 +61,31 @@ const getPublicJobs = async (req, res) => {
     const result = await jobsService.getPublicJobs(userId, filters);
     res.json(result);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const getMyJobs = async (req, res) => {
+const getMyJobs = async (req, res, next) => {
   try {
     const { page, limit } = req.query;
     const result = await jobsService.getMyJobs(req.user.id, { page, limit });
     res.json(result);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const getMyBids = async (req, res) => {
+const getMyBids = async (req, res, next) => {
   try {
     const { page, limit } = req.query;
     const result = await jobsService.getMyBids(req.user.id, { page, limit });
     res.json(result);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const getJobById = async (req, res) => {
+const getJobById = async (req, res, next) => {
   try {
     let userId = null;
     const authHeader = req.header('Authorization');
@@ -106,14 +102,13 @@ const getJobById = async (req, res) => {
     if (!job) return res.status(404).json({ msg: 'Job not found' });
     res.json(job);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
 const prisma = require('../config/prisma');
 
-const submitBid = async (req, res) => {
+const submitBid = async (req, res, next) => {
   try {
     const parseResult = bidSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -155,8 +150,7 @@ const submitBid = async (req, res) => {
           );
         }
       } catch (emailErr) {
-        console.error('[EMAIL ERROR] Failed to send bid notification email:', emailErr);
-      }
+        }
     }
     
     res.status(201).json({ msg: 'Bid submitted!', bid });
@@ -176,7 +170,7 @@ const submitBid = async (req, res) => {
   }
 };
 
-const hireProvider = async (req, res) => {
+const hireProvider = async (req, res, next) => {
   try {
     const { providerId, agreedAmount } = req.body;
     if (!providerId) return res.status(400).json({ msg: 'providerId is required.' });
@@ -201,8 +195,7 @@ const hireProvider = async (req, res) => {
         await emailService.sendHiredEmail(provider.email, job.title, clientProfile?.full_name || 'A client');
       }
     } catch (emailErr) {
-      console.error('[EMAIL ERROR] Failed to send hire email:', emailErr);
-    }
+      }
 
     res.status(200).json({ msg: 'Freelancer hired!', assignment });
   } catch (err) {
@@ -214,7 +207,7 @@ const hireProvider = async (req, res) => {
   }
 };
 
-const completeJob = async (req, res) => {
+const completeJob = async (req, res, next) => {
   try {
     const job = await jobsService.completeJob(parseInt(req.params.id), req.user.id);
     
@@ -240,7 +233,7 @@ const completeJob = async (req, res) => {
   }
 };
 
-const cancelJob = async (req, res) => {
+const cancelJob = async (req, res, next) => {
   try {
     const job = await jobsService.cancelJob(parseInt(req.params.id), req.user.id);
     res.json({ msg: 'Job cancelled successfully.', job });
@@ -253,7 +246,7 @@ const cancelJob = async (req, res) => {
   }
 };
 
-const withdrawBid = async (req, res) => {
+const withdrawBid = async (req, res, next) => {
   try {
     const jobId = parseInt(req.params.id);
     const providerId = req.user.id;
@@ -272,12 +265,11 @@ const withdrawBid = async (req, res) => {
 
     res.json({ msg: 'Bid withdrawn successfully.' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const updateJob = async (req, res) => {
+const updateJob = async (req, res, next) => {
   try {
     const jobId = parseInt(req.params.id);
     const { title, description, budget, skillIds } = req.body;
@@ -307,12 +299,11 @@ const updateJob = async (req, res) => {
 
     res.json({ msg: 'Job updated.', job: updated });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-const closeJob = async (req, res) => {
+const closeJob = async (req, res, next) => {
   try {
     const jobId = parseInt(req.params.id);
     const job = await prisma.job.findUnique({ where: { id: jobId } });
@@ -323,7 +314,6 @@ const closeJob = async (req, res) => {
     await prisma.job.update({ where: { id: jobId }, data: { status: 'closed' } });
     res.json({ msg: 'Job closed successfully.' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };

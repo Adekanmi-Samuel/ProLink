@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import Link from 'next/link';
 import { NIGERIAN_STATES } from '../../lib/states';
 import gsap from 'gsap';
+import ProLinkLoader from '../../components/ui/ProLinkLoader';
 
 export default function TalentSearchPage() {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -183,7 +184,7 @@ export default function TalentSearchPage() {
           {/* Main Feed */}
           <div className="talent-feed">
             {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><div className="pl-spinner" /></div>
+              <ProLinkLoader />
             ) : providers.length > 0 ? (
               <div className="talent-grid">
                 {providers.map((p: any) => (

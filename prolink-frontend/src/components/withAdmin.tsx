@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../lib/api';
+import ProLinkLoader from './ui/ProLinkLoader';
 
 export default function withAdmin(WrappedComponent: any) {
   return function AdminProtectedRoute(props: any) {
@@ -31,8 +32,8 @@ export default function withAdmin(WrappedComponent: any) {
 
     if (loading) {
       return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-          <div className="pl-spinner" />
+        <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+          <ProLinkLoader />
         </div>
       );
     }

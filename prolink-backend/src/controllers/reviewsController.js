@@ -1,6 +1,6 @@
 const reviewsService = require('../services/reviewsService');
 
-const submitReview = async (req, res) => {
+const submitReview = async (req, res, next) => {
   try {
     const { jobId, rating, comment } = req.body;
     
@@ -30,13 +30,12 @@ const submitReview = async (req, res) => {
   }
 };
 
-const getReviewsForUser = async (req, res) => {
+const getReviewsForUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const reviews = await reviewsService.getReviewsForUser(parseInt(userId));
     res.json(reviews);
   } catch (error) {
-    console.error('Error fetching reviews:', error);
     res.status(500).json({ msg: 'Server error while fetching reviews' });
   }
 };

@@ -127,42 +127,30 @@ const getMyJobs = async (userId, filters = {}) => {
   });
   
   if (user.user_type === 'provider') {
-    const [assignments, bids] = await Promise.all([
-      prisma.jobAssignment.findMany({
-        where: { provider_id: userId },
+    const whereClause = {
+      OR: [
+        { assignment: { provider_id: userId } },
+        { bids: { some: { provider_id: userId } } }
+      ]
+    };
+
+    const [jobs, total] = await Promise.all([
+      prisma.job.findMany({
+        where: whereClause,
+        orderBy: { posted_at: 'desc' },
+        skip,
+        take: limit,
         select: {
-          job: {
-            select: {
-              id: true, title: true, budget: true, job_type: true, status: true, posted_at: true,
-              _count: { select: { bids: true } },
-            },
-          },
+          id: true, title: true, budget: true, job_type: true, status: true, posted_at: true,
+          _count: { select: { bids: true } },
         },
       }),
-      prisma.bid.findMany({
-        where: { provider_id: userId },
-        select: {
-          job: {
-            select: {
-              id: true, title: true, budget: true, job_type: true, status: true, posted_at: true,
-              _count: { select: { bids: true } },
-            },
-          },
-        },
-      }),
+      prisma.job.count({ where: whereClause })
     ]);
     
-    const jobMap = new Map();
-    assignments.forEach(a => { if (a.job) jobMap.set(a.job.id, a.job); });
-    bids.forEach(b => { if (b.job) jobMap.set(b.job.id, b.job); });
-    
-    const jobs = Array.from(jobMap.values());
-    jobs.sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
-    
-    const paginated = jobs.slice(skip, skip + limit);
     return {
-      jobs: paginated.map(job => ({ ...job, bid_count: job._count.bids, _count: undefined })),
-      pagination: { page, limit, total: jobs.length, totalPages: Math.ceil(jobs.length / limit), hasMore: page * limit < jobs.length },
+      jobs: jobs.map(job => ({ ...job, bid_count: job._count.bids, _count: undefined })),
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: page * limit < total },
     };
   } else {
     const [jobs, total] = await Promise.all([

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { fadeUp, staggerContainer, fadeIn, scaleIn } from '../lib/motion';
 
 /* ── AnimatedSection — staggered children ── */
-export function AnimatedSection({ children, className, style, delay = 0.1, stagger = 0.07, once = true }) {
+export function AnimatedSection({ children, className, style, delay = 0.1, stagger = 0.07, once = true }: any) {
   return (
     <motion.div
       initial="hidden"
@@ -23,7 +23,7 @@ export function AnimatedSection({ children, className, style, delay = 0.1, stagg
 }
 
 /* ── AnimatedCard — fade + slide up ── */
-export function AnimatedCard({ children, className, style, index = 0, as = 'div' }) {
+export function AnimatedCard({ children, className, style, index = 0, as = 'div' }: any) {
   const Tag = motion[as] || motion.div;
   return (
     <Tag
@@ -38,7 +38,7 @@ export function AnimatedCard({ children, className, style, index = 0, as = 'div'
 }
 
 /* ── AnimatedFadeIn — simple opacity ── */
-export function AnimatedFadeIn({ children, className, style, delay = 0 }) {
+export function AnimatedFadeIn({ children, className, style, delay = 0 }: any) {
   return (
     <motion.div
       variants={fadeIn}
@@ -55,7 +55,7 @@ export function AnimatedFadeIn({ children, className, style, delay = 0 }) {
 }
 
 /* ── AnimatedScaleIn ── */
-export function AnimatedScaleIn({ children, className, style }) {
+export function AnimatedScaleIn({ children, className, style }: any) {
   return (
     <motion.div
       variants={scaleIn}
@@ -71,7 +71,7 @@ export function AnimatedScaleIn({ children, className, style }) {
 }
 
 /* ── AnimatedCounter ── */
-export function AnimatedCounter({ value, suffix = '', className }) {
+export function AnimatedCounter({ value, suffix = '', className }: any) {
   return (
     <motion.span
       initial={{ opacity: 0, y: 20 }}
@@ -86,11 +86,11 @@ export function AnimatedCounter({ value, suffix = '', className }) {
 }
 
 /* ── AnimatedHoverCard ── */
-export function AnimatedHoverCard({ children, className, style, href, onClick }) {
+export function AnimatedHoverCard({ children, className, style, href, onClick }: any) {
   const Comp = href ? 'a' : 'div';
   return (
     <motion.div
-      whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }}
+      whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.22,  1,  0.36,  1] as any } }}
       whileTap={{ scale: 0.98 }}
       className={className}
       style={style}
@@ -103,12 +103,12 @@ export function AnimatedHoverCard({ children, className, style, href, onClick })
 }
 
 /* ── AnimatedButton ── */
-export function AnimatedButton({ children, className, style, onClick, disabled, type = 'button', href }) {
+export function AnimatedButton({ children, className, style, onClick, disabled, type = 'button', href }: any) {
   if (href) {
     return (
       <motion.a
         href={href}
-        whileHover={{ y: -2, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } }}
+        whileHover={{ y: -2, transition: { duration: 0.25, ease: [0.22,  1,  0.36,  1] as any } }}
         whileTap={{ scale: 0.97 }}
         className={className}
         style={style}
@@ -122,7 +122,7 @@ export function AnimatedButton({ children, className, style, onClick, disabled, 
       type={type}
       onClick={onClick}
       disabled={disabled}
-      whileHover={disabled ? {} : { y: -2, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } }}
+      whileHover={disabled ? {} : { y: -2, transition: { duration: 0.25, ease: [0.22,  1,  0.36,  1] as any } }}
       whileTap={disabled ? {} : { scale: 0.97 }}
       className={className}
       style={style}
@@ -133,7 +133,7 @@ export function AnimatedButton({ children, className, style, onClick, disabled, 
 }
 
 /* ── AnimatedStaggerItem — for use inside AnimatedSection ── */
-export function AnimatedStaggerItem({ children, className, style }) {
+export function AnimatedStaggerItem({ children, className, style }: any) {
   return (
     <motion.div
       variants={fadeUp}
@@ -146,7 +146,7 @@ export function AnimatedStaggerItem({ children, className, style }) {
 }
 
 /* ── AnimatedStatusDot — pulsing ── */
-export function AnimatedStatusDot({ active = true }) {
+export function AnimatedStatusDot({ active = true }: any) {
   return (
     <motion.span
       className="pulse-dot"

@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const verifyOTP = async (req, res) => {
+const verifyOTP = async (req, res, next) => {
   try {
     const { otp_code } = req.body;
     const userId = req.user.id;
@@ -31,12 +31,11 @@ const verifyOTP = async (req, res) => {
 
     res.json({ message: 'Email verified successfully' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-const verifyNIN = async (req, res) => {
+const verifyNIN = async (req, res, next) => {
   try {
     const { nin_number } = req.body;
     const userId = req.user.id;
@@ -55,12 +54,11 @@ const verifyNIN = async (req, res) => {
 
     res.json({ message: 'NIN submitted for review successfully' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-const verifyCAC = async (req, res) => {
+const verifyCAC = async (req, res, next) => {
   try {
     const { cac_number } = req.body;
     const userId = req.user.id;
@@ -79,7 +77,6 @@ const verifyCAC = async (req, res) => {
 
     res.json({ message: 'CAC submitted for review successfully' });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };

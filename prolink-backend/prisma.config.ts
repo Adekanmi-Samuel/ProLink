@@ -1,23 +1,29 @@
-import 'dotenv/config';
-import path from 'node:path';
-import { defineConfig } from 'prisma/config';
+import { defineConfig } from '@prisma/config';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import { parse } from 'pg-connection-string';
+import { config as loadEnv } from 'dotenv';
 
-// Use DIRECT_URL for migrations (direct connection to avoid pgbouncer)
-// Fall back to DATABASE_URL if DIRECT_URL is not available (e.g., during Render build)
-const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+loadEnv();
+
+const dbUrl = process.env.DATABASE_URL || '';
+const parsedConfig = parse(dbUrl);
+const poolConfig = {
+  user: parsedConfig.user,
+  password: parsedConfig.password ? String(parsedConfig.password) : undefined,
+  host: parsedConfig.host,
+  port: parsedConfig.port ? parseInt(String(parsedConfig.port), 10) : 6543,
+  database: parsedConfig.database,
+  ssl: { rejectUnauthorized: false }
+};
+
+const pool = new Pool(poolConfig);
+const adapter = new PrismaPg(pool);
 
 export default defineConfig({
   earlyAccess: true,
-  schema: path.join('prisma', 'schema.prisma'),
-
+  adapter,
   datasource: {
-    url: directUrl,
-  },
-
-  migrate: {
-    async adapter() {
-      return new PrismaPg({ connectionString: directUrl });
-    },
-  },
+    url: dbUrl
+  }
 });
