@@ -3251,7 +3251,7 @@ input:-webkit-autofill:active{
 
 
 /* -------------------------------------------------------
-   MISSING COMPONENT STYLES — required by pages
+   MISSING COMPONENT STYLES  required by pages
    ------------------------------------------------------- */
 
 /* Chat bubbles */
@@ -3282,7 +3282,7 @@ input:-webkit-autofill:active{
 .chat-time-own   { text-align: right; }
 .chat-time-other { text-align: left;  }
 
-/* Stat cards — referenced in dashboard */
+/* Stat cards  referenced in dashboard */
 .card-stat {
   background: var(--surface);
   border: 1px solid var(--border);
