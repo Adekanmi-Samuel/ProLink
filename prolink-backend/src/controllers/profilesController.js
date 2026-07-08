@@ -5,6 +5,7 @@ const getMyProfile = async (req, res, next) => {
     const userId = req.user.id;
     const profile = await profilesService.getMyProfile(userId);
     if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=5');
     res.json(profile);
   } catch (err) {
     next(err);

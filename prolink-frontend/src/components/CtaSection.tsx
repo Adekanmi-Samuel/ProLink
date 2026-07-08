@@ -42,7 +42,7 @@ export default function CtaSection() {
                 whileHover={{ scale: 1.02 }}
               >
                 <Sparkles className="w-4 h-4 text-blue-500" />
-                Join 2,400+ verified Nigerian professionals
+                Join thousands of verified Nigerian professionals
               </motion.div>
             </AnimatedStaggerItem>
 
