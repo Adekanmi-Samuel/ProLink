@@ -385,7 +385,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
-      <section className="section" style={{ background: 'var(--surface-warm)', paddingTop: '6rem', paddingBottom: '7rem' }}>
+      <section className="section" style={{ background: 'var(--surface-warm)', paddingTop: '6rem', paddingBottom: '7rem', overflowX: 'hidden' }}>
         <div className="wrap">
           <AnimatedSection>
             <AnimatedStaggerItem>

@@ -3249,3 +3249,167 @@ input:-webkit-autofill:active{
   .jobs-filters__toggle { display: flex !important; }
 }
 
+
+/* -------------------------------------------------------
+   MISSING COMPONENT STYLES — required by pages
+   ------------------------------------------------------- */
+
+/* Chat bubbles */
+.chat-bubble {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+  position: relative;
+}
+.chat-bubble--own {
+  background: linear-gradient(135deg, var(--copper-dark, #C05A2E), var(--copper, #E8724A));
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+  align-self: flex-end;
+  max-width: 70%;
+  padding: 0.65rem 1rem;
+  margin-left: auto;
+}
+.chat-bubble--other {
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 18px 18px 18px 4px;
+  align-self: flex-start;
+  max-width: 70%;
+  padding: 0.65rem 1rem;
+}
+.chat-time-own   { text-align: right; }
+.chat-time-other { text-align: left;  }
+
+/* Stat cards — referenced in dashboard */
+.card-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.25rem 1.5rem;
+}
+.stat-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 0.4rem;
+}
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-secondary);
+}
+.stat-delta {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 0.4rem;
+}
+
+/* Card hierarchy */
+.card-base {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+.card-base:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.card-featured {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--copper, #E8724A);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: -4px 0 20px var(--copper-glow, rgba(232,114,74,0.1));
+}
+
+/* Eyebrow label */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Page title */
+.page-title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--fg);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Naira symbol */
+.naira {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 1.05em;
+}
+
+/* Pulse dot */
+.pulse-dot {
+  display: inline-block;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: pulse-ring 1.8s ease-out infinite;
+  opacity: 0;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(2);    opacity: 0;   }
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+  gap: 0.5rem;
+}
+.empty-state-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-alpha);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.empty-state-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+.empty-state-desc {
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  line-height: 1.5;
+}

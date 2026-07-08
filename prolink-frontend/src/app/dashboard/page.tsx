@@ -50,12 +50,14 @@ function DashboardPage() {
       setProfile(profileRes.data);
       setOpenToWork(profileRes.data.availability === 'open');
       if (profileRes.data.user_type === 'provider') {
-        const [jobsRes, earningsRes] = await Promise.allSettled([
+        const [jobsRes, earningsRes, contractsRes] = await Promise.allSettled([
           api.get('/jobs?limit=4'),
           api.get('/profiles/me/earnings'),
+          api.get('/jobs/my-jobs'),
         ]);
         if (jobsRes.status === 'fulfilled') setRecentJobs(jobsRes.value.data || []);
         if (earningsRes.status === 'fulfilled') setEarnings(earningsRes.value.data);
+        if (contractsRes.status === 'fulfilled') setMyJobs(Array.isArray(contractsRes.value.data) ? contractsRes.value.data : []);
       } else {
         try {
           const jobsRes = await api.get('/jobs/my-jobs');
@@ -202,7 +204,7 @@ function DashboardPage() {
                       className="pulse-dot"
                       style={{ background: openToWork ? 'var(--success)' : 'var(--fg-tertiary)', width: 7, height: 7 }}
                     />
-                    {openToWork ? 'Open to work' : 'Closed'}
+                    {openToWork ? 'Open to work' : 'Not available'}
                   </button>
                 ) : (
                   <Link href="/jobs/new" className="btn btn-copper btn-sm group" style={{ borderRadius: 999 }}>
@@ -218,7 +220,7 @@ function DashboardPage() {
         </motion.div>
 
         {isProvider ? (
-          <ProviderDashboard profile={profile} earnings={earnings} recentJobs={recentJobs} notifications={notifications} />
+          <ProviderDashboard profile={profile} earnings={earnings} recentJobs={recentJobs} notifications={notifications} myJobs={myJobs} />
         ) : (
           <ClientDashboard profile={profile} notifications={notifications} myJobs={myJobs} />
         )}
@@ -230,7 +232,7 @@ function DashboardPage() {
 // ═══════════════════════════════════════════════════════════════
 //  PROVIDER DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function ProviderDashboard({ profile, earnings, recentJobs, notifications }: any) {
+function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJobs }: any) {
   const totalEarned = earnings?.total_paid ? String(Number(earnings.total_paid).toLocaleString()) : '0';
   const thisMonth = earnings?.this_month ? String(Number(earnings.this_month).toLocaleString()) : '0';
   const activeContracts = profile?.active_contracts || 0;
@@ -350,13 +352,24 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications }: any
             </div>
           </AnimatedStaggerItem>
           <AnimatedStaggerItem>
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            {myJobs && myJobs.filter((j: any) => j.status === 'in_progress' || j.status === 'assigned').length > 0 ? (
+              myJobs.filter((j: any) => j.status === 'in_progress' || j.status === 'assigned').map((c: any) => (
+                <Link key={c.id} href={`/dashboard/contracts/${c.id}`} className="card-base" style={{ padding: '1rem', textDecoration: 'none', display: 'block', marginBottom: '0.65rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>{c.title || 'Contract'}</div>
+                  <div style={{ color: 'var(--fg-secondary)', fontSize: 'var(--text-sm)', marginTop: '0.2rem' }}>
+                    {c.status?.replace('_', ' ')}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <div className="empty-state-title">No active contracts</div>
+                <div className="empty-state-desc">Win a bid and your contract will appear here — complete with milestone tracking and payment history.</div>
               </div>
-              <div className="empty-state-title">No active contracts</div>
-              <div className="empty-state-desc">When you're hired, your contracts will show up here with milestone tracking.</div>
-            </div>
+            )}
           </AnimatedStaggerItem>
         </AnimatedSection>
       </div>
@@ -414,7 +427,7 @@ function ClientDashboard({ profile, notifications, myJobs }: any) {
               <span className="stat-number gold">
                 {spentThisMonth > 0 ? <><span className="naira">₦</span>{spentThisMonth.toLocaleString()}</> : '—'}
               </span>
-              <span className="stat-label">Spent (Total)</span>
+              <span className="stat-label">Total Budget Posted</span>
             </div>
           </AnimatedStaggerItem>
         </div>

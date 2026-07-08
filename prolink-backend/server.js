@@ -136,22 +136,11 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(httpLogger);
 
 // CORS - restrict to known origins
-// Production domains hardcoded (safety net since .env not in git)
-const ALLOWED_DOMAINS = [
+const allowedOrigins = [
   'http://localhost:3000',
   'https://prolink-eight.vercel.app',
-  /\.vercel\.app$/
-];
-
-// Add FRONTEND_ORIGIN from env if set
-if (process.env.FRONTEND_ORIGIN) {
-  ALLOWED_DOMAINS.push(process.env.FRONTEND_ORIGIN);
-}
-
-// In production, strictly enforce FRONTEND_ORIGIN
-// ALLOWED_DOMAINS.push(/\.vercel\.app$/); // REMOVED FOR SECURITY (Issue #2)
-
-const allowedOrigins = ALLOWED_DOMAINS;
+  process.env.FRONTEND_ORIGIN,
+].filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
