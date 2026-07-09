@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAdmin from '../../../components/withAdmin';
+import Link from 'next/link';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
@@ -125,7 +126,11 @@ function AdminUsersPage() {
                       style={{ borderBottom: '1px solid var(--border)' }}
                       whileHover={{ background: 'var(--accent-alpha)' }}
                     >
-                      <td style={tdS}><strong style={{ fontSize: '0.85rem' }}>{u.profile?.full_name || '—'}</strong></td>
+                      <td style={tdS}>
+                        <Link href={`/profiles/${u.id}`} style={{ textDecoration: 'none', color: 'var(--primary)' }}>
+                          <strong style={{ fontSize: '0.85rem' }}>{u.profile?.full_name || '—'}</strong>
+                        </Link>
+                      </td>
                       <td style={{ ...tdS, color: 'var(--fg-secondary)', fontSize: '0.82rem' }}>{u.email}</td>
                       <td style={tdS}>
                         <TypeBadge type={u.user_type} />

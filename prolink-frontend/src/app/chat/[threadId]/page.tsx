@@ -14,6 +14,7 @@ import { apiService } from '../../../lib/apiService';
 import { SOCKET_URL } from '../../../lib/backendConfig';
 import imageCompression from 'browser-image-compression';
 import ReportBlockMenu from '../../../components/ReportBlockMenu';
+import { sanitizeText } from '../../../lib/sanitize';
 
 function formatTime(dateStr: any) {
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -367,7 +368,7 @@ export default function ChatPage() {
 
                   {/* Bubble row */}
                   <div className={`chat-bubble-wrap ${isMine ? 'chat-bubble-wrap--mine' : ''}`}>
-                    <div className="chat-bubble">
+                    <div className={`chat-bubble ${isMine ? 'chat-bubble--own' : 'chat-bubble--other'}`}>
                       {/* Content */}
                       {msg.message_type === 'image' ? (
                         (() => {
@@ -378,7 +379,7 @@ export default function ChatPage() {
                                 <a href={data.url} target="_blank" rel="noreferrer">
                                   <img src={data.url} alt="Attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'cover', cursor: 'pointer' }} />
                                 </a>
-                                {data.caption && <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{data.caption}</span>}
+                                {data.caption && <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{sanitizeText(data.caption)}</span>}
                               </div>
                             );
                           } catch (e) {
@@ -394,7 +395,7 @@ export default function ChatPage() {
                                 <video controls style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} preload="metadata">
                                   <source src={data.url} />
                                 </video>
-                                {data.caption && <span style={{ fontSize: 'var(--text-sm)', wordBreak: 'break-word' }}>{data.caption}</span>}
+                                {data.caption && <span style={{ fontSize: 'var(--text-sm)', wordBreak: 'break-word' }}>{sanitizeText(data.caption)}</span>}
                               </div>
                             );
                           } catch (e) {
@@ -412,9 +413,9 @@ export default function ChatPage() {
                             return (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                 <a href={docData.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.8rem', background: isMine ? 'rgba(255,255,255,0.12)' : 'var(--accent-alpha)', borderRadius: 8, color: isMine ? '#fff' : 'var(--accent)', textDecoration: 'none', fontSize: 'var(--text-sm)' }}>
-                                  📄 {docData.name}
+                                  📄 {sanitizeText(docData.name)}
                                 </a>
-                                {docData.caption && <span style={{ fontSize: 'var(--text-sm)', wordBreak: 'break-word' }}>{docData.caption}</span>}
+                                {docData.caption && <span style={{ fontSize: 'var(--text-sm)', wordBreak: 'break-word' }}>{sanitizeText(docData.caption)}</span>}
                               </div>
                             );
                           } catch (e) {
@@ -427,13 +428,13 @@ export default function ChatPage() {
                         })()
                       ) : msg.message_type === 'action' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center' }}>
-                          <span style={{ fontSize: 'var(--text-sm)' }}>{JSON.parse(msg.content).text || 'System Action'}</span>
+                          <span style={{ fontSize: 'var(--text-sm)' }}>{sanitizeText(JSON.parse(msg.content).text || 'System Action')}</span>
                           <button onClick={() => alert('Action clicked!')} style={{ padding: '0.3rem 0.7rem', borderRadius: 20, border: 'none', background: isMine ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: '#fff', fontWeight: 600, fontSize: 'var(--text-xs)', cursor: 'pointer' }}>
-                            {JSON.parse(msg.content).label || 'View'}
+                            {sanitizeText(JSON.parse(msg.content).label || 'View')}
                           </button>
                         </div>
                       ) : (
-                        <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{msg.content}</span>
+                        <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{sanitizeText(msg.content)}</span>
                       )}
 
                       <div className="chat-time">

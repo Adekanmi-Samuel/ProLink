@@ -38,6 +38,7 @@ function DashboardPage() {
   const [myJobs, setMyJobs] = useState<any[]>([]);
   const [openToWork, setOpenToWork] = useState(false);
   const [openToWorkLoading, setOpenToWorkLoading] = useState(false);
+  const [earningsChart, setEarningsChart] = useState<any[]>([]);
   const router = useRouter();
 
   const { socket } = useSocket();
@@ -49,15 +50,27 @@ function DashboardPage() {
       const profileRes = await api.get('/profiles/me');
       setProfile(profileRes.data);
       setOpenToWork(profileRes.data.availability === 'open');
+
       if (profileRes.data.user_type === 'provider') {
-        const [jobsRes, earningsRes, contractsRes] = await Promise.allSettled([
+        const [jobsRes, earningsRes, contractsRes, earningsChartRes] = await Promise.allSettled([
           api.get('/jobs?limit=4'),
           api.get('/profiles/me/earnings'),
           api.get('/jobs/my-jobs'),
+          api.get('/profiles/me/earnings-chart'),
         ]);
         if (jobsRes.status === 'fulfilled') setRecentJobs(jobsRes.value.data || []);
         if (earningsRes.status === 'fulfilled') setEarnings(earningsRes.value.data);
         if (contractsRes.status === 'fulfilled') setMyJobs(Array.isArray(contractsRes.value.data) ? contractsRes.value.data : []);
+        const chartData = earningsChartRes.status === 'fulfilled' ? earningsChartRes.value.data : [];
+
+        // Redirect admins immediately
+        if (profileRes.data.user_type === 'admin') {
+          router.push('/admin');
+          return;
+        }
+
+        // Pass chartData to ProviderDashboard
+        setEarningsChart(chartData);
       } else {
         try {
           const jobsRes = await api.get('/jobs/my-jobs');
@@ -68,7 +81,7 @@ function DashboardPage() {
         const notifRes = await api.get('/notifications?limit=8');
         setNotifications(notifRes.data?.notifications || notifRes.data || []);
       } catch { /* noop */ }
-      
+
       // Redirect admins immediately
       if (profileRes.data.user_type === 'admin') {
         router.push('/admin');
@@ -220,7 +233,7 @@ function DashboardPage() {
         </motion.div>
 
         {isProvider ? (
-          <ProviderDashboard profile={profile} earnings={earnings} recentJobs={recentJobs} notifications={notifications} myJobs={myJobs} />
+          <ProviderDashboard profile={profile} earnings={earnings} recentJobs={recentJobs} notifications={notifications} myJobs={myJobs} earningsChart={earningsChart} />
         ) : (
           <ClientDashboard profile={profile} notifications={notifications} myJobs={myJobs} />
         )}
@@ -232,7 +245,7 @@ function DashboardPage() {
 // ═══════════════════════════════════════════════════════════════
 //  PROVIDER DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJobs }: any) {
+function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJobs, earningsChart }: any) {
   const totalEarned = earnings?.total_paid ? String(Number(earnings.total_paid).toLocaleString()) : '0';
   const thisMonth = earnings?.this_month ? String(Number(earnings.this_month).toLocaleString()) : '0';
   const activeContracts = profile?.active_contracts || 0;
@@ -280,24 +293,29 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJob
               <div className="earnings-card__title">Earnings Trend</div>
               <span className="badge badge-neutral">Last 7 days</span>
             </div>
-            {totalEarned === '0' ? (
-              <div className="earnings-empty">
-                Earnings will appear here after your first completed job
+            {earningsChart && earningsChart.length > 0 && earningsChart.some(d => d.earnings > 0) ? (
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: '100%', padding: '1rem' }}>
+                {earningsChart.map((day, i) => {
+                  const maxEarnings = Math.max(...earningsChart.map(d => d.earnings), 1);
+                  return (
+                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                      <div style={{
+                        width: '100%',
+                        height: `${Math.round((day.earnings / maxEarnings) * 80) + 5}%`,
+                        background: 'var(--accent)',
+                        borderRadius: '4px 4px 0 0',
+                        opacity: 0.85,
+                      }} />
+                      <div style={{ fontSize: '0.6rem', color: 'var(--fg-tertiary)', marginTop: 4, fontFamily: 'JetBrains Mono' }}>
+                        {day.name}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--fg-tertiary)', paddingBottom: '1.5rem' }}>
-                  <span>₦50k</span>
-                  <span>₦25k</span>
-                  <span>₦0</span>
-                </div>
-                <div className="earnings-bars" style={{ flex: 1 }}>
-                  {Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} className="earnings-bar" style={{ height: `${20 + Math.random() * 80}%` }}>
-                      <div className="earnings-bar__label">Day {i+1}</div>
-                    </div>
-                  ))}
-                </div>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)', fontFamily: 'JetBrains Mono' }}>
+                Earnings will appear here after your first completed job
               </div>
             )}
           </div>

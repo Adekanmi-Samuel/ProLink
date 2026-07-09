@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 import { NIGERIAN_STATES } from '../../../lib/states';
+import { toast } from 'sonner';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
@@ -15,7 +16,8 @@ function EditProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);   // photo upload only
+  const [isSaving, setIsSaving] = useState(false);         // form submit only
   const [error, setError] = useState('');
   const [availableSkills, setAvailableSkills] = useState<any[]>([]);
   const [customSkill, setCustomSkill] = useState('');
@@ -59,7 +61,8 @@ function EditProfilePage() {
         setAvailableSkills(skillsRes.data || []);
         let existingSkillIds: number[] = [];
         if (data.skills && Array.isArray(data.skills)) {
-          existingSkillIds = data.skills.map((s: any) => s.skill_id || s.id);
+          // Bug 2C fix: backend returns { id, name }, not skill_id
+          existingSkillIds = data.skills.map((s: any) => s.id);
         }
         setFormData({
           full_name: data.full_name || '',
@@ -111,11 +114,11 @@ function EditProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUploading(true);
+    setIsSaving(true);
     setError('');
     try {
       const payload: any = {
-        fullName: formData.full_name,
+        full_name: formData.full_name,
         bio: formData.bio,
         profile_picture_url: formData.profile_picture_url,
         state: formData.state,
@@ -127,14 +130,15 @@ function EditProfilePage() {
         payload.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
         payload.ratePeriod = formData.ratePeriod;
         payload.availability = formData.availability;
-        payload.skillIds = formData.skillIds;
+        payload.skills = formData.skillIds; // Bug 2B fix: send 'skills' not 'skillIds'
       }
       await api.put('/profiles/me', payload);
+      toast.success('Profile updated!'); // Bug 2H fix
       router.push('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.msg || 'Failed to update profile');
     } finally {
-      setIsUploading(false);
+      setIsSaving(false);
     }
   };
 
@@ -144,9 +148,15 @@ function EditProfilePage() {
         <ProLinkLoader />
       </div>
     );
-  } return (
+  }
+  return (
     <div className="page">
-      <div className="wrap" style={{ paddingTop: '100px', paddingBottom: '3rem' }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .profile-row { flex-direction: column !important; }
+        }
+      `}</style>
+      <div className="wrap" style={{ paddingTop: 'calc(var(--navbar-h) + 2rem)', paddingBottom: '3rem', paddingLeft: '1.25rem', paddingRight: '1.25rem', maxWidth: 640, margin: '0 auto' }}>
         <div className="profile-edit-layout">
           <aside className="profile-edit-sidebar">
             <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 800, marginBottom: '1rem' }}>Settings</h3>
@@ -158,7 +168,7 @@ function EditProfilePage() {
 
           <div className="profile-edit-main">
             <h1 className="page-title" style={{ marginBottom: '1.5rem' }}>Edit Profile</h1>
-            
+
             <AnimatePresence>
               {error && (
                 <motion.div
@@ -175,7 +185,7 @@ function EditProfilePage() {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div className="profile-edit-section">
                 <h2 className="profile-edit-section-title">Personal Information</h2>
-                
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
                   <div style={{
                     width: 80, height: 80, borderRadius: '50%', overflow: 'hidden',
@@ -191,7 +201,18 @@ function EditProfilePage() {
                   </div>
                   <div>
                     <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
-                      {isUploading ? 'Uploading...' : 'Change Photo'}
+                      {isUploading ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                            style={{ display: 'inline-block', width: 12, height: 12,
+                              borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)',
+                              borderTopColor: 'currentColor' }}
+                          />
+                          Uploading...
+                        </span>
+                      ) : 'Change Photo'}
                       <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
                     </label>
                     <p style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)', marginTop: '0.4rem' }}>Square image, max 2MB</p>
@@ -203,8 +224,8 @@ function EditProfilePage() {
                   <input id="full_name" name="full_name" type="text" value={formData.full_name} onChange={handleChange} className="field" placeholder="e.g. John Doe" />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="field-group">
+                <div className="profile-row" style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="field-group" style={{ flex: 1 }}>
                     <label className="field-label" htmlFor="state">State</label>
                     <select id="state" name="state" value={formData.state} onChange={handleChange} className="field">
                       <option value="">Select State</option>
@@ -213,7 +234,7 @@ function EditProfilePage() {
                       ))}
                     </select>
                   </div>
-                  <div className="field-group">
+                  <div className="field-group" style={{ flex: 1 }}>
                     <label className="field-label" htmlFor="city">LGA / City</label>
                     <select id="city" name="city" value={formData.city} onChange={handleChange} className="field" disabled={!formData.state}>
                       <option value="">Select LGA</option>
@@ -224,11 +245,24 @@ function EditProfilePage() {
                     </select>
                   </div>
                 </div>
+
+                <div className="profile-row" style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="field-group" style={{ flex: 1 }}>
+                    <label className="field-label" htmlFor="gender">Gender</label>
+                    <select id="gender" name="gender" value={formData.gender} onChange={handleChange} className="field">
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                      <option value="prefer_not_to_say">Prefer not to say</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className="profile-edit-section">
                 <h2 className="profile-edit-section-title">Professional Details</h2>
-                
+
                 {userType === 'provider' && (
                   <div className="field-group">
                     <label className="field-label" htmlFor="title">Professional Title</label>
@@ -283,7 +317,11 @@ function EditProfilePage() {
                         + Add
                       </button>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
+                    <div style={{
+                      display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '1rem', borderRadius: 'var(--radius)',
+                      border: '1px solid var(--border)', background: 'var(--surface)',
+                      maxHeight: '220px', overflowY: 'auto' /* UI 3F fix */
+                    }}>
                       {availableSkills.map((skill: any) => {
                         const selected = formData.skillIds.includes(skill.id);
                         return (
@@ -292,8 +330,11 @@ function EditProfilePage() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: 'var(--text-sm)', cursor: 'pointer',
                               background: selected ? 'var(--accent-alpha)' : 'transparent',
+                              color: selected ? '#fff' : 'var(--fg)',
                               padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)',
                               border: selected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                              transition: 'all 0.2s',
+                              boxShadow: selected ? '0 2px 8px var(--accent-alpha)' : 'none'
                             }}
                           >
                             <input
@@ -316,8 +357,8 @@ function EditProfilePage() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button type="submit" disabled={isUploading} className="btn btn-accent">
-                  {isUploading ? 'Saving...' : 'Save Changes'}
+                <button type="submit" disabled={isSaving || isUploading} className="btn btn-accent" style={{ padding: '0.8rem 2.5rem', fontSize: '1.05rem', borderRadius: '12px', boxShadow: '0 4px 14px var(--accent-alpha)' }}>
+                  {isSaving ? 'Saving…' : isUploading ? 'Upload in progress…' : 'Save Changes'}
                 </button>
               </div>
             </form>

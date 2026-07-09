@@ -199,9 +199,21 @@ const nextConfig: NextConfig = {
   // Remove X-Powered-By: Next.js header (fingerprinting)
   poweredByHeader: false,
 
+  // Enable React Strict Mode for dev-time warnings
+  reactStrictMode: true,
+
   // TypeScript build errors already ignored (keep as-is)
   typescript: {
     ignoreBuildErrors: true,
+  },
+
+  // Optimize package imports for smaller bundles
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@tanstack/react-query',
+    ],
   },
 
   // Security headers applied to all routes

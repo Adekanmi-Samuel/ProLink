@@ -53,7 +53,8 @@ export default function ProfilePage() {
     );
   }
 
-  const { full_name, bio, profile_picture_url, portfolio, rating_avg, review_count, badges, job_success_score, response_time_hours, location } = profileData;
+  const { full_name, bio, profile_picture_url, portfolio, rating_avg, review_count, badges, job_success_score, response_time_hours, city, state, title, hourly_rate, skills, user } = profileData;
+  const isProvider = user?.user_type === 'provider';
 
   return (
     <div className="profile-page fade-up">
@@ -70,8 +71,11 @@ export default function ProfilePage() {
               />
               <div className="profile-card__info">
                 <h1 className="profile-card__name">{full_name || 'ProLink User'}</h1>
+                {title && <p style={{ color: 'var(--fg-secondary)', marginTop: '0.25rem', marginBottom: '0.5rem', fontWeight: 500 }}>{title}</p>}
                 <div className="profile-card__tags">
-                  <span className="pl-badge pl-badge-provider">Service Provider</span>
+                  <span className={`pl-badge pl-badge-${user?.user_type || 'provider'}`}>
+                    {user?.user_type === 'client' ? 'Client' : user?.user_type === 'admin' ? 'Admin' : 'Service Provider'}
+                  </span>
                   {review_count > 0 && (
                     <div className="profile-card__rating">
                       <span className="star">★</span> {Number(rating_avg).toFixed(1)}
@@ -102,33 +106,56 @@ export default function ProfilePage() {
           <hr className="pl-divider" />
 
           {/* Stats & Credibility */}
-          <div className="profile-stats">
-            {badges && badges.length > 0 && (
-              <div className="profile-stats__badges">
-                {badges.map((b: string) => (
-                  <span key={b} className="profile-badge">
-                    🏆 {b.replace('_', ' ')}
-                  </span>
-                ))}
-              </div>
-            )}
-            {job_success_score !== null && job_success_score !== undefined && (
-              <div className="profile-stats__item success-score">
-                ✓ {job_success_score}% Job Success
-              </div>
-            )}
-            {response_time_hours && (
-              <div className="profile-stats__item response-time">
-                ⏱️ Replies in ~{response_time_hours}h
-              </div>
-            )}
-          </div>
+          {(badges?.length > 0 || isProvider) && (
+            <div className="profile-stats">
+              {badges && badges.length > 0 && (
+                <div className="profile-stats__badges">
+                  {badges.map((b: string) => (
+                    <span key={b} className="profile-badge">
+                      🏆 {b.replace('_', ' ')}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {isProvider && job_success_score !== null && job_success_score !== undefined && (
+                <div className="profile-stats__item success-score">
+                  ✓ {job_success_score}% Job Success
+                </div>
+              )}
+              {isProvider && response_time_hours && (
+                <div className="profile-stats__item response-time">
+                  ⏱️ Replies in ~{response_time_hours}h
+                </div>
+              )}
+              {isProvider && hourly_rate && (
+                <div className="profile-stats__item" style={{ background: 'var(--surface-hover)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius)', fontSize: '0.85rem', fontWeight: 500 }}>
+                  ₦{hourly_rate}/hr
+                </div>
+              )}
+            </div>
+          )}
 
           {/* About Section */}
           <div className="profile-section">
             <h2 className="profile-section__title">About</h2>
-            {location && <div className="profile-location">📍 {location}</div>}
+            {(city || state) && <div className="profile-location" style={{ marginBottom: '1rem', color: 'var(--fg-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              {city ? `${city}, ${state}` : state}
+            </div>}
             <p className="profile-bio">{bio || 'This user hasn\'t added a bio yet.'}</p>
+            
+            {isProvider && skills && skills.length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 600 }}>Skills</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {skills.map((s: any) => (
+                    <span key={s.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.3rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', color: 'var(--fg)' }}>
+                      {s.skill?.name || s.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <hr className="pl-divider" />

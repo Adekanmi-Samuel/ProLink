@@ -106,7 +106,7 @@ export default function Navbar() {
   const currentNavLinks = !user ? loggedOutNav : isAdmin ? adminNav : isProvider ? providerNav : clientNav;
 
   const dropdownLinks = [
-    { href: '/profile/edit', label: 'Edit Profile' },
+    { href: '/profile', label: 'Edit Profile' },
     { href: '/dashboard', label: 'Dashboard' },
   ];
 
@@ -223,14 +223,16 @@ export default function Navbar() {
                   <Link href="/signup" className="btn btn-ghost-warm btn-sm">Sign up free</Link>
                 </>
               )}
-              <motion.button onClick={() => setMobileMenu(v => !v)} className="navbar-hamburger" aria-label="Toggle menu" whileTap={{ scale: 0.92 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  {mobileMenu
-                    ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                    : <><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></>
-                  }
-                </svg>
-              </motion.button>
+              {!isDashboard && (
+                <motion.button onClick={() => setMobileMenu(v => !v)} className="navbar-hamburger" aria-label="Toggle menu" whileTap={{ scale: 0.92 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    {mobileMenu
+                      ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+                      : <><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></>
+                    }
+                  </svg>
+                </motion.button>
+              )}
             </div>
           </div>
       </motion.header>
