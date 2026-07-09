@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/dashboard/', '/admin/', '/api/', '/profile/edit', '/chat/'],
     },
-    sitemap: 'https://prolink.vercel.app/sitemap.xml',
+    sitemap: (process.env.NEXT_PUBLIC_SITE_URL || 'https://prolink-eight.vercel.app') + '/sitemap.xml',
   };
 }

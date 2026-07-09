@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://prolink.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://prolink-eight.vercel.app';
 
   return [
     {
