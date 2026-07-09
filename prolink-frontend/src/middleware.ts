@@ -1,88 +1,54 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// ── Route protection configuration ──────────────────────────────────
-
-const PUBLIC_ROUTES = [
-  '/',
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email',
-  '/verify',
-  '/terms',
-  '/privacy',
-  '/talent',
-  '/profiles',
-  '/jobs',
-  '/_next',
-  '/api',
-  '/favicon',
-];
-
-const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password'];
-
-const PROTECTED_ROUTES = ['/dashboard', '/admin', '/profile/edit', '/profile/settings'];
-
 /**
  * Edge Middleware for ProLink
  *
- * Handles:
- * 1. Authentication guards — redirect unauthenticated users to login
- * 2. Redirect already-authenticated users away from auth pages
- * 3. Security headers at the edge
- * 4. Bot and request validation
+ * NOTE: Auth is handled client-side via `withAuth` HOC and `api.ts` interceptors.
+ * The backend returns JWT tokens in JSON responses (not cookies), so edge-level
+ * auth checks are not possible. This middleware handles:
+ *
+ * 1. Security headers at the edge
+ * 2. Bot and scraper blocking on private routes
+ * 3. API route CORS preflight headers
  */
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
-  // ── 1. Check authentication via token cookie ──
-  const authToken = request.cookies.get('token')?.value;
-  const isAuthenticated = !!authToken;
-
-  // Detect if the path is public (starts with any public prefix)
-  const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  const isAuthRoute = AUTH_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  const isProtectedRoute = PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  // ── 2. Redirect unauthenticated users from protected routes ──
-  if (!isAuthenticated && isProtectedRoute) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // ── 3. Redirect authenticated users away from auth pages ──
-  if (isAuthenticated && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // ── 4. Add security headers at the edge ──
+  // ── 1. Add security headers at the edge ──
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  // ── 5. Block common bots/scrapers on non-public endpoints ──
+  // ── 2. Block common bots/scrapers on private endpoints ──
+  const PRIVATE_PATHS = ['/dashboard', '/admin', '/chat', '/profile/edit'];
+  const isPrivateRoute = PRIVATE_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+
   const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
-  if (
-    !isPublicRoute &&
-    !isAuthenticated &&
-    (userAgent.includes('ahrefsbot') ||
-      userAgent.includes('semrushbot') ||
-      userAgent.includes('dotbot') ||
-      userAgent.includes('mj12bot'))
-  ) {
+  const isBot =
+    userAgent.includes('ahrefsbot') ||
+    userAgent.includes('semrushbot') ||
+    userAgent.includes('dotbot') ||
+    userAgent.includes('mj12bot') ||
+    userAgent.includes('spider') ||
+    userAgent.includes('crawler');
+
+  if (isPrivateRoute && isBot) {
     return new NextResponse('Access Denied', { status: 403 });
+  }
+
+  // ── 3. Handle API route CORS for preflight ──
+  if (pathname.startsWith('/api/') && request.method === 'OPTIONS') {
+    const apiResponse = new NextResponse(null, { status: 204 });
+    apiResponse.headers.set('Access-Control-Allow-Origin', '*');
+    apiResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    apiResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    apiResponse.headers.set('Access-Control-Max-Age', '86400');
+    return apiResponse;
   }
 
   return response;
