@@ -98,7 +98,7 @@ const searchJobs = async (req, res, next) => {
     cache.set(cacheKey, result, 30 * 1000); // 30 second TTL for search results
     res.json(result);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to search jobs' });
+    res.status(500).json({ msg: 'Failed to search jobs', error: error.message, stack: error.stack?.split('\n').slice(0,3).join('\n') });
   }
 };
 
@@ -204,7 +204,7 @@ const searchProviders = async (req, res, next) => {
     cache.set(cacheKey, result, 30 * 1000);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to search providers' });
+    res.status(500).json({ msg: 'Failed to search providers', error: error.message });
   }
 };
 
