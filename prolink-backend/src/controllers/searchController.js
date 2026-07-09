@@ -13,16 +13,16 @@ const searchJobs = async (req, res, next) => {
 
     if (q) {
       where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { description: { contains: q, mode: 'insensitive' } }
+        { title: { contains: q } },
+        { description: { contains: q } }
       ];
     }
     
     if (categoryId) where.category_id = parseInt(categoryId);
     if (jobType) where.job_type = jobType;
     if (state) where.state = state;
-    if (city) where.city = { contains: city, mode: 'insensitive' };
-    
+    if (city) where.city = { contains: city };
+
     if (minBudget || maxBudget) {
       where.budget = {};
       if (minBudget) where.budget.gte = parseFloat(minBudget);
@@ -116,9 +116,9 @@ const searchProviders = async (req, res, next) => {
 
     if (q) {
       where.OR = [
-        { full_name: { contains: q, mode: 'insensitive' } },
-        { title: { contains: q, mode: 'insensitive' } },
-        { bio: { contains: q, mode: 'insensitive' } }
+        { full_name: { contains: q } },
+        { title: { contains: q } },
+        { bio: { contains: q } }
       ];
     }
     
@@ -130,7 +130,7 @@ const searchProviders = async (req, res, next) => {
     }
     if (availability) where.availability = availability;
     if (state) where.state = state;
-    if (city) where.city = { contains: city, mode: 'insensitive' };
+    if (city) where.city = { contains: city };
     
     if (skillIds) {
       const skills = skillIds.split(',').map(id => parseInt(id));
