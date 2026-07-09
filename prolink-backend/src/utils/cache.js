@@ -58,7 +58,7 @@ class MemoryCache {
    * @param {object} params
    * @returns {string}
    */
-  static makeKey(prefix, params = {}) {
+  makeKey(prefix, params = {}) {
     const sorted = Object.keys(params)
       .sort()
       .map(k => `${k}=${params[k] ?? ''}`)
