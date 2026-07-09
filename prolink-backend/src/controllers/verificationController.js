@@ -44,11 +44,17 @@ const verifyNIN = async (req, res, next) => {
       return res.status(400).json({ error: 'Valid NIN is required (11 digits)' });
     }
 
-    await prisma.profile.update({
+    await prisma.profile.upsert({
       where: { user_id: userId },
-      data: {
+      update: {
         nin_number,
         nin_status: 'pending' // Admin review needed
+      },
+      create: {
+        user_id: userId,
+        full_name: 'Unknown',
+        nin_number,
+        nin_status: 'pending'
       }
     });
 
@@ -67,9 +73,15 @@ const verifyCAC = async (req, res, next) => {
       return res.status(400).json({ error: 'CAC Number is required' });
     }
 
-    await prisma.profile.update({
+    await prisma.profile.upsert({
       where: { user_id: userId },
-      data: {
+      update: {
+        cac_number,
+        cac_status: 'pending'
+      },
+      create: {
+        user_id: userId,
+        full_name: 'Unknown',
         cac_number,
         cac_status: 'pending'
       }

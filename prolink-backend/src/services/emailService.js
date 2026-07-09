@@ -28,42 +28,42 @@ const fetchWithRetry = async (url, options, maxRetries = 2) => {
   }
 };
 
-// Instead of creating a transporter here, we'll send a POST request to Vercel
-async function sendViaVercel(toEmail, subject, text, html, isNotification = false, attachments = undefined) {
-  // Use the live Vercel URL
-  const vercelApiUrl = process.env.FRONTEND_ORIGIN 
-    ? `${process.env.FRONTEND_ORIGIN}/api/send-email`
-    : 'https://prolink-backend-nrswd26iy-adekanmi-samuels-projects.vercel.app/api/send-email';
-
+// Native Nodemailer integration
+async function sendNativeEmail(toEmail, subject, text, html, isNotification = false, attachments = undefined) {
   try {
-    const response = await fetchWithRetry(vercelApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: toEmail,
-        subject,
-        text,
-        html,
-        secret: process.env.EMAIL_API_SECRET || 'PROLINK_INTERNAL_SECRET_888',
-        isNotification, // so Vercel could switch accounts if we add that logic later
-        attachments,
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('Email API request failed', {
-        status: response.status,
-        error: errorText,
-        recipient: toEmail,
-      });
-    } else {
-      logger.info('Email sent successfully', { recipient: toEmail });
+    const useNotificationAccount = isNotification === true;
+    const smtpUser = useNotificationAccount
+      ? process.env.SMTP_NOTIFICATIONS_USER
+      : process.env.SMTP_USER;
+    const smtpPass = useNotificationAccount
+      ? process.env.SMTP_NOTIFICATIONS_PASS
+      : process.env.SMTP_PASS;
+
+    if (!smtpUser || !smtpPass) {
+      logger.error('SMTP credentials are not configured in backend environment variables.');
+      return;
     }
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: smtpUser, pass: smtpPass },
+      connectionTimeout: 10000,
+    });
+
+    const info = await transporter.sendMail({
+      from: `"ProLink" <${smtpUser}>`,
+      to: toEmail,
+      subject,
+      text,
+      html,
+      attachments,
+    });
+
+    logger.info('Email sent successfully directly via nodemailer', { recipient: toEmail, messageId: info.messageId });
   } catch (err) {
-    logger.error('Email API network error', {
+    logger.error('Email API native network error', {
       error: err.message,
       recipient: toEmail,
     });
@@ -83,7 +83,7 @@ const sendVerificationEmail = async (toEmail, token) => {
     `
   };
 
-  await sendViaVercel(toEmail, mailOptions.subject, mailOptions.text, mailOptions.html, false);
+  await sendNativeEmail(toEmail, mailOptions.subject, mailOptions.text, mailOptions.html, false);
 };
 
 const sendVerificationOTP = async (toEmail, otp_code) => {
@@ -101,11 +101,11 @@ const sendVerificationOTP = async (toEmail, otp_code) => {
     `
   };
 
-  await sendViaVercel(toEmail, mailOptions.subject, mailOptions.text, mailOptions.html, false);
+  await sendNativeEmail(toEmail, mailOptions.subject, mailOptions.text, mailOptions.html, false);
 };
 
 const sendNotificationEmail = async (toEmail, subject, text, html) => {
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendChatMessageNotification = async (toEmail, senderName, messageContent, threadId) => {
@@ -125,7 +125,7 @@ const sendChatMessageNotification = async (toEmail, senderName, messageContent, 
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 const sendPasswordReset = async (toEmail, token) => {
   const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
@@ -142,7 +142,7 @@ const sendPasswordReset = async (toEmail, token) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, false);
+  await sendNativeEmail(toEmail, subject, text, html, false);
 };
 
 const sendDisputeEmail = async (toEmail, disputeId, role, action) => {
@@ -177,7 +177,7 @@ const sendDisputeEmail = async (toEmail, disputeId, role, action) => {
     `;
   }
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendReportEmail = async (toEmail, targetName, reason) => {
@@ -195,7 +195,7 @@ const sendReportEmail = async (toEmail, targetName, reason) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendBlockEmail = async (toEmail, blockedName) => {
@@ -210,7 +210,7 @@ const sendBlockEmail = async (toEmail, blockedName) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendHiredEmail = async (toEmail, jobTitle, clientName) => {
@@ -229,7 +229,7 @@ const sendHiredEmail = async (toEmail, jobTitle, clientName) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendJobSubmittedEmail = async (toEmail, jobTitle, providerName) => {
@@ -248,7 +248,7 @@ const sendJobSubmittedEmail = async (toEmail, jobTitle, providerName) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendFundsApprovedEmail = async (toEmail, jobTitle, amount) => {
@@ -267,7 +267,7 @@ const sendFundsApprovedEmail = async (toEmail, jobTitle, amount) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendRevisionRequestedEmail = async (toEmail, jobTitle, notes) => {
@@ -287,7 +287,7 @@ const sendRevisionRequestedEmail = async (toEmail, jobTitle, notes) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 const sendAutoReleaseEmail = async (toEmail, jobTitle, amount) => {
@@ -306,7 +306,7 @@ const sendAutoReleaseEmail = async (toEmail, jobTitle, amount) => {
     </div>
   `;
 
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
 
@@ -321,7 +321,7 @@ async function sendBidReceivedEmail(toEmail, jobTitle, freelancerName, amount, j
       <p style="color:#888;font-size:12px;margin-top:20px;">You're receiving this because you posted a job on ProLink Nigeria.</p>
     </div>
   `;
-  await sendViaVercel(toEmail, subject, text, html, true);
+  await sendNativeEmail(toEmail, subject, text, html, true);
 }
 
 
@@ -343,7 +343,7 @@ async function sendInvoiceEmail(toEmail, invoiceId, jobTitle, amount, pdfBase64)
     encoding: 'base64'
   }];
 
-  await sendViaVercel(toEmail, subject, text, html, true, attachments);
+  await sendNativeEmail(toEmail, subject, text, html, true, attachments);
 }
 
 

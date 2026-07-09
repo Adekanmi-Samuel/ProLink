@@ -52,20 +52,20 @@ const getMyProfile = async (userId) => {
   };
 };
 
-const getProfileById = async (profileId) => {
-  const profile = await prisma.profile.findUnique({ where: { user_id: profileId } });
+const getProfileById = async (userId) => {
+  const profile = await prisma.profile.findUnique({ where: { user_id: userId } });
   if (!profile) return null;
 
   const [user, portfolioItems, profileSkills] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: profileId },
-      select: { email_verified: true, phone_verified: true }
+      where: { id: userId },
+      select: { user_type: true }
     }),
     prisma.portfolioItem.findMany({ where: { profile_id: profile.id } }),
     prisma.profileSkill.findMany({ where: { profile_id: profile.id }, include: { skill: true } })
   ]);
 
-  const trust_score = 
+  const trust_score =
     (profile.nin_status === 'verified' ? 30 : 0) +
     (profile.cac_status === 'verified' ? 20 : 0) +
     (user ? (user.email_verified ? 10 : 0) : 0) +
@@ -78,8 +78,10 @@ const getProfileById = async (profileId) => {
     title: profile.title,
     state: profile.state,
     city: profile.city,
+    location: [profile.city, profile.state].filter(Boolean).join(', ') || null,  // ← ADD location
     bio: profile.bio,
     hourly_rate: profile.hourly_rate ? parseFloat(profile.hourly_rate) : null,
+    rate_period: profile.rate_period,
     availability: profile.availability,
     profile_picture_url: profile.profile_picture_url,
     rating_avg: profile.rating_avg,
@@ -93,13 +95,19 @@ const getProfileById = async (profileId) => {
     trust_score: Math.round(trust_score),
     portfolio: portfolioItems,
     skills: profileSkills.map(s => ({ id: s.skill.id, name: s.skill.name })),
+    user_type: user?.user_type || 'provider',  // ← ADD user_type
   };
 };
 
 const updateProfile = async (userId, data, skillIds) => {
-  const profile = await prisma.profile.update({
+  const profile = await prisma.profile.upsert({
     where: { user_id: userId },
-    data,
+    update: data,
+    create: {
+      user_id: userId,
+      full_name: data.full_name || 'Unknown',
+      ...data,
+    }
   });
 
   if (skillIds !== undefined) {
@@ -119,9 +127,9 @@ const updateProfile = async (userId, data, skillIds) => {
 
 
 
-const getProfileReviews = async (profileId, filters = {}) => {
+const getProfileReviews = async (userId, filters = {}) => {
   const profile = await prisma.profile.findUnique({
-    where: { user_id: profileId },
+    where: { user_id: userId },
     select: { user_id: true }
   });
   if (!profile) return null;
@@ -132,7 +140,7 @@ const getProfileReviews = async (profileId, filters = {}) => {
 
   const [reviews, total] = await Promise.all([
     prisma.review.findMany({
-      where: { reviewee_id: profileId },
+      where: { reviewee_id: userId },
       skip,
       take: limit,
       orderBy: { created_at: 'desc' },
@@ -141,15 +149,27 @@ const getProfileReviews = async (profileId, filters = {}) => {
           select: {
             profile: { select: { full_name: true, profile_picture_url: true } }
           }
-        }
+        },
+        job: { select: { title: true } }    // ← add this to get job title
       }
     }),
     prisma.review.count({
-      where: { reviewee_id: profileId }
+      where: { reviewee_id: userId }
     })
   ]);
 
-  return { reviews, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+  // Map to flat shape for frontend
+  const mappedReviews = reviews.map(r => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    created_at: r.created_at,
+    reviewer_name: r.reviewer?.profile?.full_name || 'Anonymous',
+    reviewer_avatar: r.reviewer?.profile?.profile_picture_url || null,
+    job_title: r.job?.title || null,
+  }));
+
+  return { reviews: mappedReviews, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
 };
 
 const getBankAccount = async (userId) => {

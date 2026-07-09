@@ -1,5 +1,5 @@
-const profilesService = require('../services/profilesService');
 const prisma = require('../config/prisma');
+const profilesService = require('../services/profilesService');
 const getMyProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -25,19 +25,26 @@ const getProfileById = async (req, res, next) => {
 const updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { fullName, bio, phoneNumber, title, hourlyRate, availability, skillIds, state, city, gender, ratePeriod } = req.validatedBody || req.body;
+    const {
+      full_name, bio, profile_picture_url,
+      title, hourlyRate, ratePeriod, availability,
+      skills,           // ← frontend sends 'skills', not 'skillIds'
+      state, city, gender
+    } = req.validatedBody || req.body;
+
     await profilesService.updateProfile(userId, {
-      full_name: fullName,
+      full_name,
       bio,
-      phone_number: phoneNumber,
+      profile_picture_url,
       title,
       hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
+      rate_period: ratePeriod,
       availability,
       state,
       city,
       gender,
-      rate_period: ratePeriod,
-    }, skillIds);
+    }, skills);  // ← pass skills (not skillIds) to service
+
     res.json({ msg: 'Profile updated successfully.' });
   } catch (err) {
     next(err);
