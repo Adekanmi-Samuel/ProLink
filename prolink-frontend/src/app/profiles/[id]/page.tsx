@@ -15,21 +15,18 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (id) {
-      const fetchProfile = async () => {
+      (async () => {
         try {
           const [profileRes, reviewsRes] = await Promise.all([
             api.get(`/profiles/${id}`),
-            api.get(`/profiles/${id}/reviews`).catch(() => ({ data: [] }))
+            api.get(`/profiles/${id}/reviews`).catch(() => ({ data: [] })),
           ]);
           setProfileData(profileRes.data);
           setReviews(reviewsRes.data?.reviews || reviewsRes.data || []);
-        } catch (error) {
-          console.error('Failed to fetch profile', error);
-        } finally {
+        } catch { /* ignore */ } finally {
           setLoading(false);
         }
-      };
-      fetchProfile();
+      })();
     }
   }, [id]);
 
@@ -43,521 +40,277 @@ export default function ProfilePage() {
 
   if (!profileData) {
     return (
-      <div className="profile-page">
-        <div className="pl-container-sm">
-          <div className="pl-card" style={{ padding: '4rem', textAlign: 'center' }}>
-            <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>Profile not found.</p>
-          </div>
-        </div>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '4rem 1rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Profile not found</h2>
+        <p style={{ color: 'var(--fg-secondary)' }}>The user you are looking for doesn't exist or has been removed.</p>
       </div>
     );
   }
 
-  const { full_name, bio, profile_picture_url, portfolio, rating_avg, review_count, badges, job_success_score, response_time_hours, city, state, title, hourly_rate, skills, user } = profileData;
-  const isProvider = user?.user_type === 'provider';
+  const {
+    full_name, bio, profile_picture_url, portfolio, rating_avg, review_count,
+    badges, job_success_score, response_time_hours, city, state,
+    title, hourly_rate, skills, user_type,
+  } = profileData;
+
+  const isProvider = user_type === 'provider';
+  const location = [city, state].filter(Boolean).join(', ');
 
   return (
-    <div className="profile-page fade-up">
-      <div className="pl-container-sm">
-        
-        {/* Main Profile Card */}
-        <div className="pl-card profile-card">
-          <div className="profile-card__header">
-            <div className="profile-card__identity">
-              <img 
-                className="profile-card__avatar" 
-                src={profile_picture_url || '/default-avatar.png'} 
-                alt={full_name} 
+    <div className="page">
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(var(--navbar-h) + 1.5rem) 1rem 3rem' }}>
+        {/* ── Profile Card ── */}
+        <div className="card-base" style={{ padding: '1.5rem 2rem', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <img
+                src={profile_picture_url || '/default-avatar.png'}
+                alt={full_name}
+                style={{
+                  width: 88, height: 88, borderRadius: '50%', objectFit: 'cover',
+                  border: '3px solid var(--accent-alpha)', background: 'var(--surface-hover)',
+                }}
               />
-              <div className="profile-card__info">
-                <h1 className="profile-card__name">{full_name || 'ProLink User'}</h1>
-                {title && <p style={{ color: 'var(--fg-secondary)', marginTop: '0.25rem', marginBottom: '0.5rem', fontWeight: 500 }}>{title}</p>}
-                <div className="profile-card__tags">
-                  <span className={`pl-badge pl-badge-${user?.user_type || 'provider'}`}>
-                    {user?.user_type === 'client' ? 'Client' : user?.user_type === 'admin' ? 'Admin' : 'Service Provider'}
+              <div>
+                <h1 style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
+                  {full_name || 'ProLink User'}
+                </h1>
+                {title && isProvider && (
+                  <p style={{ color: 'var(--fg-secondary)', fontWeight: 500, fontSize: '0.95rem', marginBottom: '0.3rem' }}>
+                    {title}
+                  </p>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <span
+                    style={{
+                      display: 'inline-block', padding: '0.15rem 0.65rem', borderRadius: 999,
+                      fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: isProvider ? 'var(--accent)' : 'var(--info)',
+                      background: isProvider ? 'var(--accent-alpha)' : 'var(--info-bg)',
+                    }}
+                  >
+                    {user_type === 'client' ? 'Client' : user_type === 'admin' ? 'Admin' : 'Service Provider'}
                   </span>
                   {review_count > 0 && (
-                    <div className="profile-card__rating">
-                      <span className="star">★</span> {Number(rating_avg).toFixed(1)}
-                      <span className="count">({review_count} reviews)</span>
-                    </div>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                      <span style={{ color: 'var(--warning)' }}>★</span>{' '}
+                      {Number(rating_avg).toFixed(1)}
+                      <span style={{ color: 'var(--fg-tertiary)', fontWeight: 400, marginLeft: 4 }}>
+                        ({review_count})
+                      </span>
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="profile-card__actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <button 
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+              <button
                 onClick={() => {
                   const token = localStorage.getItem('token');
-                  if (!token) {
-                    window.location.href = `/login?redirect=/dashboard/messages?to=${profileData.user_id}`;
-                  } else {
-                    window.location.href = `/dashboard/messages?to=${profileData.user_id}`;
-                  }
+                  const base = token ? `/dashboard/messages?to=${profileData.user_id}` : `/login?redirect=/dashboard/messages?to=${profileData.user_id}`;
+                  window.location.href = base;
                 }}
-                className="pl-btn pl-btn-primary"
+                className="btn btn-accent btn-sm"
               >
-                Message Provider
+                Message
               </button>
               <ReportBlockMenu userId={profileData.user_id} />
             </div>
           </div>
+        </div>
 
-          <hr className="pl-divider" />
-
-          {/* Stats & Credibility */}
-          {(badges?.length > 0 || isProvider) && (
-            <div className="profile-stats">
-              {badges && badges.length > 0 && (
-                <div className="profile-stats__badges">
-                  {badges.map((b: string) => (
-                    <span key={b} className="profile-badge">
-                      🏆 {b.replace('_', ' ')}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {isProvider && job_success_score !== null && job_success_score !== undefined && (
-                <div className="profile-stats__item success-score">
-                  ✓ {job_success_score}% Job Success
-                </div>
+        {/* ── Stats Row ── */}
+        {(isProvider || (badges && badges.length > 0)) && (
+          <div className="card-base" style={{ padding: '1rem 1.5rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center' }}>
+              {badges && badges.length > 0 && badges.map((b: string) => (
+                <span key={b} style={{
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#fff',
+                  padding: '0.25rem 0.75rem', borderRadius: 999, fontSize: '0.7rem',
+                  fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em',
+                }}>
+                  🏆 {b.replace(/_/g, ' ')}
+                </span>
+              ))}
+              {isProvider && job_success_score != null && (
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--success)' }}>
+                  ✓ {job_success_score}% Success
+                </span>
               )}
               {isProvider && response_time_hours && (
-                <div className="profile-stats__item response-time">
-                  ⏱️ Replies in ~{response_time_hours}h
-                </div>
+                <span style={{ fontSize: '0.82rem', color: 'var(--fg-secondary)' }}>
+                  ⏱ ~{response_time_hours}h reply
+                </span>
               )}
               {isProvider && hourly_rate && (
-                <div className="profile-stats__item" style={{ background: 'var(--surface-hover)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius)', fontSize: '0.85rem', fontWeight: 500 }}>
-                  ₦{hourly_rate}/hr
-                </div>
+                <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--amber)', fontFamily: "'JetBrains Mono', monospace" }}>
+                  ₦{parseFloat(hourly_rate).toLocaleString()}/hr
+                </span>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── About ── */}
+        <div className="card-base" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
+          <h2 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--fg-tertiary)', marginBottom: '0.75rem' }}>
+            About
+          </h2>
+          {location && (
+            <div style={{ marginBottom: '0.75rem', fontSize: '0.88rem', color: 'var(--fg-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              {location}
+            </div>
           )}
+          <p style={{ fontSize: '0.92rem', lineHeight: 1.7, color: 'var(--fg)', whiteSpace: 'pre-wrap' }}>
+            {bio || "This user hasn't added a bio yet."}
+          </p>
 
-          {/* About Section */}
-          <div className="profile-section">
-            <h2 className="profile-section__title">About</h2>
-            {(city || state) && <div className="profile-location" style={{ marginBottom: '1rem', color: 'var(--fg-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              {city ? `${city}, ${state}` : state}
-            </div>}
-            <p className="profile-bio">{bio || 'This user hasn\'t added a bio yet.'}</p>
-            
-            {isProvider && skills && skills.length > 0 && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 600 }}>Skills</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {skills.map((s: any) => (
-                    <span key={s.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.3rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', color: 'var(--fg)' }}>
-                      {s.skill?.name || s.name}
-                    </span>
-                  ))}
+          {isProvider && skills && skills.length > 0 && (
+            <div style={{ marginTop: '1.25rem' }}>
+              <h3 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--fg-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Skills
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {skills.map((s: any) => (
+                  <span key={s.id} style={{
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    padding: '0.25rem 0.75rem', borderRadius: 999,
+                    fontSize: '0.78rem', color: 'var(--fg)',
+                  }}>
+                    {s.skill?.name || s.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Portfolio ── */}
+        <div className="card-base" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
+          <h2 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--fg-tertiary)', marginBottom: '0.75rem' }}>
+            Portfolio
+          </h2>
+          {portfolio && portfolio.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+              {portfolio.map((item: any) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedPortfolio(item)}
+                  style={{
+                    cursor: 'pointer', overflow: 'hidden',
+                    border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--surface)',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+                >
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.title} style={{ width: '100%', height: 140, objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-hover)', color: 'var(--fg-tertiary)', fontSize: '0.82rem' }}>
+                      No Image
+                    </div>
+                  )}
+                  <div style={{ padding: '0.75rem' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.2rem' }}>{item.title}</div>
+                    {item.description && <div style={{ fontSize: '0.75rem', color: 'var(--fg-secondary)', lineHeight: 1.4 }}>{item.description}</div>}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: 'var(--fg-tertiary)', fontSize: '0.88rem', fontStyle: 'italic' }}>
+              No portfolio items have been added yet.
+            </p>
+          )}
+        </div>
 
-          <hr className="pl-divider" />
-
-          {/* Portfolio Section */}
-          <div className="profile-section">
-            <h2 className="profile-section__title">Portfolio</h2>
-            {portfolio && portfolio.length > 0 ? (
-              <div className="portfolio-grid">
-                {portfolio.map((item: any) => (
-                  <div 
-                    key={item.id} 
-                    className="portfolio-item"
-                    onClick={() => setSelectedPortfolio(item)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {item.image_url ? (
-                      <img className="portfolio-item__img" src={item.image_url} alt={item.title} />
-                    ) : (
-                      <div className="portfolio-item__placeholder">No Image</div>
-                    )}
-                    <div className="portfolio-item__content">
-                      <h3 className="portfolio-item__title">{item.title}</h3>
-                      {item.description && <p className="portfolio-item__desc">{item.description}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="profile-empty">No portfolio items have been added yet.</p>
-            )}
-          </div>
-
-          <hr className="pl-divider" />
-
-          {/* Reviews Section */}
-          <div className="profile-section">
-            <h2 className="profile-section__title">Client Reviews</h2>
-            {reviews && reviews.length > 0 ? (
-              <div className="reviews-list">
-                {reviews.map((review: any) => (
-                  <div key={review.id} className="review-card">
-                    <div className="review-card__header">
-                      <div className="review-card__user">
-                        <img className="review-card__avatar" src={review.reviewer_avatar || '/default-avatar.png'} alt={review.reviewer_name} />
-                        <div>
-                          <div className="review-card__name">{review.reviewer_name}</div>
-                          {review.job_title && <div className="review-card__job">Job: {review.job_title}</div>}
-                        </div>
-                      </div>
-                      <div className="review-card__stars">
-                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+        {/* ── Reviews ── */}
+        <div className="card-base" style={{ padding: '1.5rem' }}>
+          <h2 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--fg-tertiary)', marginBottom: '0.75rem' }}>
+            Reviews
+          </h2>
+          {reviews && reviews.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {reviews.map((review: any) => (
+                <div key={review.id} style={{
+                  padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                  background: 'var(--surface)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <img
+                        src={review.reviewer_avatar || '/default-avatar.png'}
+                        alt={review.reviewer_name}
+                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', background: 'var(--surface-hover)' }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{review.reviewer_name}</div>
+                        {review.job_title && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>Job: {review.job_title}</div>
+                        )}
                       </div>
                     </div>
-                    <p className="review-card__comment">"{review.comment}"</p>
+                    <div style={{ color: 'var(--warning)', fontSize: '0.95rem', letterSpacing: '0.03em' }}>
+                      {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="profile-empty">No reviews yet.</p>
-            )}
-          </div>
+                  {review.comment && (
+                    <p style={{ fontSize: '0.88rem', color: 'var(--fg-secondary)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                      &ldquo;{review.comment}&rdquo;
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: 'var(--fg-tertiary)', fontSize: '0.88rem', fontStyle: 'italic' }}>
+              No reviews yet.
+            </p>
+          )}
         </div>
       </div>
 
-      <style>{`
-        .profile-page {
-          padding: 2.5rem 1rem;
-        }
-        
-        .profile-card {
-          padding: 2.5rem;
-          margin: 0 auto;
-        }
-
-        .profile-card__header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 1.5rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .profile-card__identity {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-        }
-
-        .profile-card__avatar {
-          width: 96px;
-          height: 96px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 3px solid var(--primary-alpha);
-          background: var(--bg2);
-        }
-
-        .profile-card__name {
-          font-family: var(--font-outfit), sans-serif;
-          font-size: 1.75rem;
-          font-weight: 800;
-          color: var(--fg);
-          margin-bottom: 0.5rem;
-          letter-spacing: -0.02em;
-        }
-
-        .profile-card__tags {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-        }
-
-        .profile-card__rating {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: var(--fg);
-        }
-        .profile-card__rating .star {
-          color: var(--warning);
-          font-size: 1rem;
-        }
-        .profile-card__rating .count {
-          color: var(--muted);
-          font-weight: 400;
-          margin-left: 0.15rem;
-        }
-
-        .profile-stats {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-          align-items: center;
-        }
-
-        .profile-stats__badges {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .profile-badge {
-          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-          color: #fff;
-          padding: 0.35rem 0.75rem;
-          border-radius: var(--radius-sm);
-          font-size: 0.75rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
-        }
-
-        .profile-stats__item {
-          font-size: 0.9rem;
-          font-weight: 600;
-        }
-        .success-score { color: var(--success); }
-        .response-time { color: var(--muted); }
-
-        .profile-section {
-          margin-bottom: 2.5rem;
-        }
-        .profile-section:last-child {
-          margin-bottom: 0;
-        }
-
-        .profile-section__title {
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: var(--muted2);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 1rem;
-        }
-
-        .profile-location {
-          font-size: 0.9rem;
-          color: var(--muted);
-          margin-bottom: 0.75rem;
-        }
-
-        .profile-bio {
-          font-size: 1rem;
-          color: var(--fg2);
-          line-height: 1.7;
-          white-space: pre-wrap;
-        }
-
-        .profile-empty {
-          color: var(--muted);
-          font-size: 0.95rem;
-          font-style: italic;
-        }
-
-        /* Portfolio Grid */
-        .portfolio-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 1.25rem;
-        }
-        .portfolio-item {
-          display: flex;
-          flex-direction: column;
-          background: var(--bg2);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          overflow: hidden;
-          text-decoration: none;
-          transition: all 0.2s ease;
-        }
-        .portfolio-item:hover {
-          transform: translateY(-4px);
-          border-color: var(--primary-alpha);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-        .portfolio-item__img {
-          width: 100%;
-          height: 150px;
-          object-fit: cover;
-          border-bottom: 1px solid var(--border);
-        }
-        .portfolio-item__placeholder {
-          width: 100%;
-          height: 150px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--surface);
-          color: var(--muted2);
-          font-size: 0.85rem;
-          border-bottom: 1px solid var(--border);
-        }
-        .portfolio-item__content {
-          padding: 1rem;
-        }
-        .portfolio-item__title {
-          font-weight: 700;
-          color: var(--primary);
-          font-size: 1rem;
-          margin-bottom: 0.4rem;
-        }
-        .portfolio-item__desc {
-          color: var(--muted);
-          font-size: 0.85rem;
-          line-height: 1.5;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        /* Reviews */
-        .reviews-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        .review-card {
-          background: var(--bg2);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 1.5rem;
-        }
-        .review-card__header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-        .review-card__user {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        .review-card__avatar {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          object-fit: cover;
-          background: var(--surface);
-        }
-        .review-card__name {
-          font-weight: 700;
-          color: var(--fg);
-          font-size: 0.95rem;
-        }
-        .review-card__job {
-          font-size: 0.8rem;
-          color: var(--primary-light);
-          margin-top: 0.15rem;
-        }
-        .review-card__stars {
-          color: var(--warning);
-          font-size: 1.1rem;
-          letter-spacing: 0.05em;
-        }
-        .review-card__comment {
-          font-size: 0.95rem;
-          color: var(--fg2);
-          line-height: 1.6;
-          font-style: italic;
-        }
-
-        @media (max-width: 600px) {
-          .profile-card__header {
-            flex-direction: column;
-          }
-          .profile-card__identity {
-            flex-direction: column;
-            text-align: center;
-            width: 100%;
-          }
-          .profile-card__tags {
-            justify-content: center;
-          }
-          .profile-stats {
-            justify-content: center;
-          }
-        }
-        
-        /* Modal Styles */
-        .portfolio-modal-overlay {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.8);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          backdrop-filter: blur(5px);
-          padding: 1rem;
-        }
-        .portfolio-modal-content {
-          background: var(--surface);
-          border-radius: var(--radius-lg);
-          width: 100%;
-          max-width: 800px;
-          max-height: 85vh;
-          overflow-y: auto;
-          position: relative;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-        .portfolio-modal-close {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          background: rgba(0,0,0,0.5);
-          color: white;
-          border: none;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          z-index: 10;
-          transition: background 0.2s;
-        }
-        .portfolio-modal-close:hover {
-          background: rgba(0,0,0,0.8);
-        }
-        .portfolio-modal-img {
-          width: 100%;
-          max-height: 55vh;
-          object-fit: contain;
-          background: #000;
-        }
-        .portfolio-modal-info {
-          padding: 2rem;
-        }
-        .portfolio-modal-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--fg);
-          margin-bottom: 1rem;
-        }
-        .portfolio-modal-desc {
-          color: var(--fg2);
-          line-height: 1.6;
-          margin-bottom: 1.5rem;
-        }
-      `}</style>
-
-      {/* Portfolio Modal */}
+      {/* ── Portfolio Modal ── */}
       {selectedPortfolio && (
-        <div className="portfolio-modal-overlay" onClick={() => setSelectedPortfolio(null)}>
-          <div className="portfolio-modal-content fade-up" onClick={e => e.stopPropagation()}>
-            <button className="portfolio-modal-close" onClick={() => setSelectedPortfolio(null)}>✕</button>
+        <div
+          onClick={() => setSelectedPortfolio(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(4px)', padding: '1rem',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
+              width: '100%', maxWidth: 700, maxHeight: '85vh', overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+            }}
+          >
+            <button
+              onClick={() => setSelectedPortfolio(null)}
+              style={{
+                position: 'absolute', top: '0.75rem', right: '0.75rem',
+                background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none',
+                width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
+                fontSize: '1rem', zIndex: 10,
+              }}
+            >
+              ✕
+            </button>
             {selectedPortfolio.image_url && (
-              <img src={selectedPortfolio.image_url} alt={selectedPortfolio.title} className="portfolio-modal-img" />
+              <img src={selectedPortfolio.image_url} alt={selectedPortfolio.title} style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', background: '#000' }} />
             )}
-            <div className="portfolio-modal-info">
-              <h2 className="portfolio-modal-title">{selectedPortfolio.title}</h2>
-              <p className="portfolio-modal-desc">{selectedPortfolio.description}</p>
+            <div style={{ padding: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{selectedPortfolio.title}</h2>
+              <p style={{ color: 'var(--fg-secondary)', lineHeight: 1.6, marginBottom: '1rem' }}>{selectedPortfolio.description}</p>
               {selectedPortfolio.project_url && (
-                <a href={selectedPortfolio.project_url} target="_blank" rel="noopener noreferrer" className="pl-btn pl-btn-primary">
+                <a href={selectedPortfolio.project_url} target="_blank" rel="noopener noreferrer" className="btn btn-accent btn-sm">
                   View Project ↗
                 </a>
               )}
