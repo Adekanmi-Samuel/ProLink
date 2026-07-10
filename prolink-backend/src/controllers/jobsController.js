@@ -6,15 +6,10 @@ const { jobSchema, bidSchema } = require('../validators/jobValidator');
 const createJob = async (req, res, next) => {
   try {
     const clientId = req.user.id;
-    
-    // Validate request body
-    const parseResult = jobSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ msg: parseResult.error.errors[0].message });
-    }
-    
-    const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = parseResult.data;
-    
+    const body = req.validatedBody || req.body;
+
+    const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = body;
+
     const job = await jobsService.createJob(clientId, { title, description, budget, job_type, payment_type, category_id, state, city, skillIds });
     
     const io = req.app.get('io');

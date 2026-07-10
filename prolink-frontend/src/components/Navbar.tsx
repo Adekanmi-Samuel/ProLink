@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import api, { hasAuthCookie } from '../lib/api';
+import api from '../lib/api';
 import { useTheme } from './ThemeProvider';
-import { navbarVariants, dropdownVariants, transitions } from '../lib/motion';
+import { navbarVariants, dropdownVariants } from '../lib/motion';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -23,7 +23,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
-  /* ── Auth state ── */
   const fetchUser = useCallback(async () => {
     try {
       const res = await api.get('/profiles/me');
@@ -40,7 +39,6 @@ export default function Navbar() {
 
   useEffect(() => { setMounted(true); fetchUser(); }, [fetchUser, pathname]);
 
-  // Scroll detection
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -70,7 +68,9 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, [avatarDropdown, notifDropdown]);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try { await api.post('/auth/logout'); } catch {}
+    localStorage.removeItem('token');
     setUser(null);
     setAvatarDropdown(false);
     setMobileMenu(false);
@@ -80,7 +80,9 @@ export default function Navbar() {
   const isProvider = user?.user_type === 'provider';
   const isClient = user?.user_type === 'client';
   const isAdmin = user?.user_type === 'admin';
-  const initials = user?.full_name ? user.full_name.split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : '?';
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase()
+    : '?';
 
   const loggedOutNav = [
     { href: '/jobs', label: 'Find Work' },
@@ -110,9 +112,6 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
   ];
 
-  // Check if we're on a dashboard page (which has its own sidebar)
-  const isDashboard = pathname.startsWith('/dashboard');
-
   if (!mounted) return null;
 
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/');
@@ -126,120 +125,164 @@ export default function Navbar() {
         className={scrolled ? 'navbar-main scrolled' : 'navbar-main'}
       >
         <div className="navbar-inner">
+          {/* Left: hamburger + logo — always visible */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <motion.button
+              onClick={() => setMobileMenu((v) => !v)}
+              className="navbar-hamburger"
+              aria-label="Toggle menu"
+              whileTap={{ scale: 0.92 }}
+              style={{ display: 'flex' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                {mobileMenu ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                    <line x1="4" y1="18" x2="20" y2="18" />
+                  </>
+                )}
+              </svg>
+            </motion.button>
             <Link href={user ? '/dashboard' : '/'} className="navbar-logo">
-              <span className="navbar-logo-accent">Pro</span><span className="navbar-logo-fg">Link</span>
+              <span className="navbar-logo-accent">Pro</span>
+              <span className="navbar-logo-fg">Link</span>
             </Link>
-            <nav className="navbar-nav hide-mobile">
-              {currentNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`navbar-link${isActive(link.href) ? ' navbar-link-active' : ''} ${isAdmin ? 'navbar-link-admin' : isProvider ? 'navbar-link-provider' : 'navbar-link-client'}`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="navbar-right">
-              <button onClick={toggleTheme} className="btn btn-ghost btn-icon mr-2" aria-label="Toggle theme">
-                <motion.div key={theme} initial={{ rotate: -20, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.25, ease: [0.22,  1,  0.36,  1] as any }}>
-                  {theme === 'dark' ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                      <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                    </svg>
-                  )}
-                </motion.div>
-              </button>
-              {user ? (
-                <>
-                  <div ref={notifRef} style={{ position: 'relative' }}>
-                    <button onClick={() => { setNotifDropdown(v => !v); fetchNotifications(); }} className="btn btn-ghost btn-icon" aria-label="Notifications">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                      </svg>
-                      {notifCount > 0 && <span className="navbar-notif-badge">{notifCount > 9 ? '9+' : notifCount}</span>}
-                    </button>
-                    <AnimatePresence>
-                      {notifDropdown && (
-                        <motion.div className="notif-panel" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
-                          <div className="notif-panel-header">Notifications</div>
-                          {notifications.length > 0 ? (
-                            notifications.map((n, i) => (
-                              <div key={i} className="notif-item">
-                                <div className="notif-item-title">{n.title}</div>
-                                <div className="notif-item-message">{n.message}</div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="notif-empty">No notifications yet</div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                  <div ref={dropdownRef} style={{ position: 'relative' }}>
-                    <motion.div onClick={() => setAvatarDropdown(v => !v)} className={`navbar-avatar ${isAdmin ? 'navbar-avatar-admin' : isProvider ? 'navbar-avatar-provider' : 'navbar-avatar-client'}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      {initials}
-                    </motion.div>
-                    <AnimatePresence>
-                      {avatarDropdown && (
-                        <motion.div className="avatar-dropdown-panel" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
-                          {user.full_name && (
-                            <div className="avatar-dropdown-header">
-                              <div className="avatar-dropdown-header-avatar">{initials}</div>
-                              <div>
-                                <div className="avatar-dropdown-header-name" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                  {user.full_name}
-                                  {isAdmin && <span className="badge badge-accent" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>ADMIN</span>}
-                                  {isProvider && <span className="badge badge-gold" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>PROVIDER</span>}
-                                  {isClient && <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>CLIENT</span>}
-                                </div>
-                                <div className="avatar-dropdown-header-email">{user.email}</div>
-                              </div>
-                            </div>
-                          )}
-                          <div className="avatar-dropdown-divider" />
-                          {dropdownLinks.map((link) => (
-                            <Link key={link.href} href={link.href} className="avatar-dropdown-item" onClick={() => setAvatarDropdown(false)}>{link.label}</Link>
-                          ))}
-                          <div className="avatar-dropdown-divider avatar-dropdown-divider-sm" />
-                          <button onClick={handleSignOut} className="avatar-dropdown-item avatar-dropdown-item-danger">Log out</button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className="font-semibold text-sm px-4 py-2 hover:opacity-80 transition-opacity" style={{ color: 'var(--fg)' }}>Log in</Link>
-                  <Link href="/signup" className="btn btn-ghost-warm btn-sm">Sign up free</Link>
-                </>
-              )}
-              {!isDashboard && (
-                <motion.button onClick={() => setMobileMenu(v => !v)} className="navbar-hamburger" aria-label="Toggle menu" whileTap={{ scale: 0.92 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                    {mobileMenu
-                      ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                      : <><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></>
-                    }
-                  </svg>
-                </motion.button>
-              )}
-            </div>
           </div>
+
+          {/* Center: desktop nav only (hidden on mobile via CSS) */}
+          <nav className="navbar-nav hide-mobile">
+            {currentNavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`navbar-link${isActive(link.href) ? ' navbar-link-active' : ''}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right: notifications, avatar, theme toggle */}
+          <div className="navbar-right">
+            {user ? (
+              <>
+                <div ref={notifRef} style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => { setNotifDropdown((v) => !v); fetchNotifications(); }}
+                    className="btn btn-ghost btn-icon"
+                    aria-label="Notifications"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    {notifCount > 0 && (
+                      <span className="navbar-notif-badge">{notifCount > 9 ? '9+' : notifCount}</span>
+                    )}
+                  </button>
+                  <AnimatePresence>
+                    {notifDropdown && (
+                      <motion.div className="notif-panel" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
+                        <div className="notif-panel-header">Notifications</div>
+                        {notifications.length > 0 ? (
+                          notifications.map((n, i) => (
+                            <div key={i} className="notif-item">
+                              <div className="notif-item-title">{n.title}</div>
+                              <div className="notif-item-message">{n.message}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="notif-empty">No notifications yet</div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <div ref={dropdownRef} style={{ position: 'relative' }}>
+                  <motion.div
+                    onClick={() => setAvatarDropdown((v) => !v)}
+                    className="navbar-avatar"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {initials}
+                  </motion.div>
+                  <AnimatePresence>
+                    {avatarDropdown && (
+                      <motion.div className="avatar-dropdown-panel" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
+                        {user.full_name && (
+                          <div className="avatar-dropdown-header">
+                            <div className="avatar-dropdown-header-avatar">{initials}</div>
+                            <div>
+                              <div className="avatar-dropdown-header-name">{user.full_name}</div>
+                              <div className="avatar-dropdown-header-email">{user.email}</div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="avatar-dropdown-divider" />
+                        {dropdownLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            className="avatar-dropdown-item"
+                            onClick={() => setAvatarDropdown(false)}
+                          >
+                            {link.label}
+                          </Link>
+                        ))}
+                        <div className="avatar-dropdown-divider avatar-dropdown-divider-sm" />
+                        <button onClick={handleSignOut} className="avatar-dropdown-item avatar-dropdown-item-danger">
+                          Log out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link href="/login" style={{ color: 'var(--fg)', fontWeight: 600, fontSize: '0.88rem', padding: '0.4rem 0.8rem', textDecoration: 'none' }}>
+                  Log in
+                </Link>
+                <Link href="/signup" className="btn btn-ghost-warm btn-sm">
+                  Sign up free
+                </Link>
+              </>
+            )}
+            <button onClick={toggleTheme} className="btn btn-ghost btn-icon" aria-label="Toggle theme">
+              <motion.div
+                key={theme}
+                initial={{ rotate: -20, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {theme === 'dark' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                )}
+              </motion.div>
+            </button>
+          </div>
+        </div>
       </motion.header>
 
-      {/* Mobile drawer (shared between both themes) - hide on dashboard pages which have their own sidebar */}
+      {/* Mobile drawer — accessible from any page */}
       <AnimatePresence>
-        {!isDashboard && mobileMenu && (
+        {mobileMenu && (
           <>
             <motion.div
               className="mobile-overlay"
@@ -258,25 +301,48 @@ export default function Navbar() {
             >
               <div className="mobile-drawer-header">
                 <span className="navbar-logo">
-                  <span className="navbar-logo-accent">Pro</span><span className="navbar-logo-fg">Link</span>
+                  <span className="navbar-logo-accent">Pro</span>
+                  <span className="navbar-logo-fg">Link</span>
                 </span>
-                <button
-                  onClick={() => setMobileMenu(false)}
-                  className="btn btn-ghost btn-icon"
-                  aria-label="Close menu"
-                >
+                <button onClick={() => setMobileMenu(false)} className="btn btn-ghost btn-icon" aria-label="Close menu">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
 
-              {currentNavLinks.map((link, i) => (
-                <Link key={link.href} href={link.href} className="mobile-drawer-link" onClick={() => setMobileMenu(false)}>
-                  {link.label}
-                </Link>
-              ))}
+              {/* Main nav links */}
+              <div style={{ marginBottom: user ? '0.5rem' : '0' }}>
+                {currentNavLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="mobile-drawer-link"
+                    onClick={() => setMobileMenu(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
 
+              {/* Account links when logged in */}
+              {user && (
+                <div style={{ borderTop: '1px solid var(--border)', margin: '0.3rem 0', paddingTop: '0.5rem' }}>
+                  {dropdownLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="mobile-drawer-link"
+                      onClick={() => setMobileMenu(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <button onClick={handleSignOut} className="mobile-drawer-link" style={{ color: 'var(--danger)' }}>
+                    Log out
+                  </button>
+                </div>
+              )}
 
               {!user && (
                 <div className="mobile-drawer-auth">

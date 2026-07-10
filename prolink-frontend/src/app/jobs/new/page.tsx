@@ -88,17 +88,20 @@ function NewJobPage() {
     setErrorType('');
     setLoading(true);
     try {
-      const jobData = { 
+      // Only include defined fields — skip null/undefined so Zod default works
+      const jobData: Record<string, any> = {
         title: formData.title,
         description: formData.description,
-        budget: formData.budget ? parseFloat(formData.budget) : null,
         job_type: formData.onSite ? 'in-person' : 'digital',
         payment_type: formData.jobType,
-        category_id: formData.categoryId ? parseInt(formData.categoryId) : null,
-        state: formData.onSite ? formData.state : null,
-        city: formData.onSite ? formData.city : null,
         skillIds: formData.skillIds,
       };
+      if (formData.budget) jobData.budget = parseFloat(formData.budget);
+      if (formData.categoryId) jobData.category_id = parseInt(formData.categoryId);
+      if (formData.onSite) {
+        if (formData.state) jobData.state = formData.state;
+        if (formData.city) jobData.city = formData.city;
+      }
       await api.post('/jobs', jobData);
       router.push('/dashboard/my-jobs');
     } catch (error: any) {

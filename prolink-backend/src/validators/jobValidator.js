@@ -5,15 +5,19 @@ const jobSchema = z.object({
   title: z.string().min(5, 'Job title must be at least 5 characters').max(255),
   description: z.string().min(20, 'Description must be at least 20 characters'),
   budget: z.preprocess((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
     if (typeof val === 'string' && val.trim() !== '') return Number(val);
     if (typeof val === 'number') return val;
     return undefined;
   }, z.number().min(5000, 'Budget must be at least ₦5,000')),
   job_type: z.enum(['digital', 'in-person']).default('digital'),
   payment_type: z.enum(['fixed', 'milestone']).optional(),
-  category_id: z.number().int().positive().optional(),
-  state: z.string().max(100).optional(),
-  city: z.string().max(100).optional(),
+  category_id: z.preprocess((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    return Number(val);
+  }, z.number().int().positive().optional()),
+  state: z.string().max(100).nullable().optional(),
+  city: z.string().max(100).nullable().optional(),
   skillIds: z.array(z.number().int().positive()).optional(),
 });
 
