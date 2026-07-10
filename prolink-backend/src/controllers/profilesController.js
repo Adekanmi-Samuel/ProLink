@@ -25,25 +25,24 @@ const getProfileById = async (req, res, next) => {
 const updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const {
-      full_name, bio, profile_picture_url,
-      title, hourlyRate, ratePeriod, availability,
-      skills,           // ← frontend sends 'skills', not 'skillIds'
-      state, city, gender
-    } = req.validatedBody || req.body;
+    const body = req.validatedBody || req.body;
 
-    await profilesService.updateProfile(userId, {
-      full_name,
-      bio,
-      profile_picture_url,
-      title,
-      hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
-      rate_period: ratePeriod,
-      availability,
-      state,
-      city,
-      gender,
-    }, skills);  // ← pass skills (not skillIds) to service
+    // Build clean data object — only set defined keys so upsert doesn't
+    // overwrite with null for every unspecified field.
+    const data = {};
+    if (body.full_name !== undefined) data.full_name = body.full_name;
+    if (body.bio !== undefined) data.bio = body.bio;
+    if (body.profile_picture_url !== undefined) data.profile_picture_url = body.profile_picture_url || null;
+    if (body.title !== undefined) data.title = body.title;
+    if (body.hourlyRate !== undefined) data.hourly_rate = body.hourlyRate ? parseFloat(body.hourlyRate) : null;
+    if (body.ratePeriod !== undefined) data.rate_period = body.ratePeriod;
+    if (body.rate_period !== undefined) data.rate_period = body.rate_period;
+    if (body.availability !== undefined) data.availability = body.availability;
+    if (body.state !== undefined) data.state = body.state;
+    if (body.city !== undefined) data.city = body.city;
+    if (body.gender !== undefined) data.gender = body.gender || null;
+
+    await profilesService.updateProfile(userId, data, body.skills);
 
     res.json({ msg: 'Profile updated successfully.' });
   } catch (err) {
