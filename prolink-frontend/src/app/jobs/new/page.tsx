@@ -112,11 +112,13 @@ function NewJobPage() {
         errMsg = errData.errors[0].message;
       }
 
-      // Handle verification errors from any response shape
-      if ((status === 403 || status === 500) && (
-        String(errMsg).toLowerCase().includes('verify') ||
-        String(errData?.msg || '').toLowerCase().includes('verify')
-      )) {
+      // Handle verification errors from any response shape or status code
+      const errMsgStr = String(errMsg || '');
+      const isVerifyError = errMsgStr.toLowerCase().includes('verify') ||
+        errMsgStr.toLowerCase().includes('email') ||
+        String(errData?.msg || '').toLowerCase().includes('verify');
+
+      if (isVerifyError) {
         errMsg = (
           <span>
             ⚠️ Please verify your email before posting jobs.{' '}
