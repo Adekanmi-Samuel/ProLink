@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const logger = require('../config/logger');
 
 const requireVerified = async (req, res, next) => {
   try {
@@ -8,11 +9,11 @@ const requireVerified = async (req, res, next) => {
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    
+
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
-    
+
     if (user.status === 'banned' || user.status === 'suspended') {
       return res.status(403).json({ error: 'Your account has been ' + user.status });
     }
@@ -23,7 +24,7 @@ const requireVerified = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Verify middleware error:', error);
+    logger.error('Verify middleware error', { error: error.message });
     res.status(500).json({ error: 'Server error verifying account status' });
   }
 };

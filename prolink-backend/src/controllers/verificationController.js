@@ -31,7 +31,7 @@ const verifyOTP = async (req, res, next) => {
 
     res.json({ message: 'Email verified successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
 
@@ -60,7 +60,7 @@ const verifyNIN = async (req, res, next) => {
 
     res.json({ message: 'NIN submitted for review successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
 
@@ -89,7 +89,7 @@ const verifyCAC = async (req, res, next) => {
 
     res.json({ message: 'CAC submitted for review successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
 

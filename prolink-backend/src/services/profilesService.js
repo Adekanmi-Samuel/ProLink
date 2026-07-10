@@ -60,7 +60,7 @@ const getProfileById = async (userId) => {
   const [user, portfolioItems, profileSkills] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { user_type: true }
+      select: { user_type: true, email_verified: true, phone_verified: true }
     }),
     prisma.portfolioItem.findMany({ where: { profile_id: profile.id } }),
     prisma.profileSkill.findMany({ where: { profile_id: profile.id }, include: { skill: true } })
@@ -208,11 +208,11 @@ const saveBankAccount = async (userId, data) => {
       if (result.status && result.data?.recipient_code) {
         recipientCode = result.data.recipient_code;
       } else {
-        console.warn('Paystack recipient creation failed:', result.message);
+        logger.warn('Paystack recipient creation failed', { message: result.message });
         throw new Error(result.message || 'Invalid bank account details');
       }
     } catch (err) {
-      console.warn('Paystack recipient creation error:', err.message);
+      logger.warn('Paystack recipient creation error', { error: err.message });
       throw new Error(err.message || 'Could not verify bank account with Paystack.');
     }
   }

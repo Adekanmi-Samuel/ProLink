@@ -1,4 +1,5 @@
 const reviewsService = require('../services/reviewsService');
+const logger = require('../config/logger');
 
 const submitReview = async (req, res, next) => {
   try {
@@ -25,7 +26,7 @@ const submitReview = async (req, res, next) => {
       return res.status(400).json({ msg: error.message });
     }
     
-    console.error('Error submitting review:', error);
+    logger.error('Error submitting review', { error: error.message });
     res.status(500).json({ msg: 'Server error while submitting review' });
   }
 };

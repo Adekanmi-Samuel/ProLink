@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const logger = require('../config/logger');
 
 const requireAdmin = async (req, res, next) => {
   try {
@@ -8,14 +9,14 @@ const requireAdmin = async (req, res, next) => {
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    
+
     if (!user || user.user_type !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
     next();
   } catch (error) {
-    console.error('Admin middleware error:', error);
+    logger.error('Admin middleware error', { error: error.message });
     res.status(500).json({ error: 'Server error verifying admin status' });
   }
 };

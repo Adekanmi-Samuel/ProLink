@@ -1,5 +1,6 @@
 const authService = require('../services/authService');
 const prisma = require('../config/prisma');
+const logger = require('../config/logger');
 
 const register = async (req, res, next) => {
   try {
@@ -22,7 +23,7 @@ const register = async (req, res, next) => {
     if (err.message === 'Phone number is already registered.') {
       return res.status(400).json({ error: err.message });
     }
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -49,7 +50,7 @@ const login = async (req, res, next) => {
     if (err.message === 'Invalid email or password' || err.message.startsWith('Account temporarily locked')) {
       return res.status(401).json({ error: err.message });
     }
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -81,7 +82,7 @@ const verify = async (req, res) => {
 
     res.json({ message: 'Email verified successfully!' });
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -96,7 +97,7 @@ const resendVerification = async (req, res, next) => {
     if (err.message === 'User is already verified') {
       return res.status(400).json({ error: err.message });
     }
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -113,7 +114,7 @@ const forgotPassword = async (req, res, next) => {
     if (err.message === 'User not found') {
       return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     }
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -132,7 +133,7 @@ const resetPassword = async (req, res, next) => {
     if (err.message === 'You cannot reuse a recently used password.') {
       return res.status(400).json({ error: err.message });
     }
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };

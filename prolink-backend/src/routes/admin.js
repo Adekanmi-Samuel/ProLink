@@ -4,6 +4,7 @@ const adminController = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
 const requireAdmin = require('../middleware/requireAdmin');
 const { apiLimiter } = require('../middleware/rateLimiter');
+const logger = require('../config/logger');
 
 // All admin routes require authentication and admin role
 router.use(authMiddleware);
@@ -61,7 +62,7 @@ router.get('/revenue', async (req, res) => {
       pending_verifications: pendingVerif,
     });
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 });

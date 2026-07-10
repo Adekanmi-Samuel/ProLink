@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadLimiter } = require('../middleware/rateLimiter');
+const logger = require('../config/logger');
 
 // Ensure upload directory exists
 const UPLOAD_DIR = process.env.VERCEL 
@@ -66,7 +67,7 @@ const uploadToCloudinary = async (filePath, resourceType) => {
     });
     return result.secure_url;
   } catch (err) {
-    console.warn('Cloudinary upload failed, using local fallback:', err.message);
+    logger.warn('Cloudinary upload failed, using local fallback', { error: err.message });
     return null;
   }
 };
@@ -97,7 +98,7 @@ router.post('/', authMiddleware, uploadLimiter, upload.single('file'), async (re
       resource_type: resourceType,
     });
   } catch (err) {
-    console.error('Upload Error:', err);
+    logger.error('Upload failed', { error: err.message });
     res.status(500).json({ error: 'Failed to upload file.' });
   }
 });

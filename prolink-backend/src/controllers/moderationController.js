@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const emailService = require('../services/emailService');
+const logger = require('../config/logger');
 
 const blockUser = async (req, res, next) => {
   try {
@@ -30,7 +31,7 @@ const blockUser = async (req, res, next) => {
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'You have already blocked this user' });
     }
-    console.error('Error blocking user:', error);
+    logger.error('Error blocking user', { error: error.message });
     res.status(500).json({ error: 'Server error' });
   }
 };

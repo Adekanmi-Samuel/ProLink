@@ -35,11 +35,12 @@ const createDispute = async (req, res, next) => {
         await emailService.sendDisputeEmail(targetUser.email, dispute.id, isClient ? 'provider' : 'client', 'created');
       }
     } catch (emailErr) {
-      }
+      console.error('Failed to send dispute created email', emailErr.message);
+    }
 
     res.status(201).json(dispute);
   } catch (error) {
-    res.status(500).json({ msg: error.message || 'Failed to create dispute' });
+    next(error);
   }
 };
 
@@ -48,7 +49,7 @@ const getDisputes = async (req, res, next) => {
     const disputes = await disputesService.getDisputes();
     res.json(disputes);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch disputes' });
+    next(error);
   }
 };
 
@@ -73,11 +74,12 @@ const resolveDispute = async (req, res, next) => {
         if (provider && provider.email) await emailService.sendDisputeEmail(provider.email, dispute.id, 'provider', 'resolved');
       }
     } catch (emailErr) {
-      }
+      console.error('Failed to send dispute resolved email', emailErr.message);
+    }
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ msg: error.message || 'Failed to resolve dispute' });
+    next(error);
   }
 };
 
@@ -101,7 +103,7 @@ const addEvidence = async (req, res, next) => {
     const evidence = await disputesService.addEvidence(parseInt(id), req.user.id, note, fileUrl);
     res.status(201).json(evidence);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to add evidence' });
+    next(error);
   }
 };
 
@@ -111,7 +113,7 @@ const getDisputeDetail = async (req, res, next) => {
     if (!dispute) return res.status(404).json({ msg: 'Dispute not found' });
     res.json(dispute);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch dispute' });
+    next(error);
   }
 };
 
@@ -120,7 +122,7 @@ const getMyDisputes = async (req, res, next) => {
     const disputes = await disputesService.getMyDisputes(req.user.id);
     res.json(disputes);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch your disputes' });
+    next(error);
   }
 };
 

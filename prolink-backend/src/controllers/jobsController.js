@@ -2,13 +2,12 @@ const jobsService = require('../services/jobsService');
 const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 const { jobSchema, bidSchema } = require('../validators/jobValidator');
+const logger = require('../config/logger');
 
 const createJob = async (req, res, next) => {
   try {
     const clientId = req.user.id;
     const body = req.validatedBody || req.body;
-
-    console.log('[JOBS] createJob body:', JSON.stringify(body));
 
     const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = body;
 
@@ -120,10 +119,6 @@ const submitBid = async (req, res, next) => {
     if (job) {
       const io = req.app.get('io');
       if (io) {
-        io.to(`user_${job.client_id}`).emit('global_notification', {
-          title: 'New Bid Received',
-          message: `Someone placed a bid of \u20A6${amount} on your job "${job.title}".`
-        });
         io.to(`user_${job.client_id}`).emit('bid_update', {
           jobId: job.id,
           bidId: bid.id,
@@ -147,7 +142,8 @@ const submitBid = async (req, res, next) => {
           );
         }
       } catch (emailErr) {
-        }
+        logger.error('Failed to send bid received email', { error: emailErr.message });
+      }
     }
     
     res.status(201).json({ msg: 'Bid submitted!', bid });
@@ -162,7 +158,7 @@ const submitBid = async (req, res, next) => {
     ) {
       return res.status(400).json({ msg: err.message });
     }
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
@@ -192,14 +188,15 @@ const hireProvider = async (req, res, next) => {
         await emailService.sendHiredEmail(provider.email, job.title, clientProfile?.full_name || 'A client');
       }
     } catch (emailErr) {
-      }
+      logger.error('Failed to send hired email', { error: emailErr.message });
+    }
 
     res.status(200).json({ msg: 'Freelancer hired!', assignment });
   } catch (err) {
     if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
     if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
     if (err.message === 'Job is not open for hiring.') return res.status(400).json({ msg: err.message });
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
@@ -225,7 +222,7 @@ const completeJob = async (req, res, next) => {
     if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
     if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
     if (err.message === 'Job cannot be completed in its current state.') return res.status(400).json({ msg: err.message });
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
@@ -238,7 +235,7 @@ const cancelJob = async (req, res, next) => {
     if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
     if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
     if (err.message === 'Only open jobs can be cancelled.') return res.status(400).json({ msg: err.message });
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };

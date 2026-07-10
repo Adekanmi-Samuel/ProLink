@@ -4,6 +4,7 @@ const paymentsService = require('../services/paymentsService');
 const prisma = require('../config/prisma');
 const { createNotification } = require('../services/notificationService');
 const { refreshProviderTrustMetrics } = require('../utils/trustMetrics');
+const logger = require('../config/logger');
 
 const createMilestone = async (req, res, next) => {
   try {
@@ -121,7 +122,7 @@ const approveMilestone = async (req, res, next) => {
               milestone.amount
             );
             // Real-time notification
-            createNotification(provider.id, 'milestone_approved', `Milestone "${milestone.title}" was approved — funds released!`, `/dashboard/contracts/${milestone.job_id}`).catch(console.error);
+            createNotification(provider.id, 'milestone_approved', `Milestone "${milestone.title}" was approved — funds released!`, `/dashboard/contracts/${milestone.job_id}`).catch(err => logger.error('Failed to create notification', { error: err.message }));
           }
       }
     } catch (emailErr) {
@@ -131,9 +132,9 @@ const approveMilestone = async (req, res, next) => {
     if (milestone.job.assignment?.provider_id) {
       prisma.profile.findUnique({ where: { user_id: milestone.job.assignment.provider_id } })
         .then(profile => {
-          if (profile) refreshProviderTrustMetrics(profile.id).catch(err => console.error('[TRUST METRICS] Refresh failed:', err));
+          if (profile) refreshProviderTrustMetrics(profile.id).catch(err => logger.error('Trust metrics refresh failed', { error: err.message }));
         })
-        .catch(err => console.error('[TRUST METRICS] Profile lookup failed:', err));
+        .catch(err => logger.error('Trust metrics profile lookup failed', { error: err.message }));
     }
 
     res.json(updated);
