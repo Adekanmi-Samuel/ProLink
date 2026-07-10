@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import { useTheme } from './ThemeProvider';
 import { navbarVariants, dropdownVariants } from '../lib/motion';
+import { useSocket } from '../lib/SocketContext';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -22,6 +23,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { socket } = useSocket();
 
   const fetchUser = useCallback(async () => {
     try {
@@ -51,6 +53,20 @@ export default function Navbar() {
       setNotifications(res.data?.notifications || res.data || []);
     } catch { /* noop */ }
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewNotif = (notif) => {
+      setNotifCount((c) => c + 1);
+      setNotifications((prev) => [notif, ...prev].slice(0, 5));
+    };
+    socket.on('notification', handleNewNotif);
+    socket.on('global_notification', handleNewNotif);
+    return () => {
+      socket.off('notification', handleNewNotif);
+      socket.off('global_notification', handleNewNotif);
+    };
+  }, [socket]);
 
   useEffect(() => {
     setAvatarDropdown(false);

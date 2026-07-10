@@ -16,7 +16,7 @@ function MyJobsPage() {
     const fetchMyJobs = async () => {
       try {
         const response = await api.get('/jobs/my-jobs');
-        setJobs(response.data);
+        setJobs(response.data.jobs || []);
       } catch (error) {
         console.error(error);
       } finally {

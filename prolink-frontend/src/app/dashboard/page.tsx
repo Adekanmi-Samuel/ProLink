@@ -74,7 +74,7 @@ function DashboardPage() {
       } else {
         try {
           const jobsRes = await api.get('/jobs/my-jobs');
-          setMyJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+          setMyJobs(Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data.jobs || []));
         } catch { /* noop */ }
       }
       try {
@@ -98,15 +98,17 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!socket) return;
-    const handleBidUpdate = (data: any) => {
-      // Reload dashboard silently on new bid
+    const handleUpdate = () => {
+      // Reload dashboard silently on events
       load();
     };
-    socket.on('bid_update', handleBidUpdate);
-    socket.on('global_notification', handleBidUpdate);
+    socket.on('bid_update', handleUpdate);
+    socket.on('notification', handleUpdate);
+    socket.on('global_notification', handleUpdate);
     return () => {
-      socket.off('bid_update', handleBidUpdate);
-      socket.off('global_notification', handleBidUpdate);
+      socket.off('bid_update', handleUpdate);
+      socket.off('notification', handleUpdate);
+      socket.off('global_notification', handleUpdate);
     };
   }, [socket, load]);
 
