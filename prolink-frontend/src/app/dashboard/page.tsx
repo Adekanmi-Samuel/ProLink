@@ -115,7 +115,7 @@ function DashboardPage() {
     const next = !openToWork;
     setOpenToWork(next);
     try {
-      await api.patch('/profiles/me', { availability: next ? 'open' : 'unavailable' });
+      await api.put('/profiles/me', { availability: next ? 'open' : 'unavailable' });
     } catch {
       setOpenToWork(!next);
     } finally {
