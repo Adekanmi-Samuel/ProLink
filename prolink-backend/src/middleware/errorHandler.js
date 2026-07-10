@@ -42,16 +42,9 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
-  // Default server error — pass through message for known errors
-  const isKnownError = err.message && (
-    err.message.includes('verify') ||
-    err.message.includes('Verify') ||
-    err.message.includes('email') ||
-    err.message.includes('authorized') ||
-    err.message.includes('not found')
-  );
+  // Default server error — never leak internal details to clients
   res.status(500).json({
-    error: isKnownError ? err.message : 'Internal server error',
+    error: 'Internal server error',
   });
 };
 

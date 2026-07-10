@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const { to, subject, html, text, secret, isNotification, attachments } = await req.json();
 
     // Verify secret to prevent abuse
-    if (secret !== (process.env.EMAIL_API_SECRET || 'PROLINK_INTERNAL_SECRET_888')) {
+    if (!process.env.EMAIL_API_SECRET || secret !== process.env.EMAIL_API_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -16,8 +16,8 @@ export async function POST(req: Request) {
       ? process.env.SMTP_NOTIFICATIONS_USER
       : process.env.SMTP_USER;
     const smtpPass = useNotificationAccount
-      ? (process.env.SMTP_NOTIFICATIONS_PASS || 'tmibuibxgiekzael')
-      : (process.env.SMTP_PASS || 'aacjcuqkwdtnyccg');
+      ? process.env.SMTP_NOTIFICATIONS_PASS
+      : process.env.SMTP_PASS;
 
     if (!smtpUser || !smtpPass) {
       throw new Error('SMTP credentials are not configured in environment variables.');

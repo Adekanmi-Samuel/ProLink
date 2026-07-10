@@ -92,12 +92,12 @@ export default function Navbar() {
   const clientNav = [
     { href: '/jobs/new', label: 'Post a Job' },
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/chat', label: 'Messages' },
+    { href: '/dashboard/messages', label: 'Messages' },
   ];
   const providerNav = [
     { href: '/jobs', label: 'Find Work' },
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/chat', label: 'Messages' },
+    { href: '/dashboard/messages', label: 'Messages' },
   ];
   const adminNav = [
     { href: '/admin', label: 'Admin Panel' },

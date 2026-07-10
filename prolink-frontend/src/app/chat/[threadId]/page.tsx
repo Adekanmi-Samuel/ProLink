@@ -181,9 +181,18 @@ export default function ChatPage() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newMessage.trim();
-    if ((!trimmed && !pendingAttachment) || !currentUser || !threadId || !socketRef.current) return;
+    if ((!trimmed && !pendingAttachment) || !currentUser || !threadId) return;
 
     setSending(true);
+    const isSocketConnected = socketRef.current?.connected;
+
+    // Helper: send via REST API (fallback when Socket.IO unavailable)
+    const sendViaREST = async (content: string, messageType: string) => {
+      await api.post(`/chats/${threadId}/messages`, { content, message_type: messageType });
+      // Refresh messages after REST send
+      const res = await api.get(`/chats/${threadId}/messages`);
+      setMessages(res.data?.data || []);
+    };
 
     if (pendingAttachment) {
       setUploadingFile(pendingAttachment);
@@ -197,11 +206,13 @@ export default function ChatPage() {
         if (isImage) messageType = 'image';
         else if (isVideo) messageType = 'video';
 
-        socketRef.current.emit('send_message', {
-          threadId,
-          content: JSON.stringify({ url: fileUrl, name: pendingAttachment.name, caption: trimmed }),
-          message_type: messageType,
-        });
+        const content = JSON.stringify({ url: fileUrl, name: pendingAttachment.name, caption: trimmed });
+
+        if (isSocketConnected) {
+          socketRef.current.emit('send_message', { threadId, content, message_type: messageType });
+        } else {
+          await sendViaREST(content, messageType);
+        }
       } catch (err) {
         console.error('File upload failed', err);
         alert('Failed to upload file. Please try again.');
@@ -210,14 +221,16 @@ export default function ChatPage() {
         setPendingAttachment(null);
       }
     } else {
-      socketRef.current.emit('send_message', {
-        threadId,
-        content: trimmed,
-        message_type: 'text',
-      });
+      if (isSocketConnected) {
+        socketRef.current.emit('send_message', { threadId, content: trimmed, message_type: 'text' });
+      } else {
+        await sendViaREST(trimmed, 'text');
+      }
     }
 
-    socketRef.current.emit('typing_indicator', { threadId, isTyping: false });
+    if (isSocketConnected) {
+      socketRef.current.emit('typing_indicator', { threadId, isTyping: false });
+    }
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     setNewMessage('');
     setSending(false);

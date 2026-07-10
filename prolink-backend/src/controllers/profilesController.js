@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const profilesService = require('../services/profilesService');
+const logger = require('../config/logger');
 const getMyProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -36,7 +37,7 @@ const updateProfile = async (req, res, next) => {
     if (body.title !== undefined) data.title = body.title;
     if (body.hourlyRate !== undefined) data.hourly_rate = body.hourlyRate ? parseFloat(body.hourlyRate) : null;
     if (body.ratePeriod !== undefined) data.rate_period = body.ratePeriod;
-    if (body.rate_period !== undefined) data.rate_period = body.rate_period;
+    if (body.rate_period !== undefined && data.rate_period === undefined) data.rate_period = body.rate_period;
     if (body.availability !== undefined) data.availability = body.availability;
     if (body.state !== undefined) data.state = body.state;
     if (body.city !== undefined) data.city = body.city;
@@ -74,7 +75,7 @@ const updatePicture = async (req, res, next) => {
           await cloudinary.uploader.destroy('prolink_uploads/' + publicId);
         }
       } catch (cleanupErr) {
-        console.warn('Old image cleanup skipped:', cleanupErr.message);
+        logger.warn('Old image cleanup skipped', { error: cleanupErr.message });
       }
     }
 
@@ -175,8 +176,7 @@ const patchProfile = async (req, res) => {
     await profilesService.updateProfile(userId, data);
     res.json({ msg: 'Profile updated.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 

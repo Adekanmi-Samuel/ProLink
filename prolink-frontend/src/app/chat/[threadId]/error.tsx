@@ -36,7 +36,7 @@ export default function ChatError({
         <Button variant="accent" onClick={() => reset()}>
           Try Again
         </Button>
-        <Button variant="ghost" onClick={() => (window.location.href = '/chat')}>
+        <Button variant="ghost" onClick={() => (window.location.href = '/dashboard/messages')}>
           Back to Chats
         </Button>
       </div>

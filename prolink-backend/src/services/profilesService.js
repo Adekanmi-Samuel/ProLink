@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const logger = require('../config/logger');
 
 const getMyProfile = async (userId) => {
   const profile = await prisma.profile.findUnique({ where: { user_id: userId } });

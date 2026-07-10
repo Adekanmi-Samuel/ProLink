@@ -1,4 +1,4 @@
-const pool = require('../../db');
+const prisma = require('../config/prisma');
 
 // Get personal analytics for the logged-in user
 exports.getUserAnalytics = async (req, res, next) => {
@@ -9,49 +9,53 @@ exports.getUserAnalytics = async (req, res, next) => {
     let totalSpentOrEarned = 0;
     let completedJobs = 0;
     let activeJobs = 0;
-    
+
     if (userType === 'client') {
-      // Client analytics
-      const amountRes = await pool.query(
-        `SELECT SUM(amount) as total_spent FROM milestones WHERE job_id IN (SELECT id FROM jobs WHERE client_id = $1) AND status = 'released'`,
-        [userId]
-      );
-      totalSpentOrEarned = amountRes.rows[0].total_spent || 0;
+      // Client analytics: sum of milestones on jobs where user is the client
+      const amountRes = await prisma.milestone.aggregate({
+        _sum: { amount: true },
+        where: {
+          status: { in: ['approved', 'paid'] },
+          job: { client_id: userId }
+        }
+      });
+      totalSpentOrEarned = parseFloat(amountRes._sum.amount || 0);
 
-      const jobsRes = await pool.query(
-        `SELECT 
-          COUNT(*) FILTER (WHERE status = 'completed') as completed,
-          COUNT(*) FILTER (WHERE status = 'in_progress') as active
-         FROM jobs WHERE client_id = $1`,
-        [userId]
-      );
-      completedJobs = jobsRes.rows[0].completed || 0;
-      activeJobs = jobsRes.rows[0].active || 0;
+      const [completedRes, activeRes] = await Promise.all([
+        prisma.job.count({ where: { client_id: userId, status: 'completed' } }),
+        prisma.job.count({ where: { client_id: userId, status: 'assigned' } }),
+      ]);
+      completedJobs = completedRes;
+      activeJobs = activeRes;
     } else {
-      // Provider analytics
-      const amountRes = await pool.query(
-        `SELECT SUM(amount) as total_earned FROM milestones WHERE provider_id = $1 AND status = 'released'`,
-        [userId]
-      );
-      totalSpentOrEarned = amountRes.rows[0].total_earned || 0;
+      // Provider analytics: sum of milestones on jobs where user is the assigned provider
+      const amountRes = await prisma.milestone.aggregate({
+        _sum: { amount: true },
+        where: {
+          status: { in: ['approved', 'paid'] },
+          job: { assignment: { provider_id: userId } }
+        }
+      });
+      totalSpentOrEarned = parseFloat(amountRes._sum.amount || 0);
 
-      const jobsRes = await pool.query(
-        `SELECT 
-          COUNT(*) FILTER (WHERE status = 'completed') as completed,
-          COUNT(*) FILTER (WHERE status = 'in_progress') as active
-         FROM jobs WHERE provider_id = $1`,
-        [userId]
-      );
-      completedJobs = jobsRes.rows[0].completed || 0;
-      activeJobs = jobsRes.rows[0].active || 0;
+      const [completedRes, activeRes] = await Promise.all([
+        prisma.job.count({
+          where: { status: 'completed', assignment: { provider_id: userId } }
+        }),
+        prisma.job.count({
+          where: { status: 'assigned', assignment: { provider_id: userId } }
+        }),
+      ]);
+      completedJobs = completedRes;
+      activeJobs = activeRes;
     }
 
     res.json({
       success: true,
       data: {
-        total_amount: Number(totalSpentOrEarned),
-        completed_jobs: Number(completedJobs),
-        active_jobs: Number(activeJobs)
+        total_amount: totalSpentOrEarned,
+        completed_jobs: completedJobs,
+        active_jobs: activeJobs
       }
     });
 
