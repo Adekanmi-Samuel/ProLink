@@ -210,8 +210,23 @@ const sendMessage = async (threadId, senderId, messageData) => {
     },
   });
 
-  // Send ntfy push to the other user
+  // Send email and push notifications
   try {
+    const sender = await prisma.user.findUnique({ where: { id: senderId }, include: { profile: true } });
+    const receiver = await prisma.user.findUnique({ where: { id: otherUserId } });
+    const { sendChatMessageNotification } = require('./emailService');
+    
+    // Email notification
+    if (receiver && receiver.email) {
+      sendChatMessageNotification(
+        receiver.email,
+        sender?.profile?.full_name || 'ProLink User',
+        messageData.message_type === 'text' ? messageData.content : '📎 Attachment',
+        threadId
+      ).catch(console.error);
+    }
+
+    // Push notification (ntfy)
     const topic = `prolink_user_${otherUserId}`;
     if (typeof fetch !== 'undefined') {
       await fetch(`https://ntfy.sh/${topic}`, {
@@ -221,10 +236,10 @@ const sendMessage = async (threadId, senderId, messageData) => {
           'Title': 'New Message on ProLink',
           'Tags': 'speech_balloon'
         }
-      });
+      }).catch(console.error);
     }
   } catch (err) {
-    console.error('Failed to send ntfy push notification for message:', err);
+    console.error('Failed to send notifications for message:', err);
   }
 
   return message;

@@ -309,7 +309,10 @@ const getJobById = async (jobId, userId) => {
 };
 
 const submitBid = async (jobId, providerId, { amount, proposal }) => {
-  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  const job = await prisma.job.findUnique({ 
+    where: { id: jobId },
+    include: { client: { include: { profile: true } } }
+  });
   if (!job) throw new Error('Job not found.');
 
   // Check blocks
@@ -338,6 +341,22 @@ const submitBid = async (jobId, providerId, { amount, proposal }) => {
 
   // Notify job owner about new bid
   createNotification(job.client_id, 'new_bid', `A new bid of ₦${amount} was placed on your job "${job.title}"`, `/dashboard/jobs/${jobId}`).catch(console.error);
+  
+  // Send Email Notification
+  try {
+    const provider = await prisma.user.findUnique({ where: { id: providerId }, include: { profile: true } });
+    const { sendBidReceivedEmail } = require('./emailService');
+    const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+    sendBidReceivedEmail(
+      job.client.email, 
+      job.title, 
+      provider?.profile?.full_name || 'A freelancer', 
+      amount, 
+      `${frontendUrl}/jobs/${jobId}`
+    ).catch(console.error);
+  } catch (err) {
+    console.error('Failed to send bid email:', err);
+  }
 
   return bid;
 };

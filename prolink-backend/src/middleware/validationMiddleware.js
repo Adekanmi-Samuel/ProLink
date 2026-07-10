@@ -18,8 +18,9 @@ const validateRequest = (schema, source = 'body') => {
       next();
     } catch (error) {
       if (error.name === 'ZodError') {
-        const formattedErrors = error.errors.map(err => ({
-          field: err.path.join('.'),
+        const errorsList = error.issues || error.errors || [];
+        const formattedErrors = errorsList.map(err => ({
+          field: err.path ? err.path.join('.') : 'unknown',
           message: err.message,
         }));
 

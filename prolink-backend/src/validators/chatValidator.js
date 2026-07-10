@@ -8,7 +8,6 @@ const initiateChatsSchema = z.object({
 
 // Send message validation
 const sendMessageSchema = z.object({
-  thread_id: z.number().int().positive('Thread ID must be a positive number'),
   content: z.string().min(1, 'Message cannot be empty').max(5000, 'Message is too long'),
   message_type: z.enum(['text', 'image', 'video', 'document']).default('text'),
 });
