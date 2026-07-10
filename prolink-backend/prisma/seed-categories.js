@@ -96,12 +96,13 @@ async function main() {
     console.log(`✅ Category: ${category.name} (id: ${category.id})`);
 
     for (const skillName of cat.skills) {
-      const skillSlug = skillName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      await prisma.skill.upsert({
-        where: { slug: skillSlug },
-        update: { name: skillName, category_id: category.id },
-        create: { name: skillName, slug: skillSlug, category_id: category.id }
-      });
+      const skillSlug = skillName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + category.id;
+      // Check if this skill name already exists (name column has UNIQUE constraint)
+      const existing = await prisma.skill.findFirst({ where: { name: skillName }, select: { id: true } });
+      if (!existing) {
+        await prisma.skill.create({ data: { name: skillName, slug: skillSlug, category_id: category.id } });
+      }
+      // If it exists, skip — skill is already seeded under the first category that had it
     }
     console.log(`   └─ ${cat.skills.length} skills`);
   }

@@ -25,13 +25,13 @@ const getSkills = async (req, res, next) => {
       where.category_id = parseInt(categoryId);
     }
     if (q) {
-      where.name = { contains: q, mode: 'insensitive' };
+      where.name = { contains: q };
     }
 
     const skills = await prisma.skill.findMany({
       where,
       orderBy: { name: 'asc' },
-      take: 50 // Limit results
+      take: 500
     });
     
     res.json(skills);
