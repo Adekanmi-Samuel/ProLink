@@ -112,7 +112,11 @@ function NewJobPage() {
         errMsg = errData.errors[0].message;
       }
 
-      if (status === 403 && errData?.error?.includes('verify')) {
+      // Handle verification errors from any response shape
+      if ((status === 403 || status === 500) && (
+        String(errMsg).toLowerCase().includes('verify') ||
+        String(errData?.msg || '').toLowerCase().includes('verify')
+      )) {
         errMsg = (
           <span>
             ⚠️ Please verify your email before posting jobs.{' '}
@@ -126,6 +130,7 @@ function NewJobPage() {
         errMsg = '⚠️ Only clients can post jobs. Your account is registered as a Service Provider.';
       }
       setErrorMsg(errMsg);
+      console.error('[Job Post Error]', { status, errData });
     } finally {
       setLoading(false);
     }
