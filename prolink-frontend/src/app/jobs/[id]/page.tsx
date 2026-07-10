@@ -185,6 +185,14 @@ export default function JobDetailPage() {
     } catch (error: any) { alert('Failed: ' + (error.response?.data?.msg || 'Try again.')); }
   };
 
+  const handleDeleteJob = async () => {
+    if (!window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/jobs/${id}`);
+      router.push('/dashboard/my-jobs');
+    } catch (error: any) { alert('Failed to delete job: ' + (error.response?.data?.msg || 'Please try again.')); }
+  };
+
   // Budget variance calculation
   const getBidVariance = (bidAmount: number) => {
     const budget = Number(jobData?.budget || 0);
@@ -254,6 +262,16 @@ export default function JobDetailPage() {
                     <span className="badge badge-neutral">
                       {jobData.job_type === 'fixed' ? 'Fixed Price' : 'Milestone'}
                     </span>
+                    {isOwner && jobData.status === 'open' && (
+                      <button 
+                        onClick={handleDeleteJob} 
+                        className="badge badge-neutral" 
+                        style={{ background: 'rgba(220, 38, 38, 0.1)', color: 'var(--danger)', border: '1px solid rgba(220, 38, 38, 0.2)', cursor: 'pointer' }}
+                        aria-label="Delete job"
+                      >
+                        🗑️ Delete Job
+                      </button>
+                    )}
                   </div>
                   <h1 className="job-detail-title">{jobData.title}</h1>
                 </div>
