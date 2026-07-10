@@ -10,6 +10,7 @@ const router = express.Router();
 // Profile endpoints
 router.get('/me', authMiddleware, apiLimiter, profilesController.getMyProfile);
 router.put('/me', authMiddleware, apiLimiter, validateRequest(updateProfileSchema), profilesController.updateProfile);
+router.patch('/me', authMiddleware, apiLimiter, profilesController.patchProfile);
 router.put('/me/picture', authMiddleware, apiLimiter, validateRequest(updatePictureSchema), profilesController.updatePicture);
 
 router.get('/me/bank', authMiddleware, apiLimiter, profilesController.getBankAccount);

@@ -10,6 +10,7 @@ router.post('/register', registerLimiter, validateRegister, authController.regis
 router.post('/login', loginLimiter, validateLogin, authController.login);
 router.post('/logout', authMiddleware, authController.logout);
 router.get('/verify', authController.verify);
+router.post('/verify-otp', authController.verify);
 router.post('/resend-verification', authMiddleware, authController.resendVerification);
 router.post('/forgot-password', loginLimiter, validateForgotPassword, authController.forgotPassword);
 router.post('/reset-password', loginLimiter, validateResetPassword, authController.resetPassword);

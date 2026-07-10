@@ -28,6 +28,10 @@ const resolveConfiguredApiBaseUrl = () => {
 
   // If all empty, fall back to production URL
   if (!configured || configured.trim() === '') {
+    console.warn(
+      '[ProLink] NEXT_PUBLIC_API_BASE_URL is not set. ' +
+      'Using fallback URL. Please set this env var in your Vercel dashboard.'
+    );
     return ensureApiSuffix(PRODUCTION_API_BASE_URL);
   }
 

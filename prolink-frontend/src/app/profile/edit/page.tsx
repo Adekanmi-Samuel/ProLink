@@ -214,6 +214,12 @@ function EditProfilePage() {
 
   return (
     <div className="page">
+      <style>{`
+        @media (max-width: 600px) {
+          .profile-row { flex-direction: column !important; grid-template-columns: 1fr !important; }
+          .profile-row-3 { flex-direction: column !important; grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <div
         style={{
           maxWidth: 720,
@@ -300,7 +306,7 @@ function EditProfilePage() {
                   </div>
 
                   {/* State + City */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="profile-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="field-group">
                       <label className="field-label" htmlFor="state">State</label>
                       <select id="state" name="state" value={form.state} onChange={handleChange} className="field">
@@ -379,7 +385,7 @@ function EditProfilePage() {
                   {isProvider && (
                     <>
                       {/* Rate + Period + Availability */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                      <div className="profile-row-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                         <div className="field-group">
                           <label className="field-label" htmlFor="hourlyRate">Expected Rate (₦)</label>
                           <input

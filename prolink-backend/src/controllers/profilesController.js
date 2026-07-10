@@ -161,6 +161,25 @@ const getEarningsChart = async (req, res, next) => {
   }
 };
 
+const patchProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const allowed = ['availability', 'profile_picture_url'];
+    const data = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) data[key] = req.body[key];
+    }
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ msg: 'No valid fields to update.' });
+    }
+    await profilesService.updateProfile(userId, data);
+    res.json({ msg: 'Profile updated.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfileById,
@@ -170,5 +189,6 @@ module.exports = {
   getBankAccount,
   saveBankAccount,
   getMyEarnings,
-  getEarningsChart
+  getEarningsChart,
+  patchProfile
 };

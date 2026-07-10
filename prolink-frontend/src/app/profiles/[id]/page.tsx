@@ -58,6 +58,17 @@ export default function ProfilePage() {
 
   return (
     <div className="page">
+      <style>{`
+        @media (max-width: 600px) {
+          .profile-card__header { flex-direction: column; align-items: flex-start; }
+          .profile-card__actions { align-self: flex-end; margin-top: 0.5rem; }
+          .profile-card__identity { flex-direction: column; text-align: center; width: 100%; align-items: center; }
+          .profile-card__tags { justify-content: center; }
+          .profile-stats { justify-content: center; }
+        }
+        .profile-page { padding: calc(var(--navbar-h, 68px) + 1.5rem) 1rem 3rem; }
+        .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 1.25rem; }
+      `}</style>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(var(--navbar-h) + 1.5rem) 1rem 3rem' }}>
         {/* ── Profile Card ── */}
         <div className="card-base" style={{ padding: '1.5rem 2rem', marginBottom: '1.25rem' }}>
@@ -193,7 +204,7 @@ export default function ProfilePage() {
             Portfolio
           </h2>
           {portfolio && portfolio.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div className="portfolio-grid">>
               {portfolio.map((item: any) => (
                 <div
                   key={item.id}

@@ -3,7 +3,7 @@ services:
   - type: web
     name: prolink-backend
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npx prisma generate
     startCommand: npm run start:prod
     healthCheckPath: /health/liveness
     envVars:

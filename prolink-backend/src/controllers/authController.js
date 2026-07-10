@@ -54,10 +54,10 @@ const login = async (req, res, next) => {
   }
 };
 
-const verify = async (req, res, next) => {
+const verify = async (req, res) => {
   try {
-    const { token } = req.query;
-    if (!token) return res.status(400).json({ error: 'Token is required' });
+    const token = req.query.token || req.body.token;
+    if (!token) return res.status(400).json({ error: 'OTP code is required' });
 
     const user = await prisma.user.findFirst({
       where: {
@@ -66,7 +66,9 @@ const verify = async (req, res, next) => {
       }
     });
 
-    if (!user) return res.status(400).json({ error: 'Invalid or expired code' });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired OTP. Please request a new one.' });
+    }
 
     await prisma.user.update({
       where: { id: user.id },
@@ -79,6 +81,7 @@ const verify = async (req, res, next) => {
 
     res.json({ message: 'Email verified successfully!' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
