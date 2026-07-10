@@ -108,6 +108,11 @@ function NewJobPage() {
       const errData = error.response?.data;
       const status = error.response?.status;
       let errMsg = errData?.msg || errData?.error || errData?.message || 'Failed to post job. Please try again.';
+
+      // Translate generic 500 errors to user-friendly messages
+      if (status === 500 && (errMsg === 'Internal server error' || errMsg === 'Server error' || errMsg === 'Server Error')) {
+        errMsg = 'Something went wrong on our end. Please try again in a few moments.';
+      }
       if (errData?.errors?.length > 0) {
         errMsg = errData.errors[0].message;
       }
