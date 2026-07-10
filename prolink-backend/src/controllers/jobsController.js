@@ -312,17 +312,40 @@ const closeJob = async (req, res, next) => {
   }
 };
 
+const deleteJob = async (req, res) => {
+  const jobId = parseInt(req.params.id, 10);
+  const clientId = req.user.id;
+
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  if (!job) {
+    return res.status(404).json({ msg: 'Job not found' });
+  }
+
+  if (job.client_id !== clientId) {
+    return res.status(403).json({ msg: 'Not authorized to delete this job' });
+  }
+
+  if (job.status !== 'open') {
+    return res.status(400).json({ msg: 'Only open jobs can be deleted. Please cancel or close the job instead.' });
+  }
+
+  await prisma.job.delete({ where: { id: jobId } });
+
+  res.json({ msg: 'Job deleted successfully' });
+};
+
 module.exports = {
   createJob,
   getPublicJobs,
   getMyJobs,
-  getMyBids,
   getJobById,
-  submitBid,
-  hireProvider,
-  completeJob,
-  cancelJob,
-  withdrawBid,
   updateJob,
   closeJob,
+  submitBid,
+  getMyBids,
+  hireProvider,
+  completeJob,
+  withdrawBid,
+  cancelJob,
+  deleteJob
 };

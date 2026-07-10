@@ -15,6 +15,7 @@ router.get('/', searchLimiter, asyncHandler(jobsController.getPublicJobs));
 router.get('/my-jobs', authMiddleware, apiLimiter, asyncHandler(jobsController.getMyJobs));
 router.get('/my-bids', authMiddleware, apiLimiter, requireProvider, asyncHandler(jobsController.getMyBids));
 router.get('/:id', asyncHandler(jobsController.getJobById));
+router.delete('/:id', authMiddleware, apiLimiter, requireClient, asyncHandler(jobsController.deleteJob));
 router.post('/:id/bids', authMiddleware, apiLimiter, requireVerified, requireProvider, validateRequest(bidSchema, 'body'), asyncHandler(jobsController.submitBid));
 router.delete('/:id/bids', authMiddleware, apiLimiter, requireProvider, asyncHandler(jobsController.withdrawBid));
 router.post('/:id/hire', authMiddleware, apiLimiter, requireVerified, requireClient, validateRequest(jobAssignmentSchema, 'body'), asyncHandler(jobsController.hireProvider));
