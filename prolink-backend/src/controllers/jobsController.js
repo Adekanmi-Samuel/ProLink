@@ -8,6 +8,8 @@ const createJob = async (req, res, next) => {
     const clientId = req.user.id;
     const body = req.validatedBody || req.body;
 
+    console.log('[JOBS] createJob body:', JSON.stringify(body));
+
     const { title, description, budget, job_type, payment_type, category_id, state, city, skillIds } = body;
 
     const job = await jobsService.createJob(clientId, { title, description, budget, job_type, payment_type, category_id, state, city, skillIds });

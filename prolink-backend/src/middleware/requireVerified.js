@@ -18,7 +18,7 @@ const requireVerified = async (req, res, next) => {
     }
 
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Please verify your email address to perform this action' });
+      return res.status(403).json({ msg: 'Please verify your email address before posting a job' });
     }
 
     next();
