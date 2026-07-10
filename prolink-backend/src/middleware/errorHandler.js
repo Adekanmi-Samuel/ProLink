@@ -42,11 +42,16 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
-  // Default server error
+  // Default server error — pass through message for known errors
+  const isKnownError = err.message && (
+    err.message.includes('verify') ||
+    err.message.includes('Verify') ||
+    err.message.includes('email') ||
+    err.message.includes('authorized') ||
+    err.message.includes('not found')
+  );
   res.status(500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message,
+    error: isKnownError ? err.message : 'Internal server error',
   });
 };
 
