@@ -41,8 +41,8 @@ const getPublicJobs = async (userId, filters = {}) => {
   if (jobType) whereClause.job_type = jobType;
   if (q) {
     whereClause.OR = [
-      { title: { contains: q, mode: 'insensitive' } },
-      { description: { contains: q, mode: 'insensitive' } }
+      { title: { contains: q } },
+      { description: { contains: q } }
     ];
   }
   if (minBudget !== undefined || maxBudget !== undefined) {
@@ -52,7 +52,7 @@ const getPublicJobs = async (userId, filters = {}) => {
   }
   if (categoryId) whereClause.category_id = parseInt(categoryId);
   if (filters.state) whereClause.state = filters.state;
-  if (filters.city) whereClause.city = { contains: filters.city, mode: 'insensitive' };
+  if (filters.city) whereClause.city = { contains: filters.city };
 
   // Pagination
   const page = Math.max(1, parseInt(filters.page) || 1);
