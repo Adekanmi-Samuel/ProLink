@@ -24,7 +24,8 @@ const createJob = async (req, res, next) => {
 
     res.status(201).json({ msg: 'Job posted successfully!', job });
   } catch (err) {
-    res.status(500).json({ error: 'Server Error' });
+    logger.error('createJob error:', err);
+    res.status(500).json({ error: 'Server Error', msg: err.message });
   }
 };
 
