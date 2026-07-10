@@ -204,7 +204,7 @@ export default function ProfilePage() {
             Portfolio
           </h2>
           {portfolio && portfolio.length > 0 ? (
-            <div className="portfolio-grid">>
+            <div className="portfolio-grid">
               {portfolio.map((item: any) => (
                 <div
                   key={item.id}
