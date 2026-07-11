@@ -502,7 +502,6 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJob
               )}
             </div>
           )}
-          </div>
         </AnimatedSection>
 
         <AnimatedSection delay={0.25}>
