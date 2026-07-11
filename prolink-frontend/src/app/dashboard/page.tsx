@@ -39,6 +39,8 @@ function DashboardPage() {
   const [openToWork, setOpenToWork] = useState(false);
   const [openToWorkLoading, setOpenToWorkLoading] = useState(false);
   const [earningsChart, setEarningsChart] = useState<any[]>([]);
+  const [smartMatches, setSmartMatches] = useState<any[]>([]);
+  const [smartMatchesLoading, setSmartMatchesLoading] = useState(false);
   const router = useRouter();
 
   const { socket } = useSocket();
@@ -60,6 +62,15 @@ function DashboardPage() {
           api.get('/jobs/my-jobs'),
           api.get('/profiles/me/earnings-chart'),
         ]);
+
+        if (profileRes.data.is_premium) {
+          setSmartMatchesLoading(true);
+          api.get('/ai/jobs/match').then(res => {
+            setSmartMatches(res.data.matches || []);
+          }).catch(() => {
+            setSmartMatches([]);
+          }).finally(() => setSmartMatchesLoading(false));
+        }
         if (jobsRes.status === 'fulfilled') setRecentJobs(jobsRes.value.data || []);
         if (earningsRes.status === 'fulfilled') setEarnings(earningsRes.value.data);
         if (contractsRes.status === 'fulfilled') setMyJobs(Array.isArray(contractsRes.value.data) ? contractsRes.value.data : []);
@@ -277,6 +288,8 @@ return (
           earnings={earnings}
           recentJobs={recentJobs}
           notifications={notifications}
+          smartMatches={smartMatches}
+          smartMatchesLoading={smartMatchesLoading}
         />
       ) : (
         <ClientDashboard
@@ -293,7 +306,7 @@ return (
 // ═══════════════════════════════════════════════════════════════
 //  PROVIDER DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJobs, earningsChart }: any) {
+function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJobs, earningsChart, smartMatches, smartMatchesLoading }: any) {
   const totalEarned = earnings?.total_paid ? String(Number(earnings.total_paid).toLocaleString()) : '0';
   const thisMonth = earnings?.this_month ? String(Number(earnings.this_month).toLocaleString()) : '0';
   const activeContracts = profile?.active_contracts || 0;
@@ -418,36 +431,77 @@ function ProviderDashboard({ profile, earnings, recentJobs, notifications, myJob
       {/* ── Two-column: matching jobs + activity ── */}
       <div className="dash-two-col">
         <AnimatedSection delay={0.2}>
-          <div className="dash-card">
-            <div className="dash-card__header">
-              <span className="dash-card__title">🎯 Matching Jobs</span>
-              <Link href="/jobs" className="dash-card__link">Browse all →</Link>
-            </div>
-            {recentJobs.length > 0 ? (
-              recentJobs.slice(0, 4).map((job: any, i: number) => (
-                <AnimatedStaggerItem key={job.id || i}>
-                  <Link href={'/jobs/' + job.id} className="job-row-v2">
-                    <div className="job-row-v2__dot" style={{ background: 'var(--accent)' }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="job-row-v2__title">{job.title}</div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--fg-tertiary)', marginTop: 2 }}>
-                        {job.state || 'Remote'} · {job.job_type || 'Fixed'} · {job.bid_count || 0} bids
+          {profile.is_premium ? (
+            <div className="dash-card" style={{ borderColor: 'var(--primary)', borderStyle: 'solid', borderWidth: 1 }}>
+              <div className="dash-card__header">
+                <span className="dash-card__title" style={{ color: 'var(--primary)' }}>✨ AI Smart Matches</span>
+                <Link href="/jobs" className="dash-card__link">Browse all →</Link>
+              </div>
+              {smartMatchesLoading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--fg-secondary)' }}>
+                  <span className="pl-spinner" style={{ display: 'inline-block', marginBottom: '1rem' }} />
+                  <div>Finding the best jobs for you...</div>
+                </div>
+              ) : smartMatches.length > 0 ? (
+                smartMatches.map((job: any, i: number) => (
+                  <AnimatedStaggerItem key={job.id || i}>
+                    <div className="job-row-v2" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem', background: 'rgba(59,130,246,0.03)' }}>
+                      <Link href={'/jobs/' + job.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center', textDecoration: 'none' }}>
+                        <div className="job-row-v2__dot" style={{ background: 'var(--primary)' }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="job-row-v2__title">{job.title}</div>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--fg-tertiary)', marginTop: 2 }}>
+                            {job.job_type || 'Fixed'} · ₦{Number(job.budget || 0).toLocaleString()}
+                          </div>
+                        </div>
+                      </Link>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--primary)', background: 'var(--primary-alpha)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                        <strong>Why it&apos;s a match:</strong> {job.matchReason}
                       </div>
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--amber, #F59E0B)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                      ₦{Number(job.budget || 0).toLocaleString()}
-                    </div>
-                  </Link>
-                </AnimatedStaggerItem>
-              ))
-            ) : (
-              <div className="empty-state" style={{ padding: '2rem 0' }}>
-                <div className="empty-state-icon">🔍</div>
-                <div className="empty-state-title">No matching jobs yet</div>
-                <div className="empty-state-desc">Update your skills to get better matches.</div>
-                <Link href="/profile/edit" className="btn btn-outline btn-sm" style={{ marginTop: '0.75rem' }}>Update skills →</Link>
+                  </AnimatedStaggerItem>
+                ))
+              ) : (
+                <div className="empty-state" style={{ padding: '2rem 0' }}>
+                  <div className="empty-state-icon">🤖</div>
+                  <div className="empty-state-title">No AI matches found</div>
+                  <div className="empty-state-desc">Update your profile to get better AI recommendations.</div>
+                  <Link href="/profile/edit" className="btn btn-outline btn-sm" style={{ marginTop: '0.75rem' }}>Update profile →</Link>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="dash-card">
+              <div className="dash-card__header">
+                <span className="dash-card__title">🎯 Recent Jobs</span>
+                <Link href="/jobs" className="dash-card__link">Browse all →</Link>
               </div>
-            )}
+              {recentJobs.length > 0 ? (
+                recentJobs.slice(0, 4).map((job: any, i: number) => (
+                  <AnimatedStaggerItem key={job.id || i}>
+                    <Link href={'/jobs/' + job.id} className="job-row-v2">
+                      <div className="job-row-v2__dot" style={{ background: 'var(--accent)' }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="job-row-v2__title">{job.title}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--fg-tertiary)', marginTop: 2 }}>
+                          {job.state || 'Remote'} · {job.job_type || 'Fixed'} · {job.bid_count || 0} bids
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--amber, #F59E0B)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                        ₦{Number(job.budget || 0).toLocaleString()}
+                      </div>
+                    </Link>
+                  </AnimatedStaggerItem>
+                ))
+              ) : (
+                <div className="empty-state" style={{ padding: '2rem 0' }}>
+                  <div className="empty-state-icon">🔍</div>
+                  <div className="empty-state-title">No recent jobs</div>
+                  <div className="empty-state-desc">Check back later for new opportunities.</div>
+                </div>
+              )}
+            </div>
+          )}
           </div>
         </AnimatedSection>
 

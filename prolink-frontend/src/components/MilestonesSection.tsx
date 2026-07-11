@@ -43,9 +43,13 @@ export default function MilestonesSection({ jobId, isOwner, isAssignedProvider, 
 
   const handleFund = async (id: number) => {
     try {
-      await api.post('/payments/mock-fund', { milestoneId: id });
-      alert('Payment successful! Funds are now held safely in escrow.');
-      fetchStages();
+      const response = await api.post('/payments/initialize', { milestoneId: id });
+      if (response.data.authorization_url) {
+        window.location.href = response.data.authorization_url;
+      } else {
+        alert('Payment initialized, but no redirect URL was returned.');
+        fetchStages();
+      }
     } catch (error: any) {
       alert('Failed to fund stage: ' + (error.response?.data?.msg || 'Error'));
     }

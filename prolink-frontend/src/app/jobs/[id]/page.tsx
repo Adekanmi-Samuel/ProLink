@@ -426,21 +426,26 @@ export default function JobDetailPage() {
                             {bid.proposal}
                           </div>
                           
-                          <div className="bid-card__footer">
-                            <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                              <button
-                                onClick={() => openHireModal(bid)}
-                                disabled={jobData.status !== 'open'}
-                                className="btn btn-accent btn-sm"
-                                style={{ flex: 1 }}
-                              >
-                                {jobData.status === 'open' ? '✓ Hire Now' : 'Hired'}
-                              </button>
-                              <button onClick={() => handleContact(bid)} className="btn btn-surface btn-sm" style={{ flex: 1 }}>
-                                💬 Message
-                              </button>
+                            <div className="bid-card__footer">
+                              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                                {jobData.status === 'open' ? (
+                                  <button
+                                    onClick={() => openHireModal(bid)}
+                                    className="btn btn-accent btn-sm"
+                                    style={{ flex: 1 }}
+                                  >
+                                    ✓ Hire Now
+                                  </button>
+                                ) : jobData.assignment?.provider_id === bid.provider_id ? (
+                                  <button disabled className="btn btn-accent btn-sm" style={{ flex: 1, opacity: 0.7 }}>
+                                    Hired
+                                  </button>
+                                ) : null}
+                                <button onClick={() => handleContact(bid)} className="btn btn-surface btn-sm" style={{ flex: 1 }}>
+                                  💬 Message
+                                </button>
+                              </div>
                             </div>
-                          </div>
                         </div>
                       );
                     })}

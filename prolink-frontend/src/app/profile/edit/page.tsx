@@ -368,7 +368,18 @@ function EditProfilePage() {
 
                   {/* Bio */}
                   <div className="field-group">
-                    <label className="field-label" htmlFor="bio">Bio</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <label className="field-label" htmlFor="bio" style={{ marginBottom: 0 }}>Bio</label>
+                      <button 
+                        type="button" 
+                        onClick={handleOptimizeProfile} 
+                        disabled={aiOptimizing}
+                        className="btn btn-outline btn-sm"
+                        style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                      >
+                        {aiOptimizing ? 'Optimizing...' : '✨ Optimize with AI'}
+                      </button>
+                    </div>
                     <textarea
                       id="bio"
                       name="bio"

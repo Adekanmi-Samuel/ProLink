@@ -17,6 +17,8 @@ export default function MyServices() {
   const [price, setPrice] = useState('');
   const [deliveryDays, setDeliveryDays] = useState('3');
   const [submitting, setSubmitting] = useState(false);
+  const [aiPricing, setAiPricing] = useState(false);
+  const [priceTip, setPriceTip] = useState('');
 
   const fetchServices = async () => {
     try {
@@ -55,6 +57,34 @@ export default function MyServices() {
       toast.error('Failed to create service');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSuggestPricing = async () => {
+    if (!title || !description) {
+      toast.error('Please enter a title and description first.');
+      return;
+    }
+    
+    setAiPricing(true);
+    setPriceTip('');
+    try {
+      const res = await api.post('/ai/services/pricing', { title, description });
+      const { minPrice, maxPrice, tip } = res.data;
+      
+      // We can set the price to the middle of the range, or minPrice
+      const suggestedPrice = Math.round((minPrice + maxPrice) / 2);
+      setPrice(suggestedPrice.toString());
+      setPriceTip(`Suggested range: ₦${minPrice.toLocaleString()} - ₦${maxPrice.toLocaleString()}. ${tip}`);
+      toast.success('Pricing suggested!');
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        toast.error('This feature is for Premium users only.');
+      } else {
+        toast.error('Failed to suggest pricing.');
+      }
+    } finally {
+      setAiPricing(false);
     }
   };
 
@@ -123,7 +153,17 @@ export default function MyServices() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Price (₦)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium dark:text-gray-300">Price (₦)</label>
+                      <button 
+                        type="button" 
+                        onClick={handleSuggestPricing} 
+                        disabled={aiPricing}
+                        className="text-xs text-blue-600 dark:text-blue-400 font-semibold flex items-center"
+                      >
+                        {aiPricing ? 'Thinking...' : '✨ Auto Price'}
+                      </button>
+                    </div>
                     <input required type="number" min="1000" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={price} onChange={e => setPrice(e.target.value)} placeholder="10000" />
                   </div>
                   <div>
@@ -131,6 +171,11 @@ export default function MyServices() {
                     <input required type="number" min="1" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={deliveryDays} onChange={e => setDeliveryDays(e.target.value)} />
                   </div>
                 </div>
+                {priceTip && (
+                  <div className="text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 p-3 rounded-lg mt-2">
+                    {priceTip}
+                  </div>
+                )}
               </div>
               <div className="mt-6 flex justify-end space-x-3">
                 <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Cancel</Button>
