@@ -182,6 +182,16 @@ app.use(generalLimiter);
 // Make io accessible to controllers
 app.set('io', io);
 
+// Health check endpoint — used by CI/CD pipeline
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    env: process.env.NODE_ENV || 'development',
+  });
+});
+
 // Routes
 const authRoutes = require('./src/routes/auth');
 const profileRoutes = require('./src/routes/profiles');

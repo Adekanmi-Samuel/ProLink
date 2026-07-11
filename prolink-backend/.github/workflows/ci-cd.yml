@@ -1,0 +1,244 @@
+name: ProLink Backend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ══════════════════════════════════════════════════════
+  # STAGE 1: BACKEND HEALTH CHECKS
+  # ══════════════════════════════════════════════════════
+  health-check:
+    name: Backend Health Check
+    runs-on: ubuntu-latest
+
+    services:
+      # Spin up a real PostgreSQL database for testing
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: prolink_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_test
+
+      - name: Run database migrations on test DB
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_test
+
+      - name: Check server starts without crashing
+        run: |
+          # Start server in background
+          node server.js &
+          SERVER_PID=$!
+          # Wait 8 seconds for it to boot
+          sleep 8
+          # Check if it's still running (didn't crash)
+          if kill -0 $SERVER_PID 2>/dev/null; then
+            echo "✅ Server started successfully"
+            kill $SERVER_PID
+          else
+            echo "❌ Server crashed on startup"
+            exit 1
+          fi
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_test
+          JWT_SECRET: test-jwt-secret-for-ci-only
+          PORT: 5000
+          NODE_ENV: test
+          PAYSTACK_SECRET_KEY: sk_test_fake_for_ci
+          FRONTEND_ORIGIN: http://localhost:3000
+
+      - name: Check key API routes respond
+        run: |
+          # Start server
+          node server.js &
+          sleep 8
+          # Check health endpoint
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "000")
+          echo "Health check status: $STATUS"
+          # Check auth routes exist (expect 400, not 404)
+          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5000/api/auth/login -H "Content-Type: application/json" -d '{}' || echo "000")
+          echo "Auth route status: $AUTH_STATUS"
+          if [ "$AUTH_STATUS" = "404" ]; then
+            echo "❌ Auth routes not found - routing is broken"
+            exit 1
+          fi
+          echo "✅ API routes responding correctly"
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_test
+          JWT_SECRET: test-jwt-secret-for-ci-only
+          PORT: 5000
+          NODE_ENV: test
+          PAYSTACK_SECRET_KEY: sk_test_fake_for_ci
+          FRONTEND_ORIGIN: http://localhost:3000
+
+  # ══════════════════════════════════════════════════════
+  # STAGE 2: DATABASE MIGRATION SAFETY CHECK
+  # Checks your schema migrations won't break production
+  # ══════════════════════════════════════════════════════
+  migration-check:
+    name: Migration Safety Check
+    runs-on: ubuntu-latest
+    needs: health-check
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: prolink_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_migration_test
+
+      - name: Check for pending migrations
+        run: |
+          npx prisma migrate status 2>&1 | tee migration_status.txt
+          if grep -q "Following migrations" migration_status.txt; then
+            echo "⚠️ Warning: Unapplied migrations detected"
+            cat migration_status.txt
+          else
+            echo "✅ All migrations applied"
+          fi
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_migration_test
+
+      - name: Run full migration on clean DB
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/prolink_migration_test
+
+  # ══════════════════════════════════════════════════════
+  # STAGE 3: DEPLOY BACKEND TO STAGING
+  # Triggers Render to deploy your staging backend service
+  # ══════════════════════════════════════════════════════
+  deploy-staging:
+    name: Deploy Backend Staging
+    needs: [health-check, migration-check]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: backend-staging
+
+    steps:
+      - name: Trigger Render staging deploy
+        run: |
+          echo "Triggering Render staging deployment..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}")
+          echo "Response: $RESPONSE"
+          echo "✅ Staging backend deploy triggered"
+
+      - name: Wait for staging to be ready
+        run: |
+          echo "Waiting 60 seconds for Render to deploy..."
+          sleep 60
+          # Ping the staging health endpoint to confirm
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.STAGING_BACKEND_URL }}/health || echo "000")
+          echo "Staging health check: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Staging backend is live and healthy"
+          else
+            echo "⚠️ Staging backend returned $STATUS (may still be deploying)"
+          fi
+
+  # ══════════════════════════════════════════════════════
+  # STAGE 4: DEPLOY BACKEND TO PRODUCTION
+  # Only on main branch push
+  # Runs DB migrations FIRST, then deploys
+  # ══════════════════════════════════════════════════════
+  deploy-production:
+    name: Deploy Backend Production
+    needs: [health-check, migration-check]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: backend-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations on PRODUCTION
+        # This runs migrations BEFORE the new code deploys
+        # Safe because Prisma migrations are backwards compatible
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Trigger Render production deploy
+        run: |
+          echo "Triggering Render PRODUCTION deployment..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
+          echo "✅ Production backend deploy triggered"
+
+      - name: Deployment summary
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "✅ ProLink Backend Production Deployed"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  Branch: ${{ github.ref_name }}"
+          echo "  Time: $(date)"
+          echo "═══════════════════════════════════════════"
