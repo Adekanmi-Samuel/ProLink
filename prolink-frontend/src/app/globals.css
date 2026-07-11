@@ -1,12 +1,12 @@
 /* =============================================================
-   ProLink Motion Design System — Premium, Cinematic, Fluid
+   ProLink Motion Design System - Premium, Cinematic, Fluid
    ============================================================= */
 
-/* ── Fonts & Tailwind (MUST be first — @import before all rules) ── */
+/* -- Fonts & Tailwind (MUST be first - @import before all rules) -- */
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-/* ── Global Resets ── */
+/* -- Global Resets -- */
 * {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
@@ -21,10 +21,10 @@ body {
   color: var(--fg);
 }
 
-/* ═══════════════════════════════════════════════════════
-   CORE LAYOUT — Containers, Sections, Page
+/* -------------------------------------------------------
+   CORE LAYOUT - Containers, Sections, Page
    The foundation that centres everything on desktop.
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 .page {
   width: 100%;
   min-height: 100vh;
@@ -58,7 +58,7 @@ body {
   text-align: center;
   margin-bottom: clamp(2rem, 4vw, 3rem);
 }
-/* Legal/prose pages — comfortable reading width */
+/* Legal/prose pages - comfortable reading width */
 .prose-page {
   max-width: 720px;
   margin-left: auto;
@@ -106,9 +106,9 @@ body {
   text-decoration: underline;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    DESIGN TOKENS (Tailwind v4 theme extension)
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 @theme {
   --color-prolink-50: #eff6ff;
   --color-prolink-100: #dbeafe;
@@ -136,21 +136,21 @@ body {
   --ease-prolink: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    FALLBACK: Content visible BEFORE JS hydrates
    Framer Motion sets inline opacity:0 initially. This
    override ensures users see content immediately.
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 body:not(.js-loaded) .page {
   opacity: 1 !important;
   visibility: visible !important;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    DARK MODE (default)
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 :root {
-  /* ── Backgrounds — deep navy layered depth ── */
+  /* -- Backgrounds - deep navy layered depth -- */
   --bg: #0f172a;
   --bg-gradient: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
   --surface: #1e293b;
@@ -160,18 +160,18 @@ body:not(.js-loaded) .page {
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 
-  /* ── Borders ── */
+  /* -- Borders -- */
   --border: rgba(255, 255, 255, 0.12);
   --border-hover: rgba(255, 255, 255, 0.2);
   --border-subtle: rgba(255, 255, 255, 0.05);
 
-  /* ── Text ── */
+  /* -- Text -- */
   --fg: #f8fafc;
   --fg-secondary: #94a3b8;
   --fg-tertiary: #64748b;
   --fg-inverse: #0f172a;
 
-  /* ── Primary Accent — Trust Green ──
+  /* -- Primary Accent - Trust Green --
      Uses brighter green for visual vibrancy on dark backgrounds.
      For text on light backgrounds, use --accent-dark for WCAG AA compliance. */
   --accent: #34d399;
@@ -181,14 +181,14 @@ body:not(.js-loaded) .page {
   --accent-alpha: rgba(52, 211, 153, 0.12);
   --accent-fg: #0f172a;
 
-  /* ── Secondary — Blue ── */
+  /* -- Secondary - Blue -- */
   --emerald: #10b981;
   --emerald-dark: #059669;
   --emerald-light: #34d399;
   --emerald-glow: rgba(16, 185, 129, 0.15);
   --emerald-alpha: rgba(16, 185, 129, 0.1);
 
-  /* ── Tertiary — Amber ── */
+  /* -- Tertiary - Amber -- */
   --amber: #f59e0b;
   --amber-light: #fbbf24;
   --amber-glow: rgba(245, 158, 11, 0.15);
@@ -206,7 +206,7 @@ body:not(.js-loaded) .page {
   --gold-glow: var(--amber-glow);
   --gold-alpha: var(--amber-alpha);
 
-  /* Legacy flat aliases — for pages using inline <style> */
+  /* Legacy flat aliases - for pages using inline <style> */
   --primary: var(--accent);
   --primary-alpha: var(--accent-alpha);
   --muted: var(--fg-secondary);
@@ -216,12 +216,12 @@ body:not(.js-loaded) .page {
   --border2: var(--border-hover);
   --surface2: var(--surface-hover);
 
-  /* ── Neutrals ── */
+  /* -- Neutrals -- */
   --blue: var(--accent);
   --blue-alpha: var(--accent-alpha);
   --blue-glow: var(--accent-glow);
 
-  /* ── Status ── */
+  /* -- Status -- */
   --success: #34d399;
   --success-bg: rgba(52, 211, 153, 0.06);
   --success-border: rgba(52, 211, 153, 0.15);
@@ -235,14 +235,14 @@ body:not(.js-loaded) .page {
   --info-bg: rgba(96, 165, 250, 0.06);
   --info-border: rgba(96, 165, 250, 0.15);
 
-  /* ── Radii ── */
+  /* -- Radii -- */
   --radius-xl: 24px;
   --radius-lg: 18px;
   --radius: 12px;
   --radius-sm: 8px;
   --radius-xs: 6px;
 
-  /* ── Shadows ── */
+  /* -- Shadows -- */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border-subtle);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-subtle);
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-subtle);
@@ -252,27 +252,27 @@ body:not(.js-loaded) .page {
   --shadow-copper: 0 0 30px var(--copper-glow);
   --shadow-gold: 0 0 30px var(--gold-glow);
 
-  /* ── Glass reflections ── */
+  /* -- Glass reflections -- */
   --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --glass-edge-top: 0 1px 0 rgba(255, 255, 255, 0.06);
 
-  /* ── Motion curve ── */
+  /* -- Motion curve -- */
   --curve: cubic-bezier(0.22, 1, 0.36, 1);
   --curve-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --curve-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ── Durations ── */
+  /* -- Durations -- */
   --dur-fast: 200ms;
   --dur-normal: 400ms;
   --dur-slow: 600ms;
   --dur-xl: 800ms;
 
-  /* ── Layout ── */
+  /* -- Layout -- */
   --navbar-h: 68px;
   --sidebar-w: 280px;
   --max-content: 1200px;
 
-  /* ── Spacing system ── */
+  /* -- Spacing system -- */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -282,16 +282,16 @@ body:not(.js-loaded) .page {
   --space-3xl: 64px;
   --space-4xl: 80px;
 
-  /* ── Typography scale ── */
-  --text-xs: 0.72rem; /* 11.5px — stamps, meta labels */
-  --text-sm: 0.82rem; /* 13px   — helper text, timestamps */
-  --text-base: 0.94rem; /* 15px   — body text */
-  --text-md: 1.05rem; /* 16.8px — card titles, nav links */
-  --text-lg: 1.2rem; /* 19.2px — section subheads */
-  --text-xl: 1.5rem; /* 24px   — page section titles */
-  --text-2xl: 2rem; /* 32px   — page titles */
-  --text-3xl: 2.75rem; /* 44px   — hero/dashboard display */
-  --text-4xl: 3.75rem; /* 60px   — hero headline on desktop */
+  /* -- Typography scale -- */
+  --text-xs: 0.72rem; /* 11.5px - stamps, meta labels */
+  --text-sm: 0.82rem; /* 13px   - helper text, timestamps */
+  --text-base: 0.94rem; /* 15px   - body text */
+  --text-md: 1.05rem; /* 16.8px - card titles, nav links */
+  --text-lg: 1.2rem; /* 19.2px - section subheads */
+  --text-xl: 1.5rem; /* 24px   - page section titles */
+  --text-2xl: 2rem; /* 32px   - page titles */
+  --text-3xl: 2.75rem; /* 44px   - hero/dashboard display */
+  --text-4xl: 3.75rem; /* 60px   - hero headline on desktop */
 
   --tracking-tight: -0.03em;
   --tracking-display: -0.04em;
@@ -301,15 +301,15 @@ body:not(.js-loaded) .page {
   --leading-normal: 1.55;
   --leading-loose: 1.75;
 
-  /* ── Extra shadow ── */
+  /* -- Extra shadow -- */
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-subtle);
 }
 
-/* ═══════════════════════════════════════════════════════
-   LIGHT MODE — auto via OS preference + manual .light class
-   ═══════════════════════════════════════════════════════ */
+/* -------------------------------------------------------
+   LIGHT MODE - auto via OS preference + manual .light class
+   ------------------------------------------------------- */
 .light {
-  /* ── CLEAN PROFESSIONAL BACKGROUNDS — cool slate tones ── */
+  /* -- CLEAN PROFESSIONAL BACKGROUNDS - cool slate tones -- */
   --bg: #f8fafc;
   --bg-gradient: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 100%);
 
@@ -322,18 +322,18 @@ body:not(.js-loaded) .page {
   --glass-border: rgba(0, 0, 0, 0.05);
   --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 
-  /* Borders — cool undertone */
+  /* Borders - cool undertone */
   --border: #e2e8f0;
   --border-hover: #cbd5e1;
   --border-subtle: #f1f5f9;
 
-  /* Text — slate near-black */
+  /* Text - slate near-black */
   --fg: #0f172a;
   --fg-secondary: #475569;
   --fg-tertiary: #94a3b8;
   --fg-inverse: #ffffff;
 
-  /* ── PRIMARY ACCENT — Trust Green ──
+  /* -- PRIMARY ACCENT - Trust Green --
      Darkened for WCAG AA compliance on light backgrounds (4.5:1+ contrast). */
   --accent: #047857;
   --accent-dark: #065f46;
@@ -342,20 +342,20 @@ body:not(.js-loaded) .page {
   --accent-alpha: rgba(4, 120, 87, 0.1);
   --accent-fg: #ffffff;
 
-  /* ── SECONDARY ACCENT — Trust Green ── */
+  /* -- SECONDARY ACCENT - Trust Green -- */
   --emerald: #059669;
   --emerald-dark: #047857;
   --emerald-light: #10b981;
   --emerald-glow: rgba(5, 150, 105, 0.15);
   --emerald-alpha: rgba(5, 150, 105, 0.1);
 
-  /* ── TERTIARY — Amber ── */
+  /* -- TERTIARY - Amber -- */
   --amber: #d97706;
   --amber-light: #f59e0b;
   --amber-glow: rgba(217, 119, 6, 0.14);
   --amber-alpha: rgba(217, 119, 6, 0.1);
 
-  /* Legacy aliases — map old names to new colors for backward compat */
+  /* Legacy aliases - map old names to new colors for backward compat */
   --copper: #c05a2e;
   --copper-dark: #9c4220;
   --copper-light: #e8724a;
@@ -367,7 +367,7 @@ body:not(.js-loaded) .page {
   --gold-glow: var(--amber-glow);
   --gold-alpha: var(--amber-alpha);
 
-  /* Legacy flat aliases — for pages using inline <style> */
+  /* Legacy flat aliases - for pages using inline <style> */
   --primary: var(--accent);
   --primary-alpha: var(--accent-alpha);
   --muted: var(--fg-secondary);
@@ -377,7 +377,7 @@ body:not(.js-loaded) .page {
   --border2: var(--border-hover);
   --surface2: var(--surface-hover);
 
-  /* Decorative — cool palette */
+  /* Decorative - cool palette */
   --cool-sky: rgba(147, 197, 253, 0.22);
   --cool-mist: rgba(167, 243, 208, 0.18);
   --cool-lavender: rgba(196, 181, 253, 0.14);
@@ -394,7 +394,7 @@ body:not(.js-loaded) .page {
   --warning-bg: rgba(217, 119, 6, 0.05);
   --warning-border: rgba(217, 119, 6, 0.12);
 
-  /* ── SHADOWS — clean, crisp ── */
+  /* -- SHADOWS - clean, crisp -- */
   --shadow-sm:
     0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.04);
   --shadow-md:
@@ -417,7 +417,7 @@ body:not(.js-loaded) .page {
   --glass-edge-top: 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-/* ── Anchor reset — no blue underlines ── */
+/* -- Anchor reset - no blue underlines -- */
 a {
   color: inherit;
   text-decoration: none;
@@ -431,9 +431,9 @@ a:hover {
   opacity: 0.8;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    TYPOGRAPHY
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 .h-display {
   font-family: "Space Grotesk", sans-serif;
   font-size: clamp(2.8rem, 6vw + 0.5rem, 5rem);
@@ -493,9 +493,9 @@ a:hover {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    KEYFRAMES
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -600,11 +600,11 @@ a:hover {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    COMPONENT STYLES
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 
-/* ── Glass Card ── */
+/* -- Glass Card -- */
 .glass {
   background: var(--glass);
   backdrop-filter: blur(20px) saturate(180%);
@@ -625,7 +625,7 @@ a:hover {
   border-radius: inherit;
 }
 
-/* ── Card ── */
+/* -- Card -- */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -664,9 +664,9 @@ a:hover {
   box-shadow: var(--shadow-lg), var(--shadow-accent);
 }
 
-/* ── Card hierarchy ── */
-/* Level 1 — Base card. Solid, no blur. Use for list items,
-   job cards, bid cards — content that lives "on the page". */
+/* -- Card hierarchy -- */
+/* Level 1 - Base card. Solid, no blur. Use for list items,
+   job cards, bid cards - content that lives "on the page". */
 .card-base {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -680,7 +680,7 @@ a:hover {
   transform: translateY(-1px);
 }
 
-/* Level 2 — Featured card. Slight glow on one edge.
+/* Level 2 - Featured card. Slight glow on one edge.
    Use for "active contract", "top bid", "featured provider". */
 .card-featured {
   background: var(--surface);
@@ -692,8 +692,8 @@ a:hover {
     -4px 0 20px var(--accent-glow);
 }
 
-/* Level 3 — Elevated card. Glass + blur. For modals,
-   dropdowns, tooltips — things that float above the page. */
+/* Level 3 - Elevated card. Glass + blur. For modals,
+   dropdowns, tooltips - things that float above the page. */
 .card-elevated {
   background: var(--glass);
   backdrop-filter: blur(16px) saturate(180%);
@@ -703,7 +703,7 @@ a:hover {
   box-shadow: var(--glass-shadow);
 }
 
-/* Stat card — large number + label */
+/* Stat card - large number + label */
 .card-stat {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -738,7 +738,7 @@ a:hover {
   color: var(--danger);
 }
 
-/* ── Surface variant ── */
+/* -- Surface variant -- */
 .surface {
   background: var(--surface);
   border-radius: var(--radius);
@@ -752,7 +752,7 @@ a:hover {
   border: 1px solid var(--border);
 }
 
-/* ── Navbar ── */
+/* -- Navbar -- */
 .navbar-main {
   position: fixed;
   top: 0;
@@ -1099,7 +1099,7 @@ a:hover {
   }
 }
 
-/* ── Buttons ── */
+/* -- Buttons -- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1255,7 +1255,7 @@ a:hover {
   transform: none !important;
 }
 
-/* ── Inputs ── */
+/* -- Inputs -- */
 .field-group {
   display: flex;
   flex-direction: column;
@@ -1308,7 +1308,7 @@ a:hover {
   margin-top: 2px;
 }
 
-/* ── Badges ── */
+/* -- Badges -- */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1353,7 +1353,7 @@ a:hover {
   border-color: var(--border);
 }
 
-/* ── Custom Checkbox (login) ── */
+/* -- Custom Checkbox (login) -- */
 .check-custom {
   display: inline-flex;
   align-items: center;
@@ -1375,7 +1375,7 @@ a:hover {
   border-color: var(--accent);
 }
 
-/* ── Pulse indicator ── */
+/* -- Pulse indicator -- */
 .pulse-dot {
   display: inline-block;
   width: 7px;
@@ -1405,7 +1405,7 @@ a:hover {
   }
 }
 
-/* ── Spinner ── */
+/* -- Spinner -- */
 .spinner {
   width: 22px;
   height: 22px;
@@ -1426,7 +1426,7 @@ a:hover {
   justify-content: center;
 }
 
-/* ── Legacy pl-* Aliases ── */
+/* -- Legacy pl-* Aliases -- */
 .pl-btn {
   display: inline-flex;
   align-items: center;
@@ -1590,7 +1590,7 @@ a:hover {
   padding: 1.5rem;
 }
 
-/* ── Skeleton ── */
+/* -- Skeleton -- */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -1603,7 +1603,7 @@ a:hover {
   border-radius: var(--radius-sm);
 }
 
-/* ── Ticker ── */
+/* -- Ticker -- */
 .ticker-wrap {
   overflow: hidden;
   white-space: nowrap;
@@ -1613,7 +1613,7 @@ a:hover {
   animation: ticker-scroll 30s linear infinite;
 }
 
-/* ── Tinted section backgrounds — break up all-dark monotony ── */
+/* -- Tinted section backgrounds - break up all-dark monotony -- */
 .section-accent-tint {
   background: var(--accent-alpha);
   border-top: 1px solid var(--accent-glow);
@@ -1630,7 +1630,7 @@ a:hover {
   border-bottom: 1px solid var(--gold-glow);
 }
 
-/* ── Empty state (constrained width, readable text) ── */
+/* -- Empty state (constrained width, readable text) -- */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1667,23 +1667,23 @@ a:hover {
   margin: 0 auto 1.5rem;
 }
 
-/* ── Divider ── */
+/* -- Divider -- */
 hr.div {
   border: none;
   border-top: 1px dashed var(--border);
   margin: var(--space-2xl) 0;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    REUSABLE GLASS FLOATING CONTAINER
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 .floating {
   animation: float 6s var(--curve) infinite;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    SCROLLBAR
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -1698,18 +1698,18 @@ hr.div {
   background: var(--border);
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    FOCUS
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    REDUCED MOTION
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1719,14 +1719,14 @@ hr.div {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    RESPONSIVE
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 .hide-mobile {
   display: block;
 }
 
-/* Dashboard two-column → single-column on tablet */
+/* Dashboard two-column - single-column on tablet */
 @media (max-width: 900px) {
   .dash-grid-2 {
     grid-template-columns: 1fr !important;
@@ -1771,14 +1771,14 @@ hr.div {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
+/* -------------------------------------------------------
    SMOOTH SCROLL CONTAINER
-   ═══════════════════════════════════════════════════════ */
+   ------------------------------------------------------- */
 .smooth-scroll {
   scroll-behavior: smooth;
 }
 
-/* ── Utility: hide scrollbar ── */
+/* -- Utility: hide scrollbar -- */
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1787,7 +1787,7 @@ hr.div {
   display: none;
 }
 
-/* ── Hero glow effect ── */
+/* -- Hero glow effect -- */
 .hero-glow {
   background: radial-gradient(
     ellipse,
@@ -1797,9 +1797,9 @@ hr.div {
   pointer-events: none;
 }
 
-/* ═══════════════════════════════════════════════════════
-   CSS VARIABLE UTILITY CLASSES — light/dark safe
-   ═══════════════════════════════════════════════════════ */
+/* -------------------------------------------------------
+   CSS VARIABLE UTILITY CLASSES - light/dark safe
+   ------------------------------------------------------- */
 .text-fg {
   color: var(--fg);
 }
@@ -1889,7 +1889,7 @@ hr.div {
   }
 }
 
-/* --- Container System (legacy — prefer .wrap) --- */
+/* --- Container System (legacy - prefer .wrap) --- */
 .container {
   width: 100%;
   max-width: var(--max-content, 1200px);
@@ -2327,11 +2327,11 @@ hr.div {
   }
 }
 
-/* ═══════════════════════════════════════════════
+/* -----------------------------------------------
    CINEMATIC CARD SYSTEM (warm/light specific)
-   ═══════════════════════════════════════════════ */
+   ----------------------------------------------- */
 
-/* Floating card — appears suspended above background */
+/* Floating card - appears suspended above background */
 .light .card-float,
 .card-float.light {
   background: var(--surface);
@@ -2350,7 +2350,7 @@ hr.div {
     0 0 0 1px rgba(148, 163, 184, 0.12);
 }
 
-/* Glass card — frosted, cool tinted */
+/* Glass card - frosted, cool tinted */
 .light .card-glass {
   background: var(--glass);
   backdrop-filter: blur(24px) saturate(160%);
@@ -2380,9 +2380,9 @@ hr.div {
   );
 }
 
-/* ═══════════════════════════════════════════════
+/* -----------------------------------------------
    AMBIENT GLOW ORBS
-   ═══════════════════════════════════════════════ */
+   ----------------------------------------------- */
 .light .orb {
   position: absolute;
   border-radius: 50%;
@@ -2441,9 +2441,9 @@ hr.div {
   }
 }
 
-/* ═══════════════════════════════════════════════
-   TYPOGRAPHY — cinematic scale
-   ═══════════════════════════════════════════════ */
+/* -----------------------------------------------
+   TYPOGRAPHY - cinematic scale
+   ----------------------------------------------- */
 .display-text {
   font-family: "Space Grotesk", sans-serif;
   font-weight: 800;
@@ -2491,9 +2491,9 @@ h3,
   color: var(--accent);
 }
 
-/* ═══════════════════════════════════════════════
+/* -----------------------------------------------
    PREMIUM BUTTONS (light mode)
-   ═══════════════════════════════════════════════ */
+   ----------------------------------------------- */
 .btn-primary {
   background: var(--accent);
   color: var(--accent-fg);
@@ -2587,7 +2587,7 @@ h3,
   transform: translateY(0);
 }
 
-/* ── Emerald accent button (new) ── */
+/* -- Emerald accent button (new) -- */
 .btn-emerald {
   background: var(--emerald);
   color: #ffffff;
@@ -2614,7 +2614,7 @@ h3,
   transform: translateY(0px) scale(0.98);
 }
 
-/* ── Autofill Override for Dark Mode ── */
+/* -- Autofill Override for Dark Mode -- */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -2624,9 +2624,9 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* ═══════════════════════════════════════════════
+/* -----------------------------------------------
    VERIFY EMAIL BANNER
-   ═══════════════════════════════════════════════ */
+   ----------------------------------------------- */
 .verify-toast {
   position: relative;
   background: var(--accent-alpha);
@@ -3311,11 +3311,11 @@ input:-webkit-autofill:active {
   }
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ----------------------------------------------------------
    PROFESSIONAL DASHBOARD SYSTEM
-   ══════════════════════════════════════════════════════════ */
+   ---------------------------------------------------------- */
 
-/* ── Stat card with colored top accent bar ── */
+/* -- Stat card with colored top accent bar -- */
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3405,7 +3405,7 @@ input:-webkit-autofill:active {
   color: var(--danger);
 }
 
-/* ── Dashboard section header ── */
+/* -- Dashboard section header -- */
 .dash-section-header {
   display: flex;
   align-items: center;
@@ -3428,7 +3428,7 @@ input:-webkit-autofill:active {
   text-decoration: underline;
 }
 
-/* ── Attention item row ── */
+/* -- Attention item row -- */
 .attention-item {
   display: flex;
   align-items: center;
@@ -3469,7 +3469,7 @@ input:-webkit-autofill:active {
   color: #fff;
 }
 
-/* ── Job row card ── */
+/* -- Job row card -- */
 .job-row {
   display: flex;
   align-items: center;
@@ -3512,7 +3512,7 @@ input:-webkit-autofill:active {
   white-space: nowrap;
 }
 
-/* ── Dashboard welcome banner ── */
+/* -- Dashboard welcome banner -- */
 .dash-banner {
   background: linear-gradient(
     135deg,
@@ -3563,7 +3563,7 @@ input:-webkit-autofill:active {
   margin-top: 0.3rem;
 }
 
-/* ── Timeline feed ── */
+/* -- Timeline feed -- */
 .feed-line {
   position: relative;
   padding-left: 1.5rem;
@@ -3611,7 +3611,7 @@ input:-webkit-autofill:active {
   margin-top: 0.15rem;
 }
 
-/* ── Earnings chart wrapper ── */
+/* -- Earnings chart wrapper -- */
 .earnings-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3672,7 +3672,7 @@ input:-webkit-autofill:active {
   border: 1px dashed var(--border);
 }
 
-/* ── Progress bar (milestone tracking) ── */
+/* -- Progress bar (milestone tracking) -- */
 .milestone-bar {
   height: 6px;
   background: var(--surface-hover);
@@ -3687,7 +3687,7 @@ input:-webkit-autofill:active {
   transition: width 0.6s var(--ease-spring);
 }
 
-/* ── Profile completion card ── */
+/* -- Profile completion card -- */
 .profile-completeness {
   background: var(--accent-alpha);
   border: 1px solid var(--accent-glow);
@@ -3727,7 +3727,7 @@ input:-webkit-autofill:active {
   border: 1px solid var(--copper-glow);
 }
 
-/* ── Admin stat card ── */
+/* -- Admin stat card -- */
 .admin-stat {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3763,7 +3763,7 @@ input:-webkit-autofill:active {
   margin-top: 0.2rem;
 }
 
-/* ── Responsive dashboard grids ── */
+/* -- Responsive dashboard grids -- */
 .stat-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3809,7 +3809,7 @@ input:-webkit-autofill:active {
   }
 }
 
-/* ── Verification badge row ── */
+/* -- Verification badge row -- */
 .trust-badges {
   display: flex;
   flex-wrap: wrap;
@@ -3842,7 +3842,7 @@ input:-webkit-autofill:active {
   border-color: var(--border);
 }
 
-/* ── Quick action card ── */
+/* -- Quick action card -- */
 .quick-action {
   display: flex;
   align-items: center;
@@ -3882,9 +3882,9 @@ input:-webkit-autofill:active {
   color: var(--fg-secondary);
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ----------------------------------------------------------
    JOB DETAIL PAGE
-   ══════════════════════════════════════════════════════════ */
+   ---------------------------------------------------------- */
 
 .job-detail-layout {
   display: grid;
@@ -4033,9 +4033,9 @@ input:-webkit-autofill:active {
   font-family: "JetBrains Mono", monospace;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ----------------------------------------------------------
    CHAT PAGE
-   ══════════════════════════════════════════════════════════ */
+   ---------------------------------------------------------- */
 
 .chat-layout {
   display: flex;
@@ -4710,9 +4710,9 @@ input:-webkit-autofill:active {
   line-height: 1.5;
 }
 
-/* ═══════════════════════════════════════════════════════
-   MISSING COMPONENT STYLES — required by pages
-   ═══════════════════════════════════════════════════════ */
+/* -------------------------------------------------------
+   MISSING COMPONENT STYLES - required by pages
+   ------------------------------------------------------- */
 
 /* Chat bubbles */
 .chat-bubble {
@@ -4750,7 +4750,7 @@ input:-webkit-autofill:active {
   text-align: left;
 }
 
-/* Stat cards — referenced in dashboard */
+/* Stat cards - referenced in dashboard */
 .card-stat {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -4893,7 +4893,7 @@ input:-webkit-autofill:active {
   max-width: 280px;
 }
 
-/* Btn copper — used in dashboard */
+/* Btn copper - used in dashboard */
 .btn-copper {
   background: var(--copper, #e8724a);
   color: #fff;
@@ -4963,7 +4963,7 @@ input:-webkit-autofill:active {
   }
 }
 
-/* Btn surface — used in dashboard header */
+/* Btn surface - used in dashboard header */
 .btn-surface {
   background: var(--surface-hover);
   color: var(--fg);
@@ -5037,11 +5037,11 @@ input:-webkit-autofill:active {
   font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ---------------------------------------------------------------
    DASHBOARD REDESIGN STYLES
-   ═══════════════════════════════════════════════════════════════ */
+   --------------------------------------------------------------- */
 
-/* ── Welcome banner ─────────────────────────────────────────── */
+/* -- Welcome banner ------------------------------------------- */
 .dash-banner {
   position: relative;
   border-radius: var(--radius-lg);
@@ -5115,7 +5115,7 @@ input:-webkit-autofill:active {
   flex-wrap: wrap;
 }
 
-/* ── Stat cards ──────────────────────────────────────────────── */
+/* -- Stat cards ------------------------------------------------ */
 .stat-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -5205,7 +5205,7 @@ input:-webkit-autofill:active {
   }
 }
 
-/* ── Two-column layout ───────────────────────────────────────── */
+/* -- Two-column layout ----------------------------------------- */
 .dash-two-col {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -5232,7 +5232,7 @@ input:-webkit-autofill:active {
   }
 }
 
-/* ── Section card wrapper ────────────────────────────────────── */
+/* -- Section card wrapper -------------------------------------- */
 .dash-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -5266,7 +5266,7 @@ input:-webkit-autofill:active {
   opacity: 0.7;
 }
 
-/* ── Attention item ──────────────────────────────────────────── */
+/* -- Attention item -------------------------------------------- */
 .attention-row {
   display: flex;
   align-items: center;
@@ -5331,7 +5331,7 @@ input:-webkit-autofill:active {
   color: #fff;
 }
 
-/* ── Job row ─────────────────────────────────────────────────── */
+/* -- Job row --------------------------------------------------- */
 .job-row-v2 {
   display: flex;
   align-items: center;
@@ -5378,7 +5378,7 @@ input:-webkit-autofill:active {
   white-space: nowrap;
 }
 
-/* ── Activity timeline ───────────────────────────────────────── */
+/* -- Activity timeline ----------------------------------------- */
 .feed-wrap {
   position: relative;
   padding-left: 1.25rem;
@@ -5427,7 +5427,7 @@ input:-webkit-autofill:active {
   margin-top: 0.15rem;
 }
 
-/* ── Quick action cards ──────────────────────────────────────── */
+/* -- Quick action cards ---------------------------------------- */
 .quick-action {
   display: flex;
   align-items: center;
@@ -5470,7 +5470,7 @@ input:-webkit-autofill:active {
   margin-top: 1px;
 }
 
-/* ── Earnings chart real bars ────────────────────────────────── */
+/* -- Earnings chart real bars ---------------------------------- */
 .chart-area {
   display: flex;
   align-items: flex-end;
@@ -5502,7 +5502,7 @@ input:-webkit-autofill:active {
   white-space: nowrap;
 }
 
-/* ── Profile completeness ────────────────────────────────────── */
+/* -- Profile completeness -------------------------------------- */
 .profile-progress {
   background: var(--accent-alpha);
   border: 1px solid var(--accent-glow);
@@ -5563,7 +5563,7 @@ input:-webkit-autofill:active {
   border-color: var(--copper-glow);
 }
 
-/* ── Sidebar upgrades ────────────────────────────────────────── */
+/* -- Sidebar upgrades ------------------------------------------ */
 .dash-sidebar__divider {
   height: 1px;
   background: var(--border);
@@ -5580,7 +5580,7 @@ input:-webkit-autofill:active {
   margin-top: 0.5rem;
 }
 
-/* ── Trust badges row ────────────────────────────────────────── */
+/* -- Trust badges row ------------------------------------------ */
 .trust-row {
   display: flex;
   flex-wrap: wrap;
