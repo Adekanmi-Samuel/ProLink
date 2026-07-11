@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { LayoutDashboard, Search, FileText, Briefcase, MessageSquare, Wallet, User, Plus, Bookmark } from 'lucide-react';
+import { 
+  LayoutDashboard, User, Briefcase, FileText, 
+  Settings, MessageSquare, Wallet, Search, Bookmark, Menu, X, Plus, LogOut, CheckCircle, ShieldAlert, Users, Star
+} from 'lucide-react';
 import api from '../../lib/api';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
@@ -64,9 +67,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/saved-jobs',   label: 'Saved Jobs',      icon: <Bookmark size={16}/> },
     { href: '/dashboard/my-bids',      label: 'My Proposals',    icon: <FileText size={16}/> },
     { href: '/dashboard/contracts',    label: 'Contracts',       icon: <Briefcase size={16}/> },
+    { href: '/dashboard/my-services',  label: 'My Services',     icon: <Briefcase size={16}/> },
     { href: '/dashboard/messages',     label: 'Messages',        icon: <MessageSquare size={16}/> },
     { href: '/dashboard/wallet',       label: 'Earnings',        icon: <Wallet size={16}/> },
     { href: '/profile/edit',           label: 'Profile',         icon: <User size={16}/> },
+    { href: '/dashboard/premium',      label: 'Premium',         icon: <Star size={16}/> },
   ];
 
   const clientLinks = [
@@ -76,6 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/messages',     label: 'Messages',        icon: <MessageSquare size={16}/> },
     { href: '/dashboard/wallet',       label: 'Billing',         icon: <Wallet size={16}/> },
     { href: '/profile/edit',           label: 'Profile',         icon: <User size={16}/> },
+    { href: '/dashboard/premium',      label: 'Premium',         icon: <Star size={16}/> },
   ];
 
   // Admin users get a link
@@ -101,16 +107,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           background: var(--bg);
         }
         .dash-sidebar {
-          width: var(--sidebar-w);
-          flex-shrink: 0;
-          background: var(--bg);
+          width: 260px; background: var(--surface);
           border-right: 1px solid var(--border);
-          position: sticky;
-          top: var(--navbar-h);
-          height: calc(100vh - var(--navbar-h));
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
+          display: flex; flex-direction: column;
+          height: calc(100vh - var(--navbar-h)); position: sticky; top: var(--navbar-h); overflow-y: auto;
+          flex-shrink: 0;
           padding: 1.5rem 0;
         }
         .dash-sidebar__header {
@@ -158,6 +159,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           color: var(--accent) !important;
           background: var(--accent-alpha);
           font-weight: 600;
+          border-left: 3px solid var(--accent);
+          padding-left: calc(0.75rem - 3px);
         }
         .dash-sidebar__link-icon { font-size: 0.95rem; width: 20px; text-align: center; flex-shrink: 0; }
         .dash-sidebar__badge {
@@ -165,7 +168,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           padding: 0.1rem 0.4rem; border-radius: 999px; margin-left: auto;
         }
         .dash-content {
-          flex: 1; min-width: 0; padding: calc(var(--navbar-h) + 2rem) 2rem 2rem;
+          flex: 1; min-width: 0; padding: 2rem;
         }
         .dash-mobile-topbar {
           display: none;
@@ -282,36 +285,65 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav className="dash-sidebar__nav">
-          {links.map((link, i) => (
-            <motion.div
-              key={link.href}
-              custom={i}
-              variants={DROP_VARIANTS}
-              initial="hidden"
-              animate="visible"
-              whileHover={{ x: 4 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <Link
-                href={link.href}
-                className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}
-              >
-                <span className="dash-sidebar__link-icon">{link.icon}</span>
-                <span style={{ flex: 1 }}>{link.label}</span>
-                {link.href === '/dashboard/messages' && unreadCount > 0 && (
-                  <motion.span
-                    className="dash-sidebar__badge"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                  >
-                    {unreadCount}
-                  </motion.span>
-                )}
-              </Link>
-            </motion.div>
-          ))}
+          {/* For providers: group links into sections */}
+          {isProvider ? (
+            <>
+              <div className="dash-sidebar__section-label">Work</div>
+              {[providerLinks[0], providerLinks[1], providerLinks[2], providerLinks[3]].map((link, i) => (
+                <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
+                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                    <span style={{ flex: 1 }}>{link.label}</span>
+                    {link.href === '/dashboard/messages' && unreadCount > 0 && (
+                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+              <div className="dash-sidebar__divider" />
+              <div className="dash-sidebar__section-label">Account</div>
+              {[providerLinks[4], providerLinks[5], providerLinks[6], providerLinks[7]].map((link, i) => (
+                <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
+                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                    <span style={{ flex: 1 }}>{link.label}</span>
+                    {link.href === '/dashboard/messages' && unreadCount > 0 && (
+                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+            </>
+          ) : (
+            /* For clients: same pattern */
+            <>
+              <div className="dash-sidebar__section-label">Hire</div>
+              {[clientLinks[0], clientLinks[1], clientLinks[2]].map((link, i) => (
+                <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
+                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                    <span style={{ flex: 1 }}>{link.label}</span>
+                    {link.href === '/dashboard/messages' && unreadCount > 0 && (
+                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+              <div className="dash-sidebar__divider" />
+              <div className="dash-sidebar__section-label">Account</div>
+              {[clientLinks[3], clientLinks[4], clientLinks[5]].map((link, i) => (
+                <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
+                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                    <span style={{ flex: 1 }}>{link.label}</span>
+                    {link.href === '/dashboard/messages' && unreadCount > 0 && (
+                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+            </>
+          )}
         </nav>
       </aside>
 

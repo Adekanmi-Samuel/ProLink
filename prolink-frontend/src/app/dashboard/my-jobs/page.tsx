@@ -15,7 +15,7 @@ function MyJobsPage() {
   useEffect(() => {
     const fetchMyJobs = async () => {
       try {
-        const response = await api.get('/jobs/my-jobs');
+        const response = await api.get(`/jobs/my-jobs?_t=${Date.now()}`);
         setJobs(response.data.jobs || []);
       } catch (error) {
         console.error(error);

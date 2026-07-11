@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -41,6 +41,7 @@ api.interceptors.response.use(
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup') && window.location.pathname !== '/') {
           // Clear local token on 401
           localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
           window.location.href = '/login';
         }
       }
@@ -54,6 +55,6 @@ export default api;
 export const hasAuthCookie = (): boolean => {
   if (typeof window === 'undefined') return false;
   const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('token='));
-  const hasLocalToken = !!localStorage.getItem('token');
+  const hasLocalToken = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
   return hasCookie || hasLocalToken;
 };

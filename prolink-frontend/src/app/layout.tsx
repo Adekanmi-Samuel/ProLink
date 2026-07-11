@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider>
             <Navbar />
             <VerificationBanner />
-            <main>
+            <main style={{ paddingTop: 'var(--navbar-h)' }}>
               <LandingAnimator>
                 {children}
               </LandingAnimator>

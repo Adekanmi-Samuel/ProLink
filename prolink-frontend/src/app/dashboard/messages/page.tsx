@@ -29,7 +29,7 @@ function MessagesPage() {
     const fetchThreads = async () => {
       try {
         const response = await api.get('/chats');
-        setThreads(response.data);
+        setThreads(response.data.data || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -41,14 +41,7 @@ function MessagesPage() {
 
   if (loading) return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-        style={{
-          width: 36, height: 36, borderRadius: '50%',
-          border: '3px solid var(--border)', borderTopColor: 'var(--accent)',
-        }}
-      />
+      <span style={{ color: 'var(--fg-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Loading...</span>
     </div>
   );
 

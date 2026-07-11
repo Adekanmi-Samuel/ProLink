@@ -36,7 +36,7 @@ export default function JobDetailPage() {
   const [jobData, setJobData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [bidForm, setBidForm] = useState({ amount: '', estimatedTime: '', proposal: '' });
+  const [bidForm, setBidForm] = useState({ amount: '', durationValue: '', durationUnit: 'days', proposal: '' });
   const [bidSubmitting, setBidSubmitting] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -73,7 +73,12 @@ export default function JobDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!socket || !id) return;
+    // Polling fallback/supplement
+    const interval = setInterval(() => {
+      fetchData();
+    }, 15000);
+
+    if (!socket || !id) return () => clearInterval(interval);
 
     const handleNewBid = (bid: any) => {
       if (bid.job_id !== Number(id)) return;
@@ -96,6 +101,7 @@ export default function JobDetailPage() {
     socket.on('job_updated', handleJobUpdated);
 
     return () => {
+      clearInterval(interval);
       socket.off('new_bid', handleNewBid);
       socket.off('job_updated', handleJobUpdated);
     };
@@ -135,12 +141,18 @@ export default function JobDetailPage() {
       return;
     }
     try {
-      const fullProposal = bidForm.estimatedTime
-        ? `**Estimated Time:** ${bidForm.estimatedTime}\n\n${bidForm.proposal}`
-        : bidForm.proposal;
-      await api.post(`/jobs/${id}/bids`, { amount: bidForm.amount, proposal: fullProposal });
+      let totalDays = 0;
+      const val = parseInt(bidForm.durationValue);
+      if (!isNaN(val)) {
+        if (bidForm.durationUnit === 'days') totalDays = val;
+        else if (bidForm.durationUnit === 'weeks') totalDays = val * 7;
+        else if (bidForm.durationUnit === 'months') totalDays = val * 30;
+      }
+
+      const fullProposal = bidForm.proposal;
+      await api.post(`/jobs/${id}/bids`, { amount: bidForm.amount, duration_days: totalDays, proposal: fullProposal });
       setBidSubmitted(true);
-      setBidForm({ amount: '', estimatedTime: '', proposal: '' });
+      setBidForm({ amount: '', durationValue: '', durationUnit: 'days', proposal: '' });
     } catch (error: any) {
       const apiError = error.response?.data;
       if (apiError?.errors?.length > 0) {
@@ -150,6 +162,25 @@ export default function JobDetailPage() {
       }
     } finally {
       setBidSubmitting(false);
+    }
+  };
+
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const handleDraftWithAI = async () => {
+    setAiDrafting(true);
+    try {
+      const res = await api.post('/ai/proposals/generate', { jobId: id });
+      setBidForm(prev => ({ ...prev, proposal: res.data.proposal }));
+      toast.success('Proposal drafted successfully!');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast.error('This feature is for Premium users only.');
+        router.push('/dashboard/premium');
+      } else {
+        toast.error('Failed to generate proposal.');
+      }
+    } finally {
+      setAiDrafting(false);
     }
   };
 
@@ -343,7 +374,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* ── RIGHT COLUMN: Sidebar ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'sticky', top: 'calc(var(--navbar-h) + 1rem)' }}>
+          <div className="job-detail-sidebar">
             {/* Client View: Bids Received */}
             {isOwner && (
               <motion.div
@@ -387,6 +418,11 @@ export default function JobDetailPage() {
                           </div>
                           
                           <div className="bid-card__proposal">
+                            {bid.duration_days && (
+                              <div style={{ marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.8rem', color: 'var(--accent)' }}>
+                                ⏱ Estimated Delivery: {bid.duration_days >= 30 && bid.duration_days % 30 === 0 ? `${bid.duration_days / 30} month(s)` : bid.duration_days >= 7 && bid.duration_days % 7 === 0 ? `${bid.duration_days / 7} week(s)` : `${bid.duration_days} day(s)`}
+                              </div>
+                            )}
                             {bid.proposal}
                           </div>
                           
@@ -506,18 +542,44 @@ export default function JobDetailPage() {
                     </div>
 
                     <div className="field-group">
-                      <label htmlFor="estimatedTime" className="field-label">Estimated Delivery</label>
-                      <input
-                        id="estimatedTime" name="estimatedTime" type="text"
-                        className="field"
-                        value={bidForm.estimatedTime}
-                        onChange={handleBidChange}
-                        placeholder="e.g. 2 weeks"
-                      />
+                      <label htmlFor="durationValue" className="field-label">Estimated Delivery</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          id="durationValue" name="durationValue" type="number" min="1"
+                          className="field"
+                          style={{ flex: 2 }}
+                          value={bidForm.durationValue}
+                          onChange={handleBidChange}
+                          placeholder="e.g. 2"
+                          required
+                        />
+                        <select
+                          name="durationUnit"
+                          className="field"
+                          style={{ flex: 1 }}
+                          value={bidForm.durationUnit}
+                          onChange={handleBidChange}
+                        >
+                          <option value="days">Days</option>
+                          <option value="weeks">Weeks</option>
+                          <option value="months">Months</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="field-group">
-                      <label htmlFor="proposal" className="field-label">Cover Letter</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <label htmlFor="proposal" className="field-label" style={{ marginBottom: 0 }}>Cover Letter</label>
+                        <button 
+                          type="button" 
+                          onClick={handleDraftWithAI} 
+                          disabled={aiDrafting}
+                          className="btn btn-outline btn-sm"
+                          style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                        >
+                          {aiDrafting ? 'Generating...' : '✨ Draft with AI'}
+                        </button>
+                      </div>
                       <textarea
                         id="proposal" name="proposal" rows={5} required
                         className="field"

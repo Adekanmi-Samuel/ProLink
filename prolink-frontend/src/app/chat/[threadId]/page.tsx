@@ -143,11 +143,45 @@ export default function ChatPage() {
     socket.on('user_stopped_typing', (data: any) => {
       if (data.userId !== currentUserIdRef.current) setOtherUserTyping(false);
     });
-    socket.on('error', (err: any) => setConnectionError(err?.message || 'Something went wrong.'));
-    socket.on('connect_error', () => setConnectionError('Connection lost. Trying to reconnect…'));
+    socket.on('error', (err: any) => console.log('Socket error:', err?.message));
+    socket.on('connect_error', () => console.log('Socket connect_error'));
     socket.on('connect', () => setConnectionError(''));
 
+    // Polling fallback since WebSockets are broken on Vercel
+    const interval = setInterval(async () => {
+      if (!threadId) return;
+      try {
+        const messagesRes = await api.get(`/chats/${threadId}/messages`);
+        
+        setMessages((prev: any[]) => {
+          const newMessages = messagesRes.data.data || [];
+          
+          const existingIds = new Set(prev.map((m: any) => m.id));
+          const toAdd = newMessages.filter((m: any) => !existingIds.has(m.id));
+          
+          let changed = false;
+          const updated = prev.map((om: any) => {
+            const nm = newMessages.find((m: any) => m.id === om.id);
+            if (nm && nm.read_at !== om.read_at) {
+              changed = true;
+              return { ...om, read_at: nm.read_at };
+            }
+            return om;
+          });
+
+          if (toAdd.length > 0) {
+            return [...updated, ...toAdd];
+          }
+          
+          return changed ? updated : prev;
+        });
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 3000);
+
     return () => {
+      clearInterval(interval);
       // Don't disconnect the global socket - it's managed by SocketProvider
     };
   }, [threadId, router, socket]);
@@ -208,11 +242,7 @@ export default function ChatPage() {
 
         const content = JSON.stringify({ url: fileUrl, name: pendingAttachment.name, caption: trimmed });
 
-        if (isSocketConnected) {
-          socketRef.current.emit('send_message', { threadId, content, message_type: messageType });
-        } else {
-          await sendViaREST(content, messageType);
-        }
+        await sendViaREST(content, messageType);
       } catch (err) {
         console.error('File upload failed', err);
         alert('Failed to upload file. Please try again.');
@@ -221,11 +251,7 @@ export default function ChatPage() {
         setPendingAttachment(null);
       }
     } else {
-      if (isSocketConnected) {
-        socketRef.current.emit('send_message', { threadId, content: trimmed, message_type: 'text' });
-      } else {
-        await sendViaREST(trimmed, 'text');
-      }
+      await sendViaREST(trimmed, 'text');
     }
 
     if (isSocketConnected) {
@@ -266,16 +292,8 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="page">
-        <div className="loading-wrap">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-          >
-            <div className="spinner" />
-          </motion.div>
-        </div>
+      <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: 'var(--fg-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Loading...</span>
       </div>
     );
   }

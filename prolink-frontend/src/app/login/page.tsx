@@ -35,9 +35,13 @@ function LoginForm() {
         password,
         remember_me: rememberMe,
       });
-      // Store token in localStorage as fallback
+      // Store token based on rememberMe preference
       if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
+        if (rememberMe) {
+          localStorage.setItem('token', response.data.token);
+        } else {
+          sessionStorage.setItem('token', response.data.token);
+        }
       }
       router.push('/dashboard');
     } catch (error) {

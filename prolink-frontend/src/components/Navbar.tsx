@@ -55,6 +55,21 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    // Polling fallback/supplement for instant updates
+    if (!user) return;
+    const interval = setInterval(() => {
+      api.get('/notifications/unread-count').then((res) => {
+        setNotifCount(res.data?.count || 0);
+      }).catch(() => {});
+      if (notifDropdown) {
+        fetchNotifications();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [user, notifDropdown, fetchNotifications]);
+
+  useEffect(() => {
     if (!socket) return;
     const handleNewNotif = (notif) => {
       setNotifCount((c) => c + 1);
@@ -87,6 +102,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try { await api.post('/auth/logout'); } catch {}
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setUser(null);
     setAvatarDropdown(false);
     setMobileMenu(false);
@@ -101,16 +117,19 @@ export default function Navbar() {
     : '?';
 
   const loggedOutNav = [
+    { href: '/services', label: 'Services' },
     { href: '/jobs', label: 'Find Work' },
     { href: '/jobs/new', label: 'Post a Job' },
     { href: '/#how-it-works', label: 'How it Works' },
   ];
   const clientNav = [
+    { href: '/services', label: 'Services' },
     { href: '/jobs/new', label: 'Post a Job' },
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/dashboard/messages', label: 'Messages' },
   ];
   const providerNav = [
+    { href: '/services', label: 'Services' },
     { href: '/jobs', label: 'Find Work' },
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/dashboard/messages', label: 'Messages' },
@@ -143,28 +162,29 @@ export default function Navbar() {
         <div className="navbar-inner">
           {/* Left: hamburger + logo — always visible */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <motion.button
-              onClick={() => setMobileMenu((v) => !v)}
-              className="navbar-hamburger"
-              aria-label="Toggle menu"
-              whileTap={{ scale: 0.92 }}
-              style={{ display: 'flex' }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                {mobileMenu ? (
-                  <>
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </>
-                ) : (
-                  <>
-                    <line x1="4" y1="6" x2="20" y2="6" />
-                    <line x1="4" y1="12" x2="20" y2="12" />
-                    <line x1="4" y1="18" x2="20" y2="18" />
-                  </>
-                )}
-              </svg>
-            </motion.button>
+            {!pathname?.startsWith('/dashboard') && (
+              <motion.button
+                onClick={() => setMobileMenu((v) => !v)}
+                className="navbar-hamburger"
+                aria-label="Toggle menu"
+                whileTap={{ scale: 0.92 }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  {mobileMenu ? (
+                    <>
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </>
+                  ) : (
+                    <>
+                      <line x1="4" y1="6" x2="20" y2="6" />
+                      <line x1="4" y1="12" x2="20" y2="12" />
+                      <line x1="4" y1="18" x2="20" y2="18" />
+                    </>
+                  )}
+                </svg>
+              </motion.button>
+            )}
             <Link href={user ? '/dashboard' : '/'} className="navbar-logo">
               <span className="navbar-logo-accent">Pro</span>
               <span className="navbar-logo-fg">Link</span>
