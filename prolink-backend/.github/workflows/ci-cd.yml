@@ -164,7 +164,7 @@ jobs:
 
   # ══════════════════════════════════════════════════════
   # STAGE 3: DEPLOY BACKEND TO STAGING
-  # Triggers Render to deploy your staging backend service
+  # Deploys a Vercel preview version of the backend
   # ══════════════════════════════════════════════════════
   deploy-staging:
     name: Deploy Backend Staging
@@ -175,30 +175,35 @@ jobs:
       name: backend-staging
 
     steps:
-      - name: Trigger Render staging deploy
-        run: |
-          echo "Triggering Render staging deployment..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}")
-          echo "Response: $RESPONSE"
-          echo "✅ Staging backend deploy triggered"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Wait for staging to be ready
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment (preview)
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for staging
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel (staging preview)
+        id: deploy
         run: |
-          echo "Waiting 60 seconds for Render to deploy..."
-          sleep 60
-          # Ping the staging health endpoint to confirm
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.STAGING_BACKEND_URL }}/health || echo "000")
-          echo "Staging health check: $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ Staging backend is live and healthy"
-          else
-            echo "⚠️ Staging backend returned $STATUS (may still be deploying)"
-          fi
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+          echo "Staging Backend URL: $url"
 
   # ══════════════════════════════════════════════════════
   # STAGE 4: DEPLOY BACKEND TO PRODUCTION
   # Only on main branch push
-  # Runs DB migrations FIRST, then deploys
+  # Runs DB migrations FIRST, then deploys to Vercel
   # ══════════════════════════════════════════════════════
   deploy-production:
     name: Deploy Backend Production
@@ -228,16 +233,22 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Trigger Render production deploy
-        run: |
-          echo "Triggering Render PRODUCTION deployment..."
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
-          echo "✅ Production backend deploy triggered"
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment (production)
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel PRODUCTION
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deployment summary
         run: |
           echo "═══════════════════════════════════════════"
-          echo "✅ ProLink Backend Production Deployed"
+          echo "✅ ProLink Backend Production Deployed to Vercel"
           echo "  Commit: ${{ github.sha }}"
           echo "  Branch: ${{ github.ref_name }}"
           echo "  Time: $(date)"
