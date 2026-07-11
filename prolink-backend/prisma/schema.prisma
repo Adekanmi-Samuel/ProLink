@@ -47,6 +47,9 @@ model User {
   savedSearches      SavedSearch[]
   savedJobs          SavedJob[]
   notifications      Notification[]
+  is_premium         Boolean         @default(false)
+  services           Service[]
+  service_orders     ServiceOrder[]
 
   @@index([user_type])
   @@index([status])
@@ -166,6 +169,7 @@ model Bid {
   job_id       Int
   provider_id  Int
   amount       Decimal  @db.Decimal(12, 2)
+  duration_days Int?
   proposal     String
   submitted_at DateTime @default(now())
   job          Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
@@ -183,11 +187,14 @@ model JobAssignment {
   job_id        Int      @unique
   provider_id   Int
   agreed_amount Decimal? @db.Decimal(12, 2)
+  deadline      DateTime?
+  reminder_sent Boolean  @default(false)
   assigned_at   DateTime @default(now())
   job           Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
   provider      User     @relation(fields: [provider_id], references: [id], onDelete: Cascade)
 
   @@index([provider_id])
+  @@index([deadline, reminder_sent])
   @@map("JobAssignment")
 }
 
@@ -352,6 +359,7 @@ model Category {
   created_at DateTime @default(now())
   jobs       Job[]
   skills     Skill[]
+  services   Service[]
 
   @@map("Category")
 }
@@ -433,3 +441,49 @@ model Notification {
   @@index([user_id, is_read])
   @@map("Notification")
 }
+
+
+model Service {
+  id              Int            @id @default(autoincrement())
+  provider_id     Int
+  title           String         @db.VarChar(255)
+  description     String         @db.Text
+  price           Decimal        @db.Decimal(12, 2)
+  delivery_days   Int
+  category_id     Int?
+  images          Json?
+  status          String         @default("active") @db.VarChar(20)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  provider        User           @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  category        Category?      @relation(fields: [category_id], references: [id])
+  orders          ServiceOrder[]
+
+  @@index([provider_id])
+  @@index([category_id])
+  @@index([status])
+  @@map("Service")
+}
+
+model ServiceOrder {
+  id                Int       @id @default(autoincrement())
+  service_id        Int
+  client_id         Int
+  amount            Decimal   @db.Decimal(12, 2)
+  status            String    @default("pending") @db.VarChar(30)
+  stripe_pi_id      String?   @db.VarChar(255)
+  payment_reference String?   @db.VarChar(255)
+  requirements      String?   @db.Text
+  delivery_date     DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  service           Service   @relation(fields: [service_id], references: [id])
+  client            User      @relation(fields: [client_id], references: [id])
+
+  @@index([service_id])
+  @@index([client_id])
+  @@index([status])
+  @@map("ServiceOrder")
+}
+
+

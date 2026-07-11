@@ -193,6 +193,10 @@ const adminRoutes = require('./src/routes/admin');
 const milestonesRoutes = require('./src/routes/milestones');
 const paymentsRoutes = require('./src/routes/payments');
 const disputesRoutes = require('./src/routes/disputes');
+const { startDeadlineCron } = require('./src/cron/deadlineReminders');
+
+startDeadlineCron();
+
 const taxonomyRoutes = require('./src/routes/taxonomy');
 const searchRoutes = require('./src/routes/search');
 const recommendationsRoutes = require('./src/routes/recommendations');
@@ -204,6 +208,8 @@ const notificationRoutes = require('./src/routes/notifications');
 const statsRoutes = require('./src/routes/stats');
 const savedJobsRoutes = require('./src/routes/savedJobs');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const servicesRoutes = require('./src/routes/servicesRoutes');
+const aiRoutes = require('./src/routes/aiRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
@@ -226,6 +232,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Serve uploaded files (local fallback for when Cloudinary is not configured)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

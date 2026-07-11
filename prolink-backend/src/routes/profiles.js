@@ -18,6 +18,8 @@ router.post('/me/bank', authMiddleware, apiLimiter, validateRequest(saveBankAcco
 router.get('/me/earnings', authMiddleware, apiLimiter, profilesController.getMyEarnings);
 router.get('/me/earnings-chart', authMiddleware, apiLimiter, profilesController.getEarningsChart);
 
+router.post('/upgrade', authMiddleware, apiLimiter, profilesController.upgradeToPremium);
+
 // Public profile endpoints
 router.get('/:id', searchLimiter, profilesController.getProfileById);
 router.get('/:id/reviews', searchLimiter, profilesController.getProfileReviews);

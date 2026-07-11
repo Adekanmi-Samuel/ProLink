@@ -308,7 +308,7 @@ const getJobById = async (jobId, userId) => {
   };
 };
 
-const submitBid = async (jobId, providerId, { amount, proposal }) => {
+const submitBid = async (jobId, providerId, { amount, duration_days, proposal }) => {
   const job = await prisma.job.findUnique({ 
     where: { id: jobId },
     include: { client: { include: { profile: true } } }
@@ -336,7 +336,7 @@ const submitBid = async (jobId, providerId, { amount, proposal }) => {
   if (existing) throw new Error('You have already placed a bid on this job.');
   
   const bid = await prisma.bid.create({
-    data: { job_id: jobId, provider_id: providerId, amount, proposal },
+    data: { job_id: jobId, provider_id: providerId, amount, duration_days, proposal },
   });
 
   // Notify job owner about new bid
@@ -367,10 +367,20 @@ const hireProvider = async (jobId, clientId, { providerId, agreedAmount }) => {
   if (job.client_id !== clientId) throw new Error('Not authorized.');
   if (job.status !== 'open') throw new Error('Job is not open for hiring.');
 
+  const bid = await prisma.bid.findUnique({
+    where: { job_id_provider_id: { job_id: jobId, provider_id: providerId } }
+  });
+
+  let deadline = null;
+  if (bid && bid.duration_days) {
+    deadline = new Date();
+    deadline.setDate(deadline.getDate() + bid.duration_days);
+  }
+
   return await prisma.$transaction(async (tx) => {
     await tx.job.update({ where: { id: jobId }, data: { status: 'assigned' } });
     return await tx.jobAssignment.create({
-      data: { job_id: jobId, provider_id: providerId, agreed_amount: agreedAmount },
+      data: { job_id: jobId, provider_id: providerId, agreed_amount: agreedAmount, deadline },
     });
   });
 };

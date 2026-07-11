@@ -29,14 +29,14 @@ const bidSchema = z.object({
     if (typeof val === 'number') return val;
     return undefined;
   }, z.number().min(5000, 'Bid amount must be at least ₦5,000')).transform(val => String(val)),
+  duration_days: z.number().int().positive('Duration must be a positive number of days').optional(),
   proposal: z.string().min(20, 'Proposal must be at least 20 characters').max(5000),
 });
 
 // Job assignment validation schema
 const jobAssignmentSchema = z.object({
-  job_id: z.number().int().positive(),
-  provider_id: z.number().int().positive(),
-  agreed_amount: z.string().or(z.number()).optional(),
+  providerId: z.number().int().positive(),
+  agreedAmount: z.string().or(z.number()).optional(),
 });
 
 module.exports = {

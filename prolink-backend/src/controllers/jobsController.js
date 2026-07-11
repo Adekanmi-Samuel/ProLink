@@ -111,8 +111,8 @@ const submitBid = async (req, res, next) => {
     if (!parseResult.success) {
       return res.status(400).json({ msg: parseResult.error.errors[0].message });
     }
-    const { amount, proposal } = parseResult.data;
-    const bid = await jobsService.submitBid(parseInt(req.params.id), req.user.id, { amount, proposal });
+    const { amount, duration_days, proposal } = parseResult.data;
+    const bid = await jobsService.submitBid(parseInt(req.params.id), req.user.id, { amount, duration_days, proposal });
     
     // Fetch job to get client_id
     const job = await prisma.job.findUnique({ where: { id: parseInt(req.params.id) } });

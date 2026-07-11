@@ -30,7 +30,7 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, remember_me } = req.body;
     
     // We no longer block login for unverified users here.
     // They will have limited access based on requireVerified middleware.
@@ -38,12 +38,18 @@ const login = async (req, res, next) => {
     const token = await authService.loginUser({ email, password });
     
     const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.cookie('token', token, {
+    
+    const cookieOptions = {
       httpOnly: true,
       secure: isSecure,
-      sameSite: isSecure ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+      sameSite: isSecure ? 'none' : 'lax'
+    };
+    
+    if (remember_me) {
+      cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+    }
+    
+    res.cookie('token', token, cookieOptions);
     
     res.json({ token });
   } catch (err) {

@@ -345,9 +345,37 @@ async function sendInvoiceEmail(toEmail, invoiceId, jobTitle, amount, pdfBase64)
 
   await sendNativeEmail(toEmail, subject, text, html, true, attachments);
 }
+async function sendDeadlineReminderEmail(toEmail, jobTitle, deadline, isClient) {
+  const subject = `Urgent: Deadline Approaching for "${jobTitle}"`;
+  const text = `The deadline for your job "${jobTitle}" is approaching on ${deadline.toDateString()}.`;
+  
+  const roleText = isClient 
+    ? "Please review the work or prepare to communicate with your freelancer."
+    : "Please ensure you submit your final work before the deadline.";
+    
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; background-color: #ffffff;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="color: #ef4444; margin: 0; font-size: 24px;">Deadline Reminder</h2>
+      </div>
+      <p style="color: #334155; font-size: 16px; line-height: 1.6;">Hello,</p>
+      <p style="color: #334155; font-size: 16px; line-height: 1.6;">
+        This is a friendly reminder that the deadline for the job <strong>"${jobTitle}"</strong> is approaching on <strong>${deadline.toDateString()}</strong>.
+      </p>
+      <p style="color: #334155; font-size: 16px; line-height: 1.6;">
+        ${roleText}
+      </p>
+      <div style="margin-top: 32px; text-align: center;">
+        <a href="https://prolink.com/dashboard/contracts" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">View Contract</a>
+      </div>
+    </div>
+  `;
 
+  await sendNativeEmail(toEmail, subject, text, html);
+}
 
 module.exports = {
+  sendDeadlineReminderEmail,
   sendVerificationEmail,
   sendVerificationOTP,
   sendNotificationEmail,

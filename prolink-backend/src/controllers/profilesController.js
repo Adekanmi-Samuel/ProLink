@@ -180,6 +180,21 @@ const patchProfile = async (req, res) => {
   }
 };
 
+const upgradeToPremium = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Mock successful payment logic
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { is_premium: true }
+    });
+    res.json({ message: 'Successfully upgraded to Premium!', user: { is_premium: updatedUser.is_premium } });
+  } catch (error) {
+    logger.error('Error upgrading to premium:', error);
+    res.status(500).json({ error: 'Failed to upgrade to premium.' });
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfileById,
@@ -190,5 +205,6 @@ module.exports = {
   saveBankAccount,
   getMyEarnings,
   getEarningsChart,
-  patchProfile
+  patchProfile,
+  upgradeToPremium
 };
