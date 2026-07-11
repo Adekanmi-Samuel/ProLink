@@ -186,6 +186,21 @@ const saveBankAccount = async (userId, data) => {
   if (!profile) throw new Error('Profile not found');
 
   // Create Paystack Transfer Recipient if secret key is configured
+  // Check for uniqueness of bank account across all users
+  const existingAccount = await prisma.bankAccount.findFirst({
+    where: {
+      account_number: data.account_number,
+      bank_code: data.bank_code,
+      profile_id: { not: profile.id }
+    }
+  });
+
+  if (existingAccount) {
+    const error = new Error('This bank account is already registered by another user.');
+    error.statusCode = 409;
+    throw error;
+  }
+
   let recipientCode = null;
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (secretKey && secretKey !== 'mock') {
@@ -209,11 +224,15 @@ const saveBankAccount = async (userId, data) => {
         recipientCode = result.data.recipient_code;
       } else {
         logger.warn('Paystack recipient creation failed', { message: result.message });
-        throw new Error(result.message || 'Invalid bank account details');
+        const err = new Error(result.message || 'Invalid bank account details');
+        err.statusCode = 400;
+        throw err;
       }
     } catch (err) {
       logger.warn('Paystack recipient creation error', { error: err.message });
-      throw new Error(err.message || 'Could not verify bank account with Paystack.');
+      const error = new Error(err.message || 'Could not verify bank account with Paystack.');
+      error.statusCode = err.statusCode || 400;
+      throw error;
     }
   }
 
@@ -248,15 +267,29 @@ const getMyEarnings = async (userId) => {
     select: {
       amount: true,
       status: true,
+      updated_at: true,
     },
   });
 
   let totalEarned = 0;
+  let thisMonth = 0;
   let pendingEscrow = 0;
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
 
   for (const m of milestones) {
     if (m.status === 'approved' || m.status === 'paid') {
-      totalEarned += Number(m.amount);
+      const amount = Number(m.amount);
+      totalEarned += amount;
+      
+      if (m.updated_at) {
+        const d = new Date(m.updated_at);
+        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          thisMonth += amount;
+        }
+      }
     } else if (m.status === 'funded' || m.status === 'submitted') {
       pendingEscrow += Number(m.amount);
     }
@@ -267,6 +300,7 @@ const getMyEarnings = async (userId) => {
 
   return {
     gross_earned: totalEarned,
+    this_month: thisMonth,
     platform_fee: platformFee,
     net_payout: netPayout,
     pending_escrow: pendingEscrow,

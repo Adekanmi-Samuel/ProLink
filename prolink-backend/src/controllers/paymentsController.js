@@ -21,7 +21,7 @@ const initializePayment = async (req, res, next) => {
     }
 
     const email = milestone.job.client.email;
-    const result = await paymentsService.initializePaystackCheckout(milestone.id, milestone.amount, email);
+    const result = await paymentsService.initializePaystackCheckout(milestone.id, milestone.amount, email, milestone.job_id);
     res.json(result);
   } catch (error) {
     res.status(500).json({ msg: error.message || 'Failed to initialize payment' });
@@ -30,13 +30,14 @@ const initializePayment = async (req, res, next) => {
 
 const paystackWebhook = async (req, res, next) => {
   try {
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = process.env.PAYSTACK_SECRET_KEY?.trim();
     
     // Validate Paystack signature
     if (secret && secret !== 'mock') {
       const payload = req.rawBody || JSON.stringify(req.body);
       const hash = crypto.createHmac('sha512', secret).update(payload).digest('hex');
       if (hash !== req.headers['x-paystack-signature']) {
+        console.error('Webhook signature mismatch', { expected: hash, received: req.headers['x-paystack-signature'] });
         return res.status(400).send('Invalid signature');
       }
     }
@@ -46,6 +47,7 @@ const paystackWebhook = async (req, res, next) => {
 
     res.sendStatus(200);
   } catch (error) {
+    console.error('Webhook Error:', error);
     res.sendStatus(500);
   }
 };
@@ -70,9 +72,41 @@ const mockFundMilestone = async (req, res, next) => {
   }
 };
 
+const verifyPayment = async (req, res, next) => {
+  try {
+    const { reference } = req.body;
+    if (!reference) return res.status(400).json({ msg: 'Reference is required' });
+    
+    const success = await paymentsService.verifyPaystackPayment(reference);
+    if (success) {
+      res.json({ success: true, msg: 'Payment verified and escrowed successfully' });
+    } else {
+      res.status(400).json({ success: false, msg: 'Payment verification failed' });
+    }
+  } catch (error) {
+    console.error('Verify Payment Error:', error);
+    res.status(500).json({ msg: 'Server error during verification' });
+  }
+};
+
+const resolveBankAccount = async (req, res, next) => {
+  try {
+    const { account_number, bank_code } = req.query;
+    if (!account_number || !bank_code) {
+      return res.status(400).json({ msg: 'account_number and bank_code are required' });
+    }
+    const result = await paymentsService.resolveBankAccount(account_number, bank_code);
+    res.json(result);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ msg: error.message || 'Failed to resolve bank account' });
+  }
+};
+
 module.exports = {
   initializePayment,
   paystackWebhook,
+  verifyPayment,
   mockConfirmPayment,
-  mockFundMilestone
+  mockFundMilestone,
+  resolveBankAccount
 };

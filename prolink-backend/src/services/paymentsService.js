@@ -5,13 +5,14 @@ const invoiceService = require('./invoiceService');
 
 // PAYSTACK INTEGRATION (WITH MOCK FALLBACK)
 
-const initializePaystackCheckout = async (milestoneId, amount, email) => {
+const initializePaystackCheckout = async (milestoneId, amount, email, jobId) => {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  const callback_url = jobId ? `${frontendUrl}/jobs/${jobId}` : `${frontendUrl}/dashboard`;
   
   // If we don't have a real key, fallback to a mock checkout flow
   if (!secretKey || secretKey === 'mock') {
     const mockRef = `mock_trx_${Date.now()}`;
-    const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
     
     await prisma.milestone.update({
       where: { id: milestoneId },
@@ -34,6 +35,7 @@ const initializePaystackCheckout = async (milestoneId, amount, email) => {
     body: JSON.stringify({
       email,
       amount: amount * 100, // Paystack expects amount in kobo
+      callback_url,
       metadata: {
         milestoneId
       }
@@ -53,6 +55,29 @@ const initializePaystackCheckout = async (milestoneId, amount, email) => {
   return data.data;
 };
 
+const verifyPaystackPayment = async (reference) => {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey || secretKey === 'mock') {
+    // For mock, just return true as it's already verified in mock-confirm
+    return true; 
+  }
+
+  const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${secretKey}`
+    }
+  });
+
+  const data = await response.json();
+  if (data.status && data.data.status === 'success') {
+    // Call the same logic as the webhook
+    await handleWebhook({ event: 'charge.success', data: { reference } });
+    return true;
+  }
+  return false;
+};
+
 const handleWebhook = async (eventData) => {
   // When a charge is successful
   if (eventData.event === 'charge.success') {
@@ -60,7 +85,8 @@ const handleWebhook = async (eventData) => {
     
     // Find the milestone by reference
     const milestone = await prisma.milestone.findFirst({
-      where: { payment_reference: reference }
+      where: { payment_reference: reference },
+      include: { job: { include: { client: true, assignment: { include: { provider: true } } } } }
     });
 
     if (milestone && milestone.status === 'pending') {
@@ -68,6 +94,14 @@ const handleWebhook = async (eventData) => {
         where: { id: milestone.id },
         data: { status: 'funded' }
       });
+      
+      // Notify both parties
+      const clientEmail = milestone.job.client?.email;
+      const providerEmail = milestone.job.assignment?.provider?.email;
+      const jobTitle = milestone.job.title;
+      
+      if (clientEmail) await emailService.sendFundsEscrowedEmail(clientEmail, jobTitle, milestone.amount, true);
+      if (providerEmail) await emailService.sendFundsEscrowedEmail(providerEmail, jobTitle, milestone.amount, false);
     }
   }
 };
@@ -87,15 +121,23 @@ const confirmMockPayment = async (reference) => {
 
 const mockFundMilestone = async (milestoneId) => {
   const milestone = await prisma.milestone.findUnique({
-    where: { id: milestoneId }
+    where: { id: milestoneId },
+    include: { job: { include: { client: true, provider: true } } }
+  });
+  if (!milestone) throw new Error('Milestone not found');
+  
+  await prisma.milestone.update({
+    where: { id: milestoneId },
+    data: { status: 'funded', payment_reference: `mock_ref_${Date.now()}` }
   });
 
-  if (milestone && milestone.status === 'pending') {
-    await prisma.milestone.update({
-      where: { id: milestone.id },
-      data: { status: 'funded', payment_reference: `mock_ref_${Date.now()}` }
-    });
-  }
+  // Notify both parties
+  const clientEmail = milestone.job.client?.email;
+  const providerEmail = milestone.job.provider?.email;
+  const jobTitle = milestone.job.title;
+  
+  if (clientEmail) await emailService.sendFundsEscrowedEmail(clientEmail, jobTitle, milestone.amount, true);
+  if (providerEmail) await emailService.sendFundsEscrowedEmail(providerEmail, jobTitle, milestone.amount, false);
 };
 
 const releaseFunds = async (milestoneId) => {
@@ -308,14 +350,39 @@ const refundClient = async (milestoneId) => {
   });
 };
 
+const resolveBankAccount = async (accountNumber, bankCode) => {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey || secretKey === 'mock') {
+    return { account_name: 'Test Account Name' };
+  }
+
+  const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${secretKey}`
+    }
+  });
+
+  const data = await response.json();
+  if (!data.status) {
+    const error = new Error(data.message || 'Could not resolve account name');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { account_name: data.data.account_name };
+};
+
 module.exports = {
   initializePaystackCheckout,
   handleWebhook,
+  verifyPaystackPayment,
   confirmMockPayment,
   mockFundMilestone,
   releaseFunds,
   refundClient,
   resolveSplitPayment,
   transferToProvider,
-  refundPortionToClient
+  refundPortionToClient,
+  resolveBankAccount
 };

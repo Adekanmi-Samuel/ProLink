@@ -12,12 +12,14 @@ router.post('/webhook', webhookLimiter, paymentsController.paystackWebhook);
 router.use(authMiddleware);
 router.use(apiLimiter);
 
-// Mock confirm + direct fund — dev-only. Delete this when Paystack is fully live.
+// Mock confirm + direct fund - dev-only. Delete this when Paystack is fully live.
 if (process.env.NODE_ENV !== 'production') {
   router.post('/mock-confirm', paymentsController.mockConfirmPayment);
   router.post('/mock-fund', paymentsController.mockFundMilestone);
 }
 
 router.post('/initialize', requireClient, paymentsController.initializePayment);
+router.post('/verify', paymentsController.verifyPayment);
+router.get('/resolve-bank', paymentsController.resolveBankAccount);
 
 module.exports = router;

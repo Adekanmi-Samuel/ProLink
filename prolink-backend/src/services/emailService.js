@@ -290,6 +290,29 @@ const sendRevisionRequestedEmail = async (toEmail, jobTitle, notes) => {
   await sendNativeEmail(toEmail, subject, text, html, true);
 };
 
+const sendFundsEscrowedEmail = async (toEmail, jobTitle, amount, isClient) => {
+  const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  const dashboardUrl = `${frontendUrl}/dashboard`;
+  
+  const subject = isClient 
+    ? `Payment Successful: ₦${amount} Escrowed for "${jobTitle}"`
+    : `Good news! ₦${amount} has been Escrowed for "${jobTitle}"`;
+    
+  const text = isClient 
+    ? `Your payment of ₦${amount} for "${jobTitle}" was successful and is now securely held in Escrow.`
+    : `The client has successfully funded ₦${amount} into Escrow for "${jobTitle}". You can safely begin working!`;
+    
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2>Funds in Escrow 🔒</h2>
+      <p>${text}</p>
+      <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px;">Go to Dashboard</a>
+    </div>
+  `;
+
+  await sendNativeEmail(toEmail, subject, text, html, true);
+};
+
 const sendAutoReleaseEmail = async (toEmail, jobTitle, amount) => {
   const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
   const walletUrl = `${frontendUrl}/dashboard/wallet`;
@@ -387,6 +410,7 @@ module.exports = {
   sendHiredEmail,
   sendJobSubmittedEmail,
   sendFundsApprovedEmail,
+  sendFundsEscrowedEmail,
   sendRevisionRequestedEmail,
   sendAutoReleaseEmail,
   sendBidReceivedEmail,
