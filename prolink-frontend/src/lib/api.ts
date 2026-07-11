@@ -37,7 +37,11 @@ api.interceptors.response.use(
     // If 401 — token is invalid/expired, redirect to login
     if (error.response && error.response.status === 401) {
       const endpoint = error.config?.url || '';
-      if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register') && !endpoint.includes('/auth/verify')) {
+      
+      // DO NOT redirect for soft-auth endpoints used by Navbar/UserContext on public pages
+      const isSoftAuthEndpoint = endpoint.includes('/profiles/me') || endpoint.includes('/notifications/unread-count');
+      
+      if (!isSoftAuthEndpoint && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register') && !endpoint.includes('/auth/verify')) {
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup') && window.location.pathname !== '/') {
           // Clear local token on 401
           localStorage.removeItem('token');
