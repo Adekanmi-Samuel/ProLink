@@ -9,7 +9,7 @@ const initializePayment = async (req, res, next) => {
     // Verify client
     const milestone = await prisma.milestone.findUnique({ 
       where: { id: parseInt(milestoneId) },
-      include: { job: true }
+      include: { job: { include: { client: true } } }
     });
 
     if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
@@ -20,10 +20,11 @@ const initializePayment = async (req, res, next) => {
       return res.status(400).json({ msg: 'Milestone is not pending' });
     }
 
-    const result = await paymentsService.initializePaystackCheckout(milestone.id, milestone.amount, req.user.email);
+    const email = milestone.job.client.email;
+    const result = await paymentsService.initializePaystackCheckout(milestone.id, milestone.amount, email);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to initialize payment' });
+    res.status(500).json({ msg: error.message || 'Failed to initialize payment' });
   }
 };
 
