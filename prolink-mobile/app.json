@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "ProLink",
+    "slug": "prolink",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "prolink",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.prolink.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.prolink.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2563eb"
+        }
+      ],
+      "expo-status-bar"
+    ],
+    "extra": {
+      "apiBaseURL": "https://prolink-backend.vercel.app/api",
+      "socketURL": "https://prolink-backend.vercel.app",
+      "eas": {
+        "projectId": "cdb2d765-a7f3-4775-87a7-b8a791e2fb57"
+      },
+      "router": {}
+    },
+    "owner": "samuraijackiee"
+  }
+}

@@ -77,7 +77,7 @@ const recommendJobsForProvider = async (req, res, next) => {
     
     res.json(result);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch recommendations' });
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
   }
 };
 
@@ -91,7 +91,7 @@ const recommendProvidersForJob = async (req, res, next) => {
       include: { skills: true }
     });
     
-    if (!job) return res.status(404).json({ msg: 'Job not found' });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
     
     const skillIds = job.skills.map(s => s.skill_id);
     
@@ -124,7 +124,7 @@ const recommendProvidersForJob = async (req, res, next) => {
     
     res.json(result);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch recommendations' });
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
   }
 };
 

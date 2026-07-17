@@ -217,8 +217,9 @@ const getAdminStats = async (req, res, next) => {
       select: { amount: true }
     });
 
-    const thisMonthRevenue = revenueData.reduce((sum, m) => sum + (Number(m.amount) * 0.10), 0);
-    const totalRevenue = allCompletedMilestones.reduce((sum, m) => sum + (Number(m.amount) * 0.10), 0);
+    const platformFeePercent = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10') / 100;
+    const thisMonthRevenue = revenueData.reduce((sum, m) => sum + (Number(m.amount) * platformFeePercent), 0);
+    const totalRevenue = allCompletedMilestones.reduce((sum, m) => sum + (Number(m.amount) * platformFeePercent), 0);
 
     res.json({
       users: { total: totalUsers, clients: totalClients, providers: totalProviders },
@@ -235,6 +236,41 @@ const getAdminStats = async (req, res, next) => {
   }
 };
 
+// Admin Revenue
+const getRevenue = async (req, res) => {
+  try {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [thisMonth, allTime, openDisputes, pendingVerif] = await Promise.all([
+      prisma.platformRevenue.aggregate({
+        _sum: { fee_amount: true },
+        where: { collected_at: { gte: startOfMonth } }
+      }),
+      prisma.platformRevenue.aggregate({
+        _sum: { fee_amount: true }
+      }),
+      prisma.dispute.count({ where: { status: 'open' } }),
+      prisma.profile.count({
+        where: {
+          OR: [{ nin_status: 'pending' }, { cac_status: 'pending' }]
+        }
+      }),
+    ]);
+
+    res.json({
+      revenue_this_month: parseFloat(thisMonth._sum.fee_amount || 0),
+      revenue_all_time: parseFloat(allTime._sum.fee_amount || 0),
+      open_disputes: openDisputes,
+      pending_verifications: pendingVerif,
+    });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
 module.exports = {
   getPendingVerifications,
   reviewVerification,
@@ -242,5 +278,6 @@ module.exports = {
   updateUserStatus,
   getJobs,
   deleteJob,
-  getAdminStats
+  getAdminStats,
+  getRevenue
 };

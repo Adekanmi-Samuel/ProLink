@@ -64,9 +64,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         <Providers>
           <ThemeProvider>
+            {/* Skip navigation link — visible only on keyboard focus (WCAG 2.4.1 Bypass Blocks) */}
+            <a
+              href="#main-content"
+              className="skip-link"
+            >
+              Skip to main content
+            </a>
             <Navbar />
             <VerificationBanner />
-            <main style={{ paddingTop: 'var(--navbar-h)' }}>
+            <main id="main-content" style={{ paddingTop: 'var(--navbar-h)' }}>
               <LandingAnimator>
                 {children}
               </LandingAnimator>

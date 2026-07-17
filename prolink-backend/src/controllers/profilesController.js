@@ -5,7 +5,7 @@ const getMyProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const profile = await profilesService.getMyProfile(userId);
-    if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
     res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=5');
     res.json(profile);
   } catch (err) {
@@ -16,7 +16,7 @@ const getMyProfile = async (req, res, next) => {
 const getProfileById = async (req, res, next) => {
   try {
     const profile = await profilesService.getProfileById(parseInt(req.params.id));
-    if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
     res.json(profile);
   } catch (err) {
     next(err);
@@ -55,7 +55,7 @@ const updatePicture = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { profile_picture_url } = req.validatedBody || req.body;
-    if (!profile_picture_url) return res.status(400).json({ msg: 'URL required' });
+    if (!profile_picture_url) return res.status(400).json({ error: 'URL required' });
 
     // Get old picture URL for cleanup
     const currentProfile = await profilesService.getMyProfile(userId);
@@ -89,7 +89,7 @@ const getProfileReviews = async (req, res, next) => {
   try {
     const { page, limit } = req.query;
     const result = await profilesService.getProfileReviews(parseInt(req.params.id), { page, limit });
-    if (!result) return res.status(404).json({ msg: 'Profile not found' });
+    if (!result) return res.status(404).json({ error: 'Profile not found' });
     res.json(result);
   } catch (err) {
     next(err);
@@ -109,7 +109,7 @@ const saveBankAccount = async (req, res, next) => {
   try {
     const { bank_name, bank_code, account_number, account_name } = req.validatedBody || req.body;
     if (!bank_name || !bank_code || !account_number || !account_name) {
-      return res.status(400).json({ msg: 'All bank details are required.' });
+      return res.status(400).json({ error: 'All bank details are required.' });
     }
     const bankAccount = await profilesService.saveBankAccount(req.user.id, { bank_name, bank_code, account_number, account_name });
     res.json({ msg: 'Bank details saved successfully', bankAccount });
@@ -165,25 +165,49 @@ const getEarningsChart = async (req, res, next) => {
 const patchProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const allowed = ['availability', 'profile_picture_url'];
+    const allowed = [
+      'full_name', 'bio', 'profile_picture_url', 'title', 'availability',
+      'state', 'city', 'gender', 'hourlyRate', 'ratePeriod', 'rate_period'
+    ];
     const data = {};
     for (const key of allowed) {
-      if (req.body[key] !== undefined) data[key] = req.body[key];
+      if (req.body[key] !== undefined) {
+        // Map camelCase field names to snake_case DB column names
+        if (key === 'hourlyRate') {
+          data.hourly_rate = req.body[key] ? parseFloat(req.body[key]) : null;
+        } else if (key === 'ratePeriod') {
+          data.rate_period = req.body[key];
+        } else {
+          data[key] = req.body[key];
+        }
+      }
     }
     if (Object.keys(data).length === 0) {
-      return res.status(400).json({ msg: 'No valid fields to update.' });
+      return res.status(400).json({ error: 'No valid fields to update.' });
     }
     await profilesService.updateProfile(userId, data);
     res.json({ msg: 'Profile updated.' });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: 'Failed to update profile.' });
   }
 };
 
 const upgradeToPremium = async (req, res) => {
   try {
     const userId = req.user.id;
-    // Mock successful payment logic
+    const { payment_reference } = req.body;
+
+    // In production, verify payment with Paystack before granting premium
+    if (process.env.NODE_ENV === 'production') {
+      if (!payment_reference) {
+        return res.status(400).json({ error: 'Payment reference required for premium upgrade.' });
+      }
+      // TODO: Verify payment_reference with Paystack API
+      // const verified = await paymentsService.verifyPayment(payment_reference);
+      // if (!verified) return res.status(400).json({ error: 'Payment not verified.' });
+    }
+
+    // Mock successful payment logic (non-production only)
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { is_premium: true }

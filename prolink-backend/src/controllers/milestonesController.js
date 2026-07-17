@@ -10,33 +10,46 @@ const createMilestone = async (req, res, next) => {
   try {
     const { jobId, title, amount } = req.body;
     if (!jobId || !title || !amount) {
-      return res.status(400).json({ msg: 'jobId, title, and amount are required' });
+      return res.status(400).json({ error: 'jobId, title, and amount are required' });
     }
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({ msg: 'Milestone amount must be greater than 0' });
+      return res.status(400).json({ error: 'Milestone amount must be greater than 0' });
     }
     
     // Verify user is the client of the job
     const job = await prisma.job.findUnique({ where: { id: parseInt(jobId) } });
     if (!job || job.client_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Unauthorized or job not found' });
+      return res.status(403).json({ error: 'Unauthorized or job not found' });
     }
 
     const milestone = await milestonesService.createMilestone(parseInt(jobId), title, parsedAmount);
     res.status(201).json(milestone);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to create milestone' });
+    res.status(500).json({ error: 'Failed to create milestone' });
   }
 };
 
 const getMilestones = async (req, res, next) => {
   try {
     const { jobId } = req.params;
+
+    // Authorization: verify the requesting user is the job's client or assigned provider
+    const job = await prisma.job.findUnique({
+      where: { id: parseInt(jobId) },
+      select: { client_id: true, assignment: { select: { provider_id: true } } }
+    });
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    if (job.client_id !== req.user.id && job.assignment?.provider_id !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to view milestones for this job' });
+    }
+
     const milestones = await milestonesService.getMilestonesByJob(parseInt(jobId));
     res.json(milestones);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch milestones' });
+    res.status(500).json({ error: 'Failed to fetch milestones' });
   }
 };
 
@@ -50,12 +63,12 @@ const submitMilestone = async (req, res, next) => {
       include: { job: { include: { assignment: true } } }
     });
 
-    if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
     if (milestone.job.assignment?.provider_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Only the provider can submit a milestone' });
+      return res.status(403).json({ error: 'Only the provider can submit a milestone' });
     }
     if (milestone.status !== 'funded' && milestone.status !== 'revision_requested') {
-      return res.status(400).json({ msg: 'Milestone must be funded or in revision before submission' });
+      return res.status(400).json({ error: 'Milestone must be funded or in revision before submission' });
     }
 
     const updated = await milestonesService.submitMilestone(parseInt(id));
@@ -75,7 +88,7 @@ const submitMilestone = async (req, res, next) => {
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to submit milestone' });
+    res.status(500).json({ error: 'Failed to submit milestone' });
   }
 };
 
@@ -89,12 +102,12 @@ const approveMilestone = async (req, res, next) => {
       include: { job: { include: { assignment: true } } }
     });
 
-    if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
     if (milestone.job.client_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Only the client can approve a milestone' });
+      return res.status(403).json({ error: 'Only the client can approve a milestone' });
     }
     if (milestone.status !== 'submitted') {
-      return res.status(400).json({ msg: 'Milestone must be submitted before approval' });
+      return res.status(400).json({ error: 'Milestone must be submitted before approval' });
     }
 
     await milestonesService.approveMilestone(parseInt(id));
@@ -105,7 +118,7 @@ const approveMilestone = async (req, res, next) => {
     } catch (payoutErr) {
       // Leave status as 'approved' (not 'paid') so it's visibly stuck, not silently lost.
       return res.status(207).json({
-        msg: 'Milestone approved, but payout to provider failed and needs admin attention.',
+        error: 'Milestone approved, but payout to provider failed and needs admin attention.',
         milestoneId: parseInt(id)
       });
     }
@@ -139,7 +152,7 @@ const approveMilestone = async (req, res, next) => {
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to approve milestone' });
+    res.status(500).json({ error: 'Failed to approve milestone' });
   }
 };
 
@@ -153,12 +166,12 @@ const requestRevision = async (req, res, next) => {
       include: { job: { include: { assignment: true } } }
     });
 
-    if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
     if (milestone.job.client_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Only the client can request a revision' });
+      return res.status(403).json({ error: 'Only the client can request a revision' });
     }
     if (milestone.status !== 'submitted') {
-      return res.status(400).json({ msg: 'Can only request revision on a submitted milestone' });
+      return res.status(400).json({ error: 'Can only request revision on a submitted milestone' });
     }
 
     const updated = await milestonesService.requestRevision(parseInt(id), notes);
@@ -175,7 +188,7 @@ const requestRevision = async (req, res, next) => {
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to request revision' });
+    res.status(500).json({ error: 'Failed to request revision' });
   }
 };
 
@@ -190,18 +203,18 @@ const deleteMilestone = async (req, res, next) => {
       include: { job: true }
     });
 
-    if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
     if (milestone.job.client_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Only the client can delete a milestone' });
+      return res.status(403).json({ error: 'Only the client can delete a milestone' });
     }
     if (milestone.status === 'submitted' || milestone.status === 'approved') {
-      return res.status(400).json({ msg: 'Cannot delete a milestone that is submitted or approved' });
+      return res.status(400).json({ error: 'Cannot delete a milestone that is submitted or approved' });
     }
 
     await milestonesService.deleteMilestone(parseInt(id));
-    res.json({ msg: 'Milestone deleted successfully' });
+    res.json({ error: 'Milestone deleted successfully' });
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to delete milestone' });
+    res.status(500).json({ error: 'Failed to delete milestone' });
   }
 };
 

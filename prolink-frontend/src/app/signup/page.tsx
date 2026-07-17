@@ -103,6 +103,12 @@ export default function SignupPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 1.25rem 2rem', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @media (max-width: 480px) {
+          .signup-grid-2 { grid-template-columns: 1fr !important; }
+          .signup-card { padding: 1.5rem 1.25rem !important; }
+        }
+      `}</style>
       {/* Warm ambient orbs */}
       <div className={`absolute inset-0 pointer-events-none overflow-hidden${theme === 'light' ? ' light' : ''}`}>
         <div className="orb orb-peach" style={{ width: '500px', height: '500px', top: '-10%', right: '-5%' }} />
@@ -219,7 +225,7 @@ function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, s
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+      <div className="signup-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <div className="field-group">
           <label className="field-label">Full name</label>
           <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Chidi Okonkwo" className="field" required />
@@ -230,7 +236,7 @@ function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, s
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+      <div className="signup-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <div className="field-group">
           <label className="field-label">Phone</label>
           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="0803 123 4567" className="field" required pattern="^(\+234|0)[789][01]\d{8}$" title="Enter a valid Nigerian phone number (e.g. 08012345678)" />

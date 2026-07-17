@@ -371,6 +371,8 @@ const hireProvider = async (jobId, clientId, { providerId, agreedAmount }) => {
     where: { job_id_provider_id: { job_id: jobId, provider_id: providerId } }
   });
 
+  if (!bid) throw new Error('This provider has not placed a bid on this job.');
+
   let deadline = null;
   if (bid && bid.duration_days) {
     deadline = new Date();
@@ -407,6 +409,7 @@ const cancelJob = async (jobId, clientId) => {
     where: { id: jobId, client_id: clientId },
     data: { status: 'cancelled' }
   });
+  return cancelled;
 };
 
 module.exports = {

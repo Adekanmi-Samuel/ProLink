@@ -36,7 +36,6 @@ const ContentSecurityPolicy = `
   script-src
     'self'
     'unsafe-inline'
-    'unsafe-eval'
     https://js.paystack.co
     https://js.paystack.co/v1/inline.js
     https://vercel.live

@@ -5,8 +5,9 @@ import api from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/ui/Button';
+import withAuth from '../../../components/withAuth';
 
-export default function PremiumUpgrade() {
+function PremiumUpgrade() {
   const { user } = useUser();
   const router = useRouter();
   const [upgrading, setUpgrading] = useState(false);
@@ -103,3 +104,5 @@ export default function PremiumUpgrade() {
     </>
   );
 }
+
+export default withAuth(PremiumUpgrade);

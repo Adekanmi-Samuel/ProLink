@@ -12,8 +12,9 @@ router.post('/webhook', webhookLimiter, paymentsController.paystackWebhook);
 router.use(authMiddleware);
 router.use(apiLimiter);
 
-// Mock confirm + direct fund - dev-only. Delete this when Paystack is fully live.
-if (process.env.NODE_ENV !== 'production') {
+// Mock confirm + direct fund - explicitly gated by env var, never by NODE_ENV alone.
+// Set ENABLE_MOCK_PAYMENTS=true only in local development.
+if (process.env.ENABLE_MOCK_PAYMENTS === 'true') {
   router.post('/mock-confirm', paymentsController.mockConfirmPayment);
   router.post('/mock-fund', paymentsController.mockFundMilestone);
 }

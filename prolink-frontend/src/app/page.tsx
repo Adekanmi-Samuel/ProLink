@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Code2, Smartphone, Palette, PenLine, Share2, Video,
@@ -52,6 +53,20 @@ const PROVIDERS_HARDCODED = [
   { initials: 'NO', name: 'Ngozi Obi', title: 'Content Writer', location: 'Port Harcourt', rating: 4.9, reviews: 61, skills: ['Copywriting', 'SEO', 'Blogging'] },
 ];
 
+function mapProfileToProvider(profile: any) {
+  const name = profile.full_name || profile.name || 'Unknown';
+  const initials = name.split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase();
+  return {
+    initials,
+    name,
+    title: profile.title || profile.professional_title || profile.headline || '',
+    location: profile.location || profile.city || '',
+    rating: profile.rating ?? profile.average_rating ?? 0,
+    reviews: profile.review_count ?? profile.reviews ?? 0,
+    skills: profile.skills || [],
+  };
+}
+
 const TICKER_ITEMS = [
   'Chukwuemeka just got hired for a React project · Lagos',
   'Fatimah completed a Logo Design job · Abuja',
@@ -73,9 +88,21 @@ const EASE = [0.22, 1, 0.36, 1];
 export default function HomePage() {
   const [headlineIdx, setHeadlineIdx] = useState(0);
   const [stats, setStats] = useState(null);
+  const [providers, setProviders] = useState(PROVIDERS_HARDCODED);
 
   useEffect(() => {
     api.get('/stats').then(r => setStats(r.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    api.get('/search/profiles', { params: { limit: 6 } })
+      .then((res) => {
+        const data = res.data?.data || res.data?.profiles || res.data;
+        if (Array.isArray(data) && data.length > 0) {
+          setProviders(data.map(mapProfileToProvider));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Rotating headline
@@ -95,7 +122,7 @@ export default function HomePage() {
   return (
     <div className="page">
       {/* ═══════════════════ HERO ═══════════════════ */}
-      <section className="relative min-h-[90vh] lg:min-h-[calc(100vh-var(--navbar-h))] flex items-center overflow-hidden pt-[calc(var(--navbar-h)+2rem)] lg:pt-[calc(var(--navbar-h)+1rem)] pb-12">
+      <section className="relative min-h-[60vh] sm:min-h-[80vh] lg:min-h-[calc(100vh-var(--navbar-h))] flex items-center overflow-hidden pt-[calc(var(--navbar-h)+1.5rem)] lg:pt-[calc(var(--navbar-h)+1rem)] pb-12">
         {/* Ambient glow orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden light">
           <div className="orb orb-peach" style={{ width: '600px', height: '600px', top: '-10%', right: '-5%' }} />
@@ -180,7 +207,7 @@ export default function HomePage() {
 
               {/* Stats bar */}
               <motion.div
-                className="grid grid-cols-3 sm:flex sm:items-center gap-3 sm:gap-0 mt-6 sm:mt-8"
+                className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:gap-0 mt-6 sm:mt-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
@@ -344,7 +371,7 @@ export default function HomePage() {
           </AnimatedSection>
 
           <AnimatedSection delay={0.2} stagger={0.05}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {CATEGORIES.map((cat, i) => (
                 <AnimatedStaggerItem key={i}>
                   <Link
@@ -522,7 +549,7 @@ export default function HomePage() {
 
           <AnimatedSection delay={0.15} stagger={0.1}>
             <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-none">
-              {PROVIDERS_HARDCODED.map((p, i) => (
+              {providers.map((p, i) => (
                 <AnimatedStaggerItem key={i}>
                   <AnimatedHoverCard>
                     <div className="min-w-[250px] card-base p-5 flex-shrink-0">
@@ -580,6 +607,57 @@ export default function HomePage() {
 
       {/* ═══════════════════ FOOTER ═══════════════════ */}
       <FooterSection />
+
+      {/* JSON-LD Structured Data for SEO */}
+      <Script
+        id="organization-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "ProLink Nigeria",
+            url: "https://prolink.vercel.app",
+            logo: "https://prolink.vercel.app/logo.png",
+            description: "Nigeria's professional freelance network. Connect with verified professionals, pay in Naira, and get work done securely with escrow protection.",
+            sameAs: [
+              "https://twitter.com/prolinkng",
+              "https://linkedin.com/company/prolink-ng",
+              "https://instagram.com/prolinkng"
+            ],
+            address: {
+              "@type": "PostalAddress",
+              addressCountry: "NG",
+              addressRegion: "Lagos"
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "customer service",
+              availableLanguage: ["English"]
+            }
+          })
+        }}
+      />
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "ProLink Nigeria",
+            url: "https://prolink.vercel.app",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: "https://prolink.vercel.app/jobs?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          })
+        }}
+      />
     </div>
   );
 }

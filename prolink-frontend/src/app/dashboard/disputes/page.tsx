@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
@@ -56,7 +57,7 @@ function DisputesPage() {
       const res = await api.get(`/disputes/${selectedDispute.id}`);
       setDetailData(res.data);
     } catch (err: any) {
-      alert(err.response?.data?.msg || 'Failed to add evidence');
+      toast.error(err.response?.data?.msg || 'Failed to add evidence');
     }
   };
 

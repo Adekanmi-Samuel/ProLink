@@ -1,0 +1,203 @@
+name: ProLink CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================================
+  # STAGE 1: CODE QUALITY
+  # ============================================================
+  quality:
+    name: ✅ Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        working-directory: ./prolink-frontend
+        run: npm ci
+
+      - name: Frontend — ESLint
+        working-directory: ./prolink-frontend
+        run: npm run lint
+
+      - name: Frontend — TypeScript type check
+        working-directory: ./prolink-frontend
+        run: npm run type-check
+
+      - name: Frontend — Build test
+        working-directory: ./prolink-frontend
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NODE_ENV: production
+
+      - name: Install Backend Dependencies
+        working-directory: ./prolink-backend
+        run: npm ci
+
+      - name: Backend — Build test (Prisma generation)
+        working-directory: ./prolink-backend
+        run: npm run vercel-build
+
+  # ============================================================
+  # STAGE 2A: DEPLOY FRONTEND TO STAGING
+  # ============================================================
+  deploy-frontend-staging:
+    name: 🚧 Frontend → Staging
+    needs: quality
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel staging (preview)
+        id: deploy
+        working-directory: ./prolink-frontend
+        run: |
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Staging URL: $URL"
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Post staging URL as commit comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            if (!url) return;
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: [
+                '## 🚧 Staging Deployment Ready',
+                '',
+                `**Preview URL:** ${url}`,
+                '',
+                'Test this link before merging to `main` for production.',
+                '',
+                `Commit: \`${context.sha.substring(0, 7)}\``,
+              ].join('\n')
+            });
+
+  # ============================================================
+  # STAGE 2B: DEPLOY BACKEND TO STAGING
+  # ============================================================
+  deploy-backend-staging:
+    name: 🚧 Backend → Staging
+    needs: quality
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: backend-staging
+
+    steps:
+      - name: Trigger Render staging deploy via webhook
+        run: |
+          echo "Triggering Render staging deployment..."
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
+          echo "✅ Staging backend deploy triggered"
+
+  # ============================================================
+  # STAGE 3A: DEPLOY FRONTEND TO PRODUCTION
+  # ============================================================
+  deploy-frontend-production:
+    name: 🚀 Frontend → Production
+    needs: quality
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://prolink.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel PRODUCTION
+        working-directory: ./prolink-frontend
+        run: |
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Production deploy summary
+        run: |
+          echo "════════════════════════════════"
+          echo "✅ ProLink is LIVE"
+          echo "   URL: https://prolink.com"
+          echo "   Commit: ${{ github.sha }}"
+          echo "   Time: $(date)"
+          echo "════════════════════════════════"
+
+  # ============================================================
+  # STAGE 3B: DEPLOY BACKEND TO PRODUCTION
+  # ============================================================
+  deploy-backend-production:
+    name: 🚀 Backend → Production
+    needs: quality
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: backend-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run database migrations
+        working-directory: ./prolink-backend
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Trigger production backend deploy
+        run: |
+          echo "Triggering Render production deployment..."
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
+          echo "✅ Production backend deploy triggered"

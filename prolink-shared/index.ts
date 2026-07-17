@@ -1,0 +1,138 @@
+// ─── Types ─────────────────────────────────────────────────────────
+export type {
+  // Prisma models
+  User,
+  Profile,
+  BankAccount,
+  PortfolioItem,
+  Skill,
+  Category,
+  Job,
+  Bid,
+  JobAssignment,
+  Milestone,
+  PlatformRevenue,
+  Dispute,
+  DisputeEvidence,
+  ChatThread,
+  Message,
+  Review,
+  Report,
+  Block,
+  SavedJob,
+  SavedSearch,
+  ProfileSkill,
+  JobSkill,
+  Notification,
+  Service,
+  ServiceOrder,
+  // API response types
+  ApiResponse,
+  PaginatedResponse,
+  ErrorResponse,
+  // Auth types
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  // Query / filter types
+  JobFilters,
+  SearchFilters,
+  // Request types
+  UpdateProfileRequest,
+  CreateJobRequest,
+  UpdateJobRequest,
+  SubmitBidRequest,
+  CreateMilestoneRequest,
+  RequestRevisionRequest,
+  CreateDisputeRequest,
+  AddEvidenceRequest,
+  CreateReviewRequest,
+  CreateServiceRequest,
+  PurchaseServiceRequest,
+  InitiateChatRequest,
+  SendMessageRequest,
+  InitializePaymentRequest,
+  ResolveBankRequest,
+  SaveJobRequest,
+  CreatePortfolioItemRequest,
+  AdminUserFilters,
+  AdminJobFilters,
+  AdminDisputeFilters,
+  ResolveDisputeRequest,
+  UpdateUserStatusRequest,
+  NotificationFilters,
+} from './types';
+
+// ─── Constants ─────────────────────────────────────────────────────
+export {
+  API_PREFIX,
+  API_PATHS,
+  USER_ROLES,
+  JOB_STATUSES,
+  JOB_TYPES,
+  MILESTONE_STATUSES,
+  DISPUTE_STATUSES,
+  SERVICE_STATUSES,
+  SERVICE_ORDER_STATUSES,
+  USER_STATUSES,
+  REPORT_STATUSES,
+  VERIFICATION_STATUSES,
+  MESSAGE_TYPES,
+  RATE_PERIODS,
+  PLATFORM_CONFIG,
+  PAGINATION,
+  SORT_OPTIONS,
+} from './constants';
+
+export type {
+  UserRole,
+  JobStatus,
+  JobType,
+  MilestoneStatus,
+  DisputeStatus,
+  ServiceStatus,
+  ServiceOrderStatus,
+  UserStatus,
+  ReportStatus,
+  VerificationStatus,
+  MessageType,
+  RatePeriod,
+  SortOption,
+} from './constants';
+
+// ─── API Client ────────────────────────────────────────────────────
+export {
+  createApiClient,
+  apiClient,
+} from './api/client';
+
+export type {
+  ApiClientConfig,
+  ProLinkApiClient,
+} from './api/client';
+
+// ─── API Endpoints ─────────────────────────────────────────────────
+export {
+  authEndpoints,
+  profilesEndpoints,
+  jobsEndpoints,
+  bidsEndpoints,
+  chatsEndpoints,
+  paymentsEndpoints,
+  milestonesEndpoints,
+  disputesEndpoints,
+  reviewsEndpoints,
+  servicesEndpoints,
+  searchEndpoints,
+  notificationsEndpoints,
+  adminEndpoints,
+  taxonomyEndpoints,
+  portfolioEndpoints,
+  savedJobsEndpoints,
+  savedSearchesEndpoints,
+  recommendationsEndpoints,
+  uploadEndpoints,
+  verificationEndpoints,
+  aiEndpoints,
+  moderationEndpoints,
+} from './api/endpoints';

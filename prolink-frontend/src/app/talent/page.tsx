@@ -13,6 +13,7 @@ export default function TalentSearchPage() {
   const [loading, setLoading] = useState(true);
   const [skills, setSkills] = useState([]);
   
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     q: '',
     minRating: '',
@@ -93,16 +94,35 @@ export default function TalentSearchPage() {
     <div className="page" ref={pageRef}>
       <div className="wrap" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
         <div className="talent-header" style={{ marginBottom: '2rem' }}>
-          <h1 className="page-title">Find Talent</h1>
-          <p className="page-sub">Browse verified Nigerian professionals ready to work</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h1 className="page-title">Find Talent</h1>
+              <p className="page-sub">Browse verified Nigerian professionals ready to work</p>
+            </div>
+            <button
+              className="talent-filters__toggle"
+              onClick={() => setFiltersOpen(true)}
+              style={{ display: 'none', flexShrink: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer' }}
+            >
+              ☰ Filters
+            </button>
+          </div>
         </div>
 
-        <div className="talent-layout" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="talent-layout" style={{ display: 'grid', gap: '1.5rem', alignItems: 'start' }}>
           {/* Sidebar Filters */}
-          <aside className="talent-filters" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', position: 'sticky', top: 'calc(var(--navbar-h) + 1rem)' }}>
+          <aside className={`talent-filters ${filtersOpen ? 'talent-filters--open' : ''}`} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
             <div className="talent-filters__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 className="talent-filters__title" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--fg)' }}>Filters</h3>
-              <button onClick={clearFilters} className="talent-filters__clear" style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Clear all</button>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button onClick={clearFilters} className="talent-filters__clear" style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Clear all</button>
+                <button
+                  className="talent-filters__close"
+                  onClick={() => setFiltersOpen(false)}
+                  style={{ display: 'none', background: 'none', border: 'none', color: 'var(--fg-secondary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0.25rem' }}
+                  aria-label="Close filters"
+                >✕</button>
+              </div>
             </div>
 
             <div className="talent-filter-group" style={{ marginBottom: '1.25rem' }}>

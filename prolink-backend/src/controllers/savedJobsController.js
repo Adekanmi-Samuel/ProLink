@@ -7,7 +7,7 @@ const saveJob = async (req, res, next) => {
 
     // Check if job exists
     const job = await prisma.job.findUnique({ where: { id: parseInt(jobId) } });
-    if (!job) return res.status(404).json({ msg: 'Job not found' });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
 
     // Try to create saved job
     try {
@@ -29,16 +29,16 @@ const saveJob = async (req, res, next) => {
           },
         },
       });
-      res.status(201).json({ msg: 'Job saved', savedJob });
+      res.status(201).json({ error: 'Job saved', savedJob });
     } catch (error) {
       if (error.code === 'P2002') {
         // Already saved
-        return res.status(400).json({ msg: 'Job already saved' });
+        return res.status(400).json({ error: 'Job already saved' });
       }
       throw error;
     }
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to save job' });
+    res.status(500).json({ error: 'Failed to save job' });
   }
 };
 
@@ -52,16 +52,16 @@ const unsaveJob = async (req, res, next) => {
     });
 
     if (!savedJob) {
-      return res.status(404).json({ msg: 'Saved job not found' });
+      return res.status(404).json({ error: 'Saved job not found' });
     }
 
     await prisma.savedJob.delete({
       where: { user_id_job_id: { user_id: userId, job_id: parseInt(jobId) } },
     });
 
-    res.json({ msg: 'Job unsaved' });
+    res.json({ error: 'Job unsaved' });
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to unsave job' });
+    res.status(500).json({ error: 'Failed to unsave job' });
   }
 };
 
@@ -118,7 +118,7 @@ const getSavedJobs = async (req, res, next) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch saved jobs' });
+    res.status(500).json({ error: 'Failed to fetch saved jobs' });
   }
 };
 
@@ -133,7 +133,7 @@ const checkSavedStatus = async (req, res, next) => {
 
     res.json({ isSaved: !!savedJob });
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to check saved status' });
+    res.status(500).json({ error: 'Failed to check saved status' });
   }
 };
 

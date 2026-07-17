@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import ReviewModal from '../../../components/ReviewModal';
 import MilestonesSection from '../../../components/MilestonesSection';
 import { useSocket } from '../../../lib/SocketContext';
+import { toast } from 'sonner';
 
 const COLORS = ['#00D68F', '#4A8CFF', '#E8633C', '#F0B429', '#A78BFA', '#F472B6', '#14B8A6'];
 function avatarColor(name: string) {
@@ -31,10 +32,27 @@ function decodeJwt(token: string) {
 export default function JobDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { socket } = useSocket();
 
   const [jobData, setJobData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const verifyRef = async () => {
+      const ref = searchParams.get('reference') || searchParams.get('trxref');
+      if (ref) {
+        try {
+          await api.post('/payments/verify', { reference: ref });
+        } catch (e) {
+          console.error('Verification failed or already processed:', e);
+        }
+        toast.success('Payment Successful! The milestone is now Escrowed.');
+        router.replace(`/jobs/${id}`); // Strip query params
+      }
+    };
+    verifyRef();
+  }, [searchParams, router, id]);
 
   const [bidForm, setBidForm] = useState({ amount: '', durationValue: '', durationUnit: 'days', proposal: '' });
   const [bidSubmitting, setBidSubmitting] = useState(false);
@@ -150,7 +168,7 @@ export default function JobDetailPage() {
       }
 
       const fullProposal = bidForm.proposal;
-      await api.post(`/jobs/${id}/bids`, { amount: bidForm.amount, duration_days: totalDays, proposal: fullProposal });
+      await api.post(`/jobs/${id}/bids`, { amount: parseFloat(bidForm.amount), duration_days: totalDays, proposal: fullProposal });
       setBidSubmitted(true);
       setBidForm({ amount: '', durationValue: '', durationUnit: 'days', proposal: '' });
     } catch (error: any) {
@@ -191,7 +209,7 @@ export default function JobDetailPage() {
     try {
       const response = await api.post('/chats/initiate', { jobId: jobData.id, providerId: bid.provider_id });
       router.push(`/chat/${response.data.threadId}`);
-    } catch { alert('Could not start conversation.'); }
+    } catch { toast.error('Could not start conversation.'); }
   };
 
   const openHireModal = (bid: any) => {
@@ -205,7 +223,7 @@ export default function JobDetailPage() {
       await api.post(`/jobs/${id}/hire`, { providerId: selectedBidForHire.provider_id, agreedAmount: selectedBidForHire.amount });
       setHireModalOpen(false);
       fetchData();
-    } catch (error: any) { alert('Failed: ' + (error.response?.data?.msg || 'Try again.')); }
+    } catch (error: any) { toast.error('Failed: ' + (error.response?.data?.msg || 'Try again.')); }
   };
 
   const handleCompleteJob = async () => {
@@ -213,7 +231,7 @@ export default function JobDetailPage() {
     try {
       await api.patch(`/jobs/${id}/complete`);
       fetchData();
-    } catch (error: any) { alert('Failed: ' + (error.response?.data?.msg || 'Try again.')); }
+    } catch (error: any) { toast.error('Failed: ' + (error.response?.data?.msg || 'Try again.')); }
   };
 
   const handleDeleteJob = async () => {
@@ -221,7 +239,7 @@ export default function JobDetailPage() {
     try {
       await api.delete(`/jobs/${id}`);
       router.push('/dashboard/my-jobs');
-    } catch (error: any) { alert('Failed to delete job: ' + (error.response?.data?.msg || 'Please try again.')); }
+    } catch (error: any) { toast.error('Failed to delete job: ' + (error.response?.data?.msg || 'Please try again.')); }
   };
 
   // Budget variance calculation
@@ -622,7 +640,7 @@ export default function JobDetailPage() {
         <ReviewModal
           jobId={jobData.id}
           onClose={() => setShowReviewModal(false)}
-          onSuccess={() => { setShowReviewModal(false); alert('Review submitted!'); }}
+          onSuccess={() => { setShowReviewModal(false); toast.success('Review submitted!'); }}
         />
       )}
 

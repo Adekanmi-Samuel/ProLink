@@ -4,8 +4,9 @@ import api from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/ui/Button';
+import withAuth from '../../../components/withAuth';
 
-export default function MyServices() {
+function MyServices() {
   const { user } = useUser();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,3 +189,5 @@ export default function MyServices() {
     </>
   );
 }
+
+export default withAuth(MyServices);

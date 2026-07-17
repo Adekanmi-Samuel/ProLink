@@ -103,7 +103,12 @@
       "Bash(vercel env *)",
       "Bash(vercel promote *)",
       "Bash(vercel project *)",
-      "Bash(xargs grep -l \"middleware\")"
+      "Bash(xargs grep -l \"middleware\")",
+      "Bash(git -C \"C:\\\\ProLink\" log --all --oneline -- \"prolink-backend/.env\" \"prolink-backend/.env.local\" \"prolink-backend/.env.production\" \"prolink-frontend/.env.local\" \"prolink-frontend/.env.example\")",
+      "WebSearch",
+      "Bash(git -C \"C:\\\\ProLink\" log --all --oneline -- \"prolink-backend/.env*\" \"prolink-frontend/.env*\")",
+      "Bash(node *)",
+      "Bash(DB_SSL_REJECT_UNAUTHORIZED=false node -e ' *)"
     ]
   }
 }

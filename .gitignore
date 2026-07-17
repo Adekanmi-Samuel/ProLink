@@ -46,3 +46,8 @@ generated/prisma/
 *.temp
 .vercel
 .env*
+
+# Potential secrets
+b64.txt
+tmp.env
+tmp3.env

@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const paymentsService = require('../services/paymentsService');
 
 const getServices = async (req, res) => {
   try {
@@ -37,13 +38,29 @@ const createService = async (req, res) => {
     const providerId = req.user.id;
     const { title, description, price, delivery_days, category_id, images } = req.body;
 
+    // Input validation
+    if (!title || typeof title !== 'string' || title.trim().length < 3) {
+      return res.status(400).json({ error: 'Title is required and must be at least 3 characters' });
+    }
+    if (!description || typeof description !== 'string' || description.trim().length < 10) {
+      return res.status(400).json({ error: 'Description is required and must be at least 10 characters' });
+    }
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ error: 'Price must be a positive number' });
+    }
+    const parsedDeliveryDays = parseInt(delivery_days, 10);
+    if (isNaN(parsedDeliveryDays) || parsedDeliveryDays < 1) {
+      return res.status(400).json({ error: 'Delivery days must be a positive integer' });
+    }
+
     const service = await prisma.service.create({
       data: {
         provider_id: providerId,
-        title,
-        description,
-        price,
-        delivery_days,
+        title: title.trim(),
+        description: description.trim(),
+        price: parsedPrice,
+        delivery_days: parsedDeliveryDays,
         category_id,
         images
       }
@@ -89,7 +106,48 @@ const purchaseService = async (req, res) => {
       }
     });
 
-    res.status(201).json(order);
+    // Process payment via Paystack for the service order
+    const client = await prisma.user.findUnique({ where: { id: clientId }, select: { email: true } });
+    const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+    const callback_url = `${frontendUrl}/dashboard/orders`;
+
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    let checkoutResult;
+
+    if (!secretKey || secretKey === 'mock') {
+      const mockRef = `mock_svc_${Date.now()}`;
+      await prisma.serviceOrder.update({ where: { id: order.id }, data: { payment_reference: mockRef } });
+      checkoutResult = {
+        authorization_url: `${frontendUrl}/mock-paystack?reference=${mockRef}&amount=${service.price}&email=${client.email}`,
+        reference: mockRef
+      };
+    } else {
+      const response = await fetch('https://api.paystack.co/transaction/initialize', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${secretKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: client.email,
+          amount: parseFloat(service.price) * 100,
+          callback_url,
+          metadata: { service_order_id: order.id }
+        })
+      });
+      const data = await response.json();
+      if (!data.status) {
+        throw new Error(data.message || 'Paystack initialization failed');
+      }
+      await prisma.serviceOrder.update({ where: { id: order.id }, data: { payment_reference: data.data.reference } });
+      checkoutResult = data.data;
+    }
+
+    res.status(201).json({
+      order,
+      checkout_url: checkoutResult.authorization_url,
+      reference: checkoutResult.reference
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to purchase service' });
   }

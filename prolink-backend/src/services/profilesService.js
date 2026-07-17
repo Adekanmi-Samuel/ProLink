@@ -257,43 +257,39 @@ const saveBankAccount = async (userId, data) => {
 };
 
 const getMyEarnings = async (userId) => {
-  // Use DB aggregation to avoid nested JS loops blocking the event loop
-  const milestones = await prisma.milestone.findMany({
-    where: {
-      job: {
-        assignment: { provider_id: userId }
-      }
-    },
-    select: {
-      amount: true,
-      status: true,
-      updated_at: true,
-    },
-  });
-
-  let totalEarned = 0;
-  let thisMonth = 0;
-  let pendingEscrow = 0;
+  // Use Prisma aggregate to push computation to the DB layer instead of
+  // fetching every milestone row into Node.js and looping in JS.
+  const where = {
+    job: { assignment: { provider_id: userId } },
+  };
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  for (const m of milestones) {
-    if (m.status === 'approved' || m.status === 'paid') {
-      const amount = Number(m.amount);
-      totalEarned += amount;
-      
-      if (m.updated_at) {
-        const d = new Date(m.updated_at);
-        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-          thisMonth += amount;
-        }
-      }
-    } else if (m.status === 'funded' || m.status === 'submitted') {
-      pendingEscrow += Number(m.amount);
-    }
-  }
+  // Total earned (approved + paid) — single aggregate query
+  const earnedAgg = await prisma.milestone.aggregate({
+    where: { ...where, status: { in: ['approved', 'paid'] } },
+    _sum: { amount: true },
+  });
+  const totalEarned = Number(earnedAgg._sum.amount || 0);
+
+  // This month (approved + paid milestones updated this month)
+  const thisMonthAgg = await prisma.milestone.aggregate({
+    where: {
+      ...where,
+      status: { in: ['approved', 'paid'] },
+      updated_at: { gte: startOfMonth },
+    },
+    _sum: { amount: true },
+  });
+  const thisMonth = Number(thisMonthAgg._sum.amount || 0);
+
+  // Pending escrow (funded + submitted)
+  const escrowAgg = await prisma.milestone.aggregate({
+    where: { ...where, status: { in: ['funded', 'submitted'] } },
+    _sum: { amount: true },
+  });
+  const pendingEscrow = Number(escrowAgg._sum.amount || 0);
 
   const platformFee = totalEarned * 0.10;
   const netPayout = totalEarned - platformFee;

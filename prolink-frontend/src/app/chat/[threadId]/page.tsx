@@ -145,7 +145,11 @@ export default function ChatPage() {
     });
     socket.on('error', (err: any) => console.log('Socket error:', err?.message));
     socket.on('connect_error', () => console.log('Socket connect_error'));
-    socket.on('connect', () => setConnectionError(''));
+    socket.on('connect', () => {
+      setConnectionError('');
+      // Re-join the thread room after reconnection
+      if (threadId) socket.emit('join_thread', { threadId });
+    });
 
     // Polling fallback since WebSockets are broken on Vercel
     const interval = setInterval(async () => {
@@ -182,7 +186,18 @@ export default function ChatPage() {
 
     return () => {
       clearInterval(interval);
-      // Don't disconnect the global socket - it's managed by SocketProvider
+      // Clean up all socket listeners to prevent memory leaks and duplicate messages
+      socket.off('new_message');
+      socket.off('messages_read');
+      socket.off('user_typing');
+      socket.off('user_stopped_typing');
+      socket.off('error');
+      socket.off('connect_error');
+      socket.off('connect');
+      // Leave the thread room
+      if (threadId) {
+        socket.emit('leave_thread', { threadId });
+      }
     };
   }, [threadId, router, socket]);
 
@@ -458,12 +473,21 @@ export default function ChatPage() {
                           }
                         })()
                       ) : msg.message_type === 'action' ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center' }}>
-                          <span style={{ fontSize: 'var(--text-sm)' }}>{sanitizeText(JSON.parse(msg.content).text || 'System Action')}</span>
-                          <button onClick={() => alert('Action clicked!')} style={{ padding: '0.3rem 0.7rem', borderRadius: 20, border: 'none', background: isMine ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: '#fff', fontWeight: 600, fontSize: 'var(--text-xs)', cursor: 'pointer' }}>
-                            {sanitizeText(JSON.parse(msg.content).label || 'View')}
-                          </button>
-                        </div>
+                        (() => {
+                          try {
+                            const actionData = JSON.parse(msg.content);
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center' }}>
+                                <span style={{ fontSize: 'var(--text-sm)' }}>{sanitizeText(actionData.text || 'System Action')}</span>
+                                <button onClick={() => alert('Action clicked!')} style={{ padding: '0.3rem 0.7rem', borderRadius: 20, border: 'none', background: isMine ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: '#fff', fontWeight: 600, fontSize: 'var(--text-xs)', cursor: 'pointer' }}>
+                                  {sanitizeText(actionData.label || 'View')}
+                                </button>
+                              </div>
+                            );
+                          } catch (e) {
+                            return <span style={{ fontSize: 'var(--text-sm)' }}>{sanitizeText(msg.content)}</span>;
+                          }
+                        })()
                       ) : (
                         <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.4, wordBreak: 'break-word' }}>{sanitizeText(msg.content)}</span>
                       )}

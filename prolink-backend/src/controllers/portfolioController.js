@@ -6,11 +6,11 @@ const addPortfolioItem = async (req, res, next) => {
     const { title, description, image_url, project_url } = req.body;
 
     if (!title) {
-      return res.status(400).json({ msg: 'Title is required' });
+      return res.status(400).json({ error: 'Title is required' });
     }
 
     const profile = await prisma.profile.findUnique({ where: { user_id: userId } });
-    if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
 
     const item = await prisma.portfolioItem.create({
       data: {
@@ -32,7 +32,7 @@ const getMyPortfolio = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const profile = await prisma.profile.findUnique({ where: { user_id: userId } });
-    if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
 
     const items = await prisma.portfolioItem.findMany({
       where: { profile_id: profile.id },
@@ -51,13 +51,13 @@ const deletePortfolioItem = async (req, res, next) => {
     const itemId = parseInt(req.params.id);
 
     const profile = await prisma.profile.findUnique({ where: { user_id: userId } });
-    if (!profile) return res.status(404).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
 
     const item = await prisma.portfolioItem.findUnique({ where: { id: itemId } });
-    if (!item) return res.status(404).json({ msg: 'Item not found' });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
 
     if (item.profile_id !== profile.id) {
-      return res.status(403).json({ msg: 'Not authorized' });
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
     await prisma.portfolioItem.delete({ where: { id: itemId } });

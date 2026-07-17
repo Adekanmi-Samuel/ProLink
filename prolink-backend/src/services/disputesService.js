@@ -68,7 +68,11 @@ const resolveDispute = async (disputeId, resolution, adminNotes, splitPercentage
     throw new Error('Invalid resolution');
   }
 
-  return { success: true };
+  // Return the full updated dispute record
+  return await prisma.dispute.findUnique({
+    where: { id: disputeId },
+    include: { milestone: { include: { job: { include: { assignment: true } } } } }
+  });
 };
 
 const getMyDisputes = async (userId) => {

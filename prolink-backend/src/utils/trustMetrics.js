@@ -1,11 +1,9 @@
 const prisma = require('../config/prisma');
 
 const calculateJobSuccessScore = async (profileId) => {
-  const projects = await prisma.project.findMany({
-    where: { provider_id: profileId, status: { in: ['COMPLETED', 'CANCELLED'] } }
-  });
-  if (projects.length === 0) return null;
-  return Math.round((projects.filter(p => p.status === 'COMPLETED').length / projects.length) * 100);
+  const { total, completed } = await getCompletedJobsForProvider(profileId);
+  if (total === 0) return null;
+  return Math.round((completed / total) * 100);
 };
 
 const determineBadges = (successScore, completedProjectsCount, avgRating) => {

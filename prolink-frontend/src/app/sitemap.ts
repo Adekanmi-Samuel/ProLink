@@ -2,47 +2,78 @@ import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://prolink-eight.vercel.app';
+  const now = new Date();
 
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/talent`,
-      lastModified: new Date(),
+      url: `${baseUrl}/jobs`,
+      lastModified: now,
       changeFrequency: 'daily',
-      priority: 0.8,
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/jobs`,
-      lastModified: new Date(),
+      url: `${baseUrl}/jobs/new`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/services`,
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/login`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.3,
+      priority: 0.5,
     },
     {
       url: `${baseUrl}/signup`,
-      lastModified: new Date(),
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/dashboard`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/dashboard/messages`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/dashboard/wallet`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/profile/edit`,
+      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.2,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.2,
     },

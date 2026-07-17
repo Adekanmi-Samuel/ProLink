@@ -101,7 +101,7 @@ const matchJobs = async (req, res) => {
     // Fetch up to 20 recent open jobs
     const openJobs = await prisma.job.findMany({
       where: { status: 'open' },
-      orderBy: { created_at: 'desc' },
+      orderBy: { posted_at: 'desc' },
       take: 20,
       select: { id: true, title: true, description: true, budget: true, job_type: true }
     });

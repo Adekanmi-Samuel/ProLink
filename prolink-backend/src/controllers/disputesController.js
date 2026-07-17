@@ -12,13 +12,13 @@ const createDispute = async (req, res, next) => {
       include: { job: { include: { assignment: true } } }
     });
 
-    if (!milestone) return res.status(404).json({ msg: 'Milestone not found' });
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
 
     const isClient = milestone.job.client_id === req.user.id;
     const isProvider = milestone.job.assignment?.provider_id === req.user.id;
 
     if (!isClient && !isProvider) {
-      return res.status(403).json({ msg: 'Not authorized to dispute this milestone' });
+      return res.status(403).json({ error: 'Not authorized to dispute this milestone' });
     }
 
     const dispute = await disputesService.createDispute(parseInt(milestoneId), req.user.id, reason);
@@ -92,12 +92,12 @@ const addEvidence = async (req, res, next) => {
       where: { id: parseInt(id) },
       include: { milestone: { include: { job: { include: { assignment: true } } } } }
     });
-    if (!dispute) return res.status(404).json({ msg: 'Dispute not found' });
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
 
     const isClient = dispute.milestone.job.client_id === req.user.id;
     const isProvider = dispute.milestone.job.assignment?.provider_id === req.user.id;
     if (!isClient && !isProvider) {
-      return res.status(403).json({ msg: 'Not authorized to add evidence to this dispute' });
+      return res.status(403).json({ error: 'Not authorized to add evidence to this dispute' });
     }
 
     const evidence = await disputesService.addEvidence(parseInt(id), req.user.id, note, fileUrl);
@@ -110,7 +110,7 @@ const addEvidence = async (req, res, next) => {
 const getDisputeDetail = async (req, res, next) => {
   try {
     const dispute = await disputesService.getDisputeDetail(parseInt(req.params.id));
-    if (!dispute) return res.status(404).json({ msg: 'Dispute not found' });
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
     res.json(dispute);
   } catch (error) {
     next(error);

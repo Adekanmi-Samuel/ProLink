@@ -26,6 +26,8 @@ interface ProfileData {
   user_type: string;
   email: string;
   phone_number: string | null;
+  nin_status: string;
+  cac_status: string;
 }
 
 function EditProfilePage() {
@@ -33,6 +35,7 @@ function EditProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [aiOptimizing, setAiOptimizing] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [availableSkills, setAvailableSkills] = useState<any[]>([]);
   const [customSkill, setCustomSkill] = useState('');
@@ -138,6 +141,27 @@ function EditProfilePage() {
         ? prev.skillIds.filter(x => x !== id)
         : [...prev.skillIds, id],
     }));
+  };
+
+  const handleOptimizeProfile = async () => {
+    if (!form.bio || form.bio.length < 10) {
+      toast.error('Please provide at least a brief bio first');
+      return;
+    }
+    setAiOptimizing(true);
+    try {
+      const res = await api.post('/ai/profile/optimize', { bio: form.bio, skills: form.skillIds.map(id => availableSkills.find(s => s.id === id)?.name).filter(Boolean) });
+      setForm(prev => ({ ...prev, bio: res.data.optimizedBio || res.data.optimized_bio || prev.bio }));
+      toast.success('Bio optimized with AI!');
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        toast.error('This AI feature requires a Premium account.');
+      } else {
+        toast.error('AI optimization failed. Try again.');
+      }
+    } finally {
+      setAiOptimizing(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -457,9 +481,9 @@ function EditProfilePage() {
                             borderRadius: 'var(--radius)',
                             border: '1px solid var(--border)',
                             background: 'var(--surface)',
-                            maxHeight: 220,
-                            overflowY: 'auto',
                             marginTop: '0.5rem',
+                            maxHeight: '200px',
+                            overflowY: 'auto',
                           }}
                         >
                           {availableSkills.map(skill => {

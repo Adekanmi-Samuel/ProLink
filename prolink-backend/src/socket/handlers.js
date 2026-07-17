@@ -9,6 +9,47 @@ const { createNotification } = require('../services/notificationService');
 
 const filter = new Filter();
 
+// In-memory rate limiter for send_message: tracks message count per user per minute
+const messageRateLimits = new Map();
+
+/**
+ * Check if a user has exceeded the send_message rate limit.
+ * Allows 30 messages per 60-second window per user.
+ * @param {number} userId
+ * @returns {boolean} true if rate limit exceeded
+ */
+function isRateLimited(userId) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  const maxMessages = 30;
+
+  if (!messageRateLimits.has(userId)) {
+    messageRateLimits.set(userId, []);
+  }
+
+  const timestamps = messageRateLimits.get(userId);
+  // Prune timestamps outside the current window
+  while (timestamps.length > 0 && timestamps[0] <= now - windowMs) {
+    timestamps.shift();
+  }
+
+  if (timestamps.length >= maxMessages) {
+    return true;
+  }
+
+  timestamps.push(now);
+  return false;
+}
+
+/**
+ * Verify the socket has an authenticated userId.
+ * @param {Socket} socket
+ * @returns {boolean}
+ */
+function isAuthenticated(socket) {
+  return socket.userId !== undefined && socket.userId !== null;
+}
+
 /**
  * Initialize Socket.IO event listeners
  * @param {Server} io - Socket.IO server instance
@@ -76,10 +117,24 @@ const initializeSocketHandlers = (io) => {
     // =====================
     socket.on('send_message', async (data) => {
       try {
+        if (!isAuthenticated(socket)) {
+          return socket.emit('error', { message: 'Authentication required' });
+        }
+
         const { threadId, content, message_type = 'text' } = data;
 
         if (!threadId || !content?.trim()) {
           return socket.emit('error', { message: 'Thread ID and content are required' });
+        }
+
+        // Message length validation (max 10,000 characters)
+        if (content.length > 10000) {
+          return socket.emit('error', { message: 'Message exceeds maximum length of 10,000 characters' });
+        }
+
+        // Rate limiting: 30 messages per minute per user
+        if (isRateLimited(socket.userId)) {
+          return socket.emit('error', { message: 'You are sending messages too quickly. Please wait a moment.' });
         }
 
         // Verify authorization
@@ -205,6 +260,10 @@ const initializeSocketHandlers = (io) => {
     // =====================
     socket.on('typing_indicator', async (data) => {
       try {
+        if (!isAuthenticated(socket)) {
+          return socket.emit('error', { message: 'Authentication required' });
+        }
+
         const { threadId, isTyping } = data;
 
         if (!threadId) {
@@ -235,6 +294,10 @@ const initializeSocketHandlers = (io) => {
     // =====================
     socket.on('mark_read', async (data) => {
       try {
+        if (!isAuthenticated(socket)) {
+          return socket.emit('error', { message: 'Authentication required' });
+        }
+
         const { threadId } = data;
         if (!threadId) return;
 
@@ -259,6 +322,56 @@ const initializeSocketHandlers = (io) => {
         });
       } catch (err) {
         console.error('mark_read error:', err);
+      }
+    });
+
+    // =====================
+    // LEAVE THREAD EVENT
+    // =====================
+    socket.on('leave_thread', async (data) => {
+      try {
+        if (!isAuthenticated(socket)) {
+          return socket.emit('error', { message: 'Authentication required' });
+        }
+
+        const { threadId } = data;
+
+        if (!threadId) {
+          return socket.emit('error', { message: 'Thread ID is required' });
+        }
+
+        // Verify the user is a participant in this thread
+        const thread = await prisma.chatThread.findUnique({
+          where: { id: parseInt(threadId) },
+          select: { client_id: true, provider_id: true },
+        });
+
+        if (!thread) {
+          return socket.emit('error', { message: 'Thread not found' });
+        }
+
+        if (thread.client_id !== socket.userId && thread.provider_id !== socket.userId) {
+          return socket.emit('error', { message: 'Not authorized to leave this thread' });
+        }
+
+        const roomName = `thread_${threadId}`;
+        socket.leave(roomName);
+
+        // Notify others in the room
+        io.to(roomName).emit('user_left', {
+          userId: socket.userId,
+          timestamp: new Date(),
+        });
+
+        socket.emit('left_thread', {
+          status: 'success',
+          threadId,
+        });
+
+        console.log(`User ${socket.userId} left thread ${threadId}`);
+      } catch (err) {
+        console.error('leave_thread error:', err);
+        socket.emit('error', { message: 'Failed to leave thread' });
       }
     });
 

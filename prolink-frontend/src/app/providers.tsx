@@ -9,9 +9,9 @@ import { SocketProvider } from '../lib/SocketContext';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
+      staleTime: 60_000,
+      retry: 3,
+      refetchOnWindowFocus: true,
     },
   },
 });

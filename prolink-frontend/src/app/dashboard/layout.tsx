@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { 
-  LayoutDashboard, User, Briefcase, FileText, 
-  Settings, MessageSquare, Wallet, Search, Bookmark, Menu, X, Plus, LogOut, CheckCircle, ShieldAlert, Users, Star
+import {
+  LayoutDashboard, User, Briefcase, FileText,
+  MessageSquare, Wallet, Search, Bookmark, Menu, X, Plus, LogOut, Star
 } from 'lucide-react';
 import api from '../../lib/api';
+import styles from './layout.module.css';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 const DROP_VARIANTS = {
@@ -99,138 +100,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     : user?.email?.charAt(0).toUpperCase() || '?';
 
   return (
-    <div className="dash-layout">
-      <style>{`
-        .dash-layout {
-          display: flex;
-          min-height: calc(100vh - var(--navbar-h));
-          background: var(--bg);
-        }
-        .dash-sidebar {
-          width: 260px; background: var(--surface);
-          border-right: 1px solid var(--border);
-          display: flex; flex-direction: column;
-          height: calc(100vh - var(--navbar-h)); position: sticky; top: var(--navbar-h); overflow-y: auto;
-          flex-shrink: 0;
-          padding: 1.5rem 0;
-        }
-        .dash-sidebar__header {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0 1.25rem 1.25rem;
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 1rem;
-        }
-        .dash-sidebar__avatar {
-          width: 40px; height: 40px; border-radius: 50%;
-          background: var(--accent-alpha); color: var(--accent);
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 800; font-size: 1rem; flex-shrink: 0;
-          font-family: var(--font-mono), monospace;
-        }
-        .dash-sidebar__user-info { min-width: 0; }
-        .dash-sidebar__name {
-          font-size: 0.9rem; font-weight: 700; color: var(--fg);
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .dash-sidebar__role {
-          font-size: 0.72rem; color: var(--fg-tertiary); margin-top: 2px;
-        }
-        .dash-sidebar__role-badge {
-          display: inline-block; padding: 1px 8px; border-radius: 99px;
-          font-family: var(--font-mono), monospace; font-size: 0.6rem; font-weight: 700;
-          text-transform: uppercase; letter-spacing: 0.04em;
-        }
-        .dash-sidebar__nav {
-          display: flex; flex-direction: column; gap: 2px; padding: 0 0.75rem;
-        }
-        .dash-sidebar__link {
-          display: flex; align-items: center; gap: 0.6rem;
-          padding: 0.55rem 0.75rem; font-size: 0.85rem; font-weight: 500;
-          color: var(--fg-secondary); border-radius: var(--radius);
-          text-decoration: none;
-          transition: background 0.15s, color 0.15s, transform 0.15s;
-        }
-        .dash-sidebar__link:hover {
-          color: var(--fg); background: var(--accent-alpha);
-        }
-        .dash-sidebar__link--active {
-          color: var(--accent) !important;
-          background: var(--accent-alpha);
-          font-weight: 600;
-          border-left: 3px solid var(--accent);
-          padding-left: calc(0.75rem - 3px);
-        }
-        .dash-sidebar__link-icon { font-size: 0.95rem; width: 20px; text-align: center; flex-shrink: 0; }
-        .dash-sidebar__badge {
-          background: var(--danger); color: #fff; font-size: 0.65rem; font-weight: 700;
-          padding: 0.1rem 0.4rem; border-radius: 999px; margin-left: auto;
-        }
-        .dash-content {
-          flex: 1; min-width: 0; padding: 2rem;
-        }
-        .dash-mobile-topbar {
-          display: none;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem 0;
-          margin-bottom: 1.25rem;
-          border-bottom: 1px solid var(--border);
-        }
-        .dash-mobile-topbar__toggle {
-          background: transparent;
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 0.5rem;
-          cursor: pointer;
-          color: var(--fg);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .dash-mobile-topbar__toggle:hover {
-          background: var(--accent-alpha);
-          border-color: var(--accent);
-          color: var(--accent);
-        }
-        .dash-mobile-topbar__title {
-          font-size: 1rem;
-          font-weight: 700;
-          color: var(--fg);
-          font-family: var(--font-heading), sans-serif;
-          flex: 1;
-        }
-        .dash-mobile-topbar__badge {
-          background: var(--danger);
-          color: #fff;
-          font-size: 0.72rem;
-          font-weight: 700;
-          padding: 0.2rem 0.6rem;
-          border-radius: 999px;
-          text-decoration: none;
-        }
-        .dash-layout__overlay {
-          display: none; position: fixed; inset: 0;
-          background: transparent; backdrop-filter: none; z-index: 49;
-        }
-        @media (max-width: 768px) {
-          .dash-sidebar {
-            position: fixed; top: var(--navbar-h); left: 0; z-index: 50;
-            width: 280px; transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-          }
-          .dash-sidebar--open { transform: translateX(0); }
-          .dash-mobile-topbar { display: flex; }
-          .dash-sidebar__close { display: block !important; }
-          .dash-layout__overlay { display: block; }
-          .dash-content { padding: calc(1.25rem + var(--navbar-h)) 1rem 5rem; }
-        }
-        @media (min-width: 769px) {
-          .dash-mobile-topbar { display: none !important; }
-        }
-      `}</style>
+    <div className={styles['dash-layout']}>
+      {/* Skip navigation link — visible only on keyboard focus (WCAG 2.4.1 Bypass Blocks) */}
+      <a
+        href="#dash-main-content"
+        className="skip-link"
+      >
+        Skip to main content
+      </a>
 
 
 
@@ -238,7 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            className="dash-layout__overlay"
+            className={styles.dashLayoutOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -249,21 +126,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`dash-sidebar ${sidebarOpen ? 'dash-sidebar--open' : ''}`}>
-        <div className="dash-sidebar__header">
+      <aside className={`${styles['dash-sidebar']} ${sidebarOpen ? styles['dash-sidebar--open'] : ''}`}>
+        <div className={styles['dash-sidebar__header']}>
           <motion.div
-            className="dash-sidebar__avatar"
+            className={styles['dash-sidebar__avatar']}
             whileHover={{ scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           >
             {initials}
           </motion.div>
-          <div className="dash-sidebar__user-info">
-            <div className="dash-sidebar__name">
+          <div className={styles['dash-sidebar__user-info']}>
+            <div className={styles['dash-sidebar__name']}>
               {user?.full_name || user?.email?.split('@')[0] || 'Dashboard'}
             </div>
-            <div className="dash-sidebar__role">
-              <span className={'dash-sidebar__role-badge ' + (isProvider ? 'badge-gold' : 'badge-info')}>
+            <div className={styles['dash-sidebar__role']}>
+              <span className={styles['dash-sidebar__role-badge'] + ' ' + (isProvider ? 'badge-gold' : 'badge-info')}>
                 {isProvider ? 'Provider' : 'Client'}
               </span>
             </div>
@@ -284,31 +161,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        <nav className="dash-sidebar__nav">
+        <nav className={styles['dash-sidebar__nav']}>
           {/* For providers: group links into sections */}
           {isProvider ? (
             <>
               <div className="dash-sidebar__section-label">Work</div>
               {[providerLinks[0], providerLinks[1], providerLinks[2], providerLinks[3]].map((link, i) => (
                 <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
-                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
-                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                  <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
+                    <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
                     {link.href === '/dashboard/messages' && unreadCount > 0 && (
-                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                      <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
                 </motion.div>
               ))}
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
-              {[providerLinks[4], providerLinks[5], providerLinks[6], providerLinks[7]].map((link, i) => (
+              {providerLinks.slice(4).map((link, i) => (
                 <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
-                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
-                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                  <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
+                    <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
                     {link.href === '/dashboard/messages' && unreadCount > 0 && (
-                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                      <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
                 </motion.div>
@@ -320,24 +197,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="dash-sidebar__section-label">Hire</div>
               {[clientLinks[0], clientLinks[1], clientLinks[2]].map((link, i) => (
                 <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
-                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
-                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                  <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
+                    <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
                     {link.href === '/dashboard/messages' && unreadCount > 0 && (
-                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                      <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
                 </motion.div>
               ))}
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
-              {[clientLinks[3], clientLinks[4], clientLinks[5]].map((link, i) => (
+              {clientLinks.slice(3).map((link, i) => (
                 <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
-                  <Link href={link.href} className={`dash-sidebar__link ${isActive(link.href) ? 'dash-sidebar__link--active' : ''}`}>
-                    <span className="dash-sidebar__link-icon">{link.icon}</span>
+                  <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
+                    <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
                     {link.href === '/dashboard/messages' && unreadCount > 0 && (
-                      <span className="dash-sidebar__badge">{unreadCount}</span>
+                      <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
                 </motion.div>
@@ -349,16 +226,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <motion.main
-        className="dash-content"
+        id="dash-main-content"
+        className={styles['dash-content']}
         key={pathname}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: FAUCET_EASING }}
       >
         {/* Mobile nav bar — only visible on mobile (desktop sidebar handles nav) */}
-        <div className="dash-mobile-topbar">
+        <div className={styles['dash-mobile-topbar']}>
           <button
-            className="dash-mobile-topbar__toggle"
+            className={styles['dash-mobile-topbar__toggle']}
             onClick={() => setSidebarOpen(true)}
             aria-label="Open navigation"
           >
@@ -369,7 +247,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
-          <span className="dash-mobile-topbar__title">
+          <span className={styles['dash-mobile-topbar__title']}>
             {pathname === '/dashboard' ? 'Dashboard'
               : pathname.includes('messages') ? 'Messages'
               : pathname.includes('wallet') ? 'Wallet'
@@ -381,7 +259,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               : 'Dashboard'}
           </span>
           {unreadCount > 0 && (
-            <Link href="/dashboard/messages" className="dash-mobile-topbar__badge">
+            <Link href="/dashboard/messages" className={styles['dash-mobile-topbar__badge']}>
               {unreadCount} unread
             </Link>
           )}

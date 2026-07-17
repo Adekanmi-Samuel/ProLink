@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
+import withAuth from '../../../components/withAuth';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
@@ -12,7 +13,7 @@ const BADGE_VARIANT = {
   none: { bg: 'rgba(107,114,128,0.1)', c: '#6b7280', label: 'Unverified' },
 };
 
-export default function VerificationPage() {
+function VerificationPage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -255,3 +256,5 @@ export default function VerificationPage() {
     </motion.div>
   );
 }
+
+export default withAuth(VerificationPage);

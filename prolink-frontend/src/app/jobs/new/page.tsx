@@ -152,6 +152,14 @@ function NewJobPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: FAUCET_EASING }}
     >
+      <style>{`
+        @media (max-width: 480px) {
+          .jobnew-outer { padding: 1rem 1rem !important; }
+          .jobnew-card { padding: 1.25rem !important; }
+          .jobnew-grid-2 { grid-template-columns: 1fr !important; }
+          .jobnew-flex-row { flex-direction: column !important; }
+        }
+      `}</style>
       <motion.div style={{ marginBottom: '2rem' }}>
         <div className="section-eyebrow" style={{ marginBottom: '0.4rem' }}>Client dashboard</div>
         <h1 style={{ fontFamily: 'var(--font-heading), sans-serif', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--fg)' }}>Post a New Job</h1>
@@ -193,7 +201,7 @@ function NewJobPage() {
       </div>
 
       <motion.div
-        className="card"
+        className="card jobnew-card"
         style={{ padding: '2.5rem' }}
         layout
         transition={{ duration: 0.3, ease: FAUCET_EASING }}
@@ -317,6 +325,7 @@ function NewJobPage() {
                     <motion.div
                       initial={{ opacity: 0, y: -8, height: 0 }}
                       animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      className="jobnew-flex-row"
                       style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}
                     >
                       <div style={{ flex: 1 }} className="field-group">
@@ -366,7 +375,7 @@ function NewJobPage() {
                 
                 <div className="field-group">
                   <label className="field-label">Payment Type</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="jobnew-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     {[
                       { value: 'fixed', title: 'Fixed Price', desc: 'Pay the entire amount into Escrow at once.' },
                       { value: 'milestone', title: 'Project Stages', desc: "Split the project into smaller parts and pay for each part as it's completed." },

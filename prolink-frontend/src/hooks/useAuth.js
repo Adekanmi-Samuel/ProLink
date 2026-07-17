@@ -56,7 +56,8 @@ export const useAuth = () => {
     }
     document.cookie = 'token=; Max-Age=0; path=/';
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('prolink_token');
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
     }
     setUser(null);
     setIsAuthenticated(false);

@@ -122,7 +122,7 @@ const confirmMockPayment = async (reference) => {
 const mockFundMilestone = async (milestoneId) => {
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
-    include: { job: { include: { client: true, provider: true } } }
+    include: { job: { include: { client: true, assignment: { include: { provider: true } } } } }
   });
   if (!milestone) throw new Error('Milestone not found');
   
@@ -133,7 +133,7 @@ const mockFundMilestone = async (milestoneId) => {
 
   // Notify both parties
   const clientEmail = milestone.job.client?.email;
-  const providerEmail = milestone.job.provider?.email;
+  const providerEmail = milestone.job.assignment?.provider?.email;
   const jobTitle = milestone.job.title;
   
   if (clientEmail) await emailService.sendFundsEscrowedEmail(clientEmail, jobTitle, milestone.amount, true);

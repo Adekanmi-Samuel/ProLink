@@ -21,7 +21,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Skip socket connection on login/signup pages
+    // NOTE: This path-based skip is fragile — it relies on hardcoded URL prefixes
+    // and will silently break if routes are renamed or new auth pages are added.
+    // A more robust approach would be to check auth state (e.g. from a cookie or
+    // auth context) before connecting, or to always connect and let the server
+    // reject unauthenticated sockets. For now this is kept for backward compat.
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
       if (path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/verify-email') || path.startsWith('/forgot-password') || path.startsWith('/reset-password')) {

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import api from '../lib/api';
 import DisputeModal from './DisputeModal';
 
 export default function MilestonesSection({ jobId, isOwner, isAssignedProvider, onCompleteJob }: any) {
   const [stages, setStages] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newAmount, setNewAmount] = useState('');
@@ -25,7 +28,43 @@ export default function MilestonesSection({ jobId, isOwner, isAssignedProvider, 
   };
 
   useEffect(() => {
-    fetchStages();
+    // Check if redirected back from Paystack
+    const reference = searchParams?.get('reference');
+    const trxref = searchParams?.get('trxref');
+    
+    if (reference || trxref) {
+      const refToVerify = reference || trxref;
+      api.post('/payments/verify', { reference: refToVerify })
+        .then(() => {
+          fetchStages();
+          // Remove query params to avoid re-verifying on reload
+          router.replace(window.location.pathname);
+        })
+        .catch(err => {
+          console.error("Payment verification fallback failed:", err);
+          fetchStages();
+        });
+    } else {
+      fetchStages();
+    }
+
+    // Poll every 15 seconds, pause when tab is hidden to save bandwidth
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchStages();
+      }
+    }, 15000);
+
+    // Fetch once immediately when tab becomes visible again
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchStages();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [jobId]);
 
   const handleCreateStage = async (e: any) => {
@@ -226,13 +265,29 @@ export default function MilestonesSection({ jobId, isOwner, isAssignedProvider, 
                   <button onClick={() => handleSubmit(m.id)} className="pl-btn pl-btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Submit Work</button>
                 )}
                 {isAssignedProvider && m.status === 'revision_requested' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-end' }}>
-                    {m.revision_notes && (
-                      <div style={{ fontSize: '0.75rem', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '0.3rem 0.6rem', borderRadius: '4px', maxWidth: '250px', textAlign: 'right' }}>
-                        Client: {m.revision_notes}
-                      </div>
-                    )}
-                    <button onClick={() => handleSubmit(m.id)} className="pl-btn pl-btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'var(--warning)', color: 'var(--bg)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-end', width: '100%' }}>
+                      {m.revision_notes && (
+                        <div style={{
+                          fontSize: '0.85rem',
+                          color: '#b45309',
+                          background: '#fffbeb',
+                          border: '1px solid #fde68a',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '6px',
+                          width: '100%',
+                          textAlign: 'left',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.25rem'
+                        }}>
+                          <strong style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            Revision Feedback
+                          </strong>
+                          <span style={{ lineHeight: '1.4' }}>{m.revision_notes}</span>
+                        </div>
+                      )}
+                      <button onClick={() => handleSubmit(m.id)} className="pl-btn pl-btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'var(--warning)', color: 'var(--bg)', alignSelf: 'flex-end' }}>
                       Resubmit Work
                     </button>
                   </div>

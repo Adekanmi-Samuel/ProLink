@@ -125,7 +125,7 @@ app.use(express.json({
   limit: '1mb',
   verify: (req, res, buf) => {
     // Only capture rawBody for webhook routes to save memory
-    if (req.originalUrl && req.originalUrl.includes('/webhook')) {
+    if (req.path && req.path.includes('/webhook')) {
       req.rawBody = buf.toString();
     }
   }
@@ -255,13 +255,6 @@ app.use('/health', healthRoutes);
 // Initialize core services
 require('./src/events/EventBus');
 const cacheService = require('./src/cache/CacheService');
-
-// Start scheduled jobs (auto-release stale milestones)
-try {
-  require('./src/jobs/autoReleaseMilestones');
-} catch (cronErr) {
-  console.warn('[CRON] Auto-release job failed to start:', cronErr.message);
-}
 
 // Global error handler (must be last)
 const errorHandler = require('./src/middleware/errorHandler');

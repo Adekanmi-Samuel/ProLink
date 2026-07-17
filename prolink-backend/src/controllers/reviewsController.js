@@ -6,11 +6,11 @@ const submitReview = async (req, res, next) => {
     const { jobId, rating, comment } = req.body;
     
     if (!jobId || !rating) {
-      return res.status(400).json({ msg: 'Job ID and Rating are required' });
+      return res.status(400).json({ error: 'Job ID and Rating are required' });
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({ msg: 'Rating must be between 1 and 5' });
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
     const review = await reviewsService.submitReview(parseInt(jobId), req.user.id, parseInt(rating), comment);
@@ -23,11 +23,11 @@ const submitReview = async (req, res, next) => {
       error.message === 'Not authorized to leave a review for this job.' ||
       error.message === 'You have already left a review for this job.'
     ) {
-      return res.status(400).json({ msg: error.message });
+      return res.status(400).json({ error: error.message });
     }
     
     logger.error('Error submitting review', { error: error.message });
-    res.status(500).json({ msg: 'Server error while submitting review' });
+    res.status(500).json({ error: 'Server error while submitting review' });
   }
 };
 
@@ -37,7 +37,7 @@ const getReviewsForUser = async (req, res, next) => {
     const reviews = await reviewsService.getReviewsForUser(parseInt(userId));
     res.json(reviews);
   } catch (error) {
-    res.status(500).json({ msg: 'Server error while fetching reviews' });
+    res.status(500).json({ error: 'Server error while fetching reviews' });
   }
 };
 

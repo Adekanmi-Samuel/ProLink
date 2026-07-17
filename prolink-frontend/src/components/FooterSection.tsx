@@ -81,10 +81,8 @@ export default function FooterSection() {
                       <li key={link.label}>
                         <Link
                           href={link.href}
-                          className="text-sm transition-colors duration-200"
+                          className="footer-link"
                           style={{ color: 'var(--fg-secondary)' }}
-                          onMouseOver={e => e.currentTarget.style.color = 'var(--accent)'}
-                          onMouseOut={e => e.currentTarget.style.color = 'var(--fg-secondary)'}
                         >
                           {link.label}
                         </Link>

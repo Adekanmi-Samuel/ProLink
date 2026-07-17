@@ -13,7 +13,7 @@ const createSavedSearch = async (req, res, next) => {
     });
     res.json(savedSearch);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to save search' });
+    res.status(500).json({ error: 'Failed to save search' });
   }
 };
 
@@ -25,7 +25,7 @@ const getSavedSearches = async (req, res, next) => {
     });
     res.json(searches);
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to fetch saved searches' });
+    res.status(500).json({ error: 'Failed to fetch saved searches' });
   }
 };
 
@@ -35,13 +35,13 @@ const deleteSavedSearch = async (req, res, next) => {
     
     const search = await prisma.savedSearch.findUnique({ where: { id: parseInt(id) } });
     if (!search || search.user_id !== req.user.id) {
-      return res.status(403).json({ msg: 'Not authorized' });
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
     await prisma.savedSearch.delete({ where: { id: parseInt(id) } });
-    res.json({ msg: 'Search deleted' });
+    res.json({ error: 'Search deleted' });
   } catch (error) {
-    res.status(500).json({ msg: 'Failed to delete saved search' });
+    res.status(500).json({ error: 'Failed to delete saved search' });
   }
 };
 

@@ -1,26 +1,53 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
+import { toast } from 'sonner';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
 
 function WalletPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [earnings, setEarnings] = useState<any>(null);
   const [bankAccount, setBankAccount] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const [isEditingBank, setIsEditingBank] = useState(false);
+  const [savingBank, setSavingBank] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+  const [resolveError, setResolveError] = useState('');
   const [bankForm, setBankForm] = useState({
     bank_name: '',
     bank_code: '',
     account_number: '',
     account_name: ''
   });
-  const [savingBank, setSavingBank] = useState(false);
+
+  useEffect(() => {
+    if (bankForm.account_number.length === 10 && bankForm.bank_code) {
+      setIsResolving(true);
+      setResolveError('');
+      api.get(`/payments/resolve-bank?account_number=${bankForm.account_number}&bank_code=${bankForm.bank_code}`)
+        .then(res => {
+          setBankForm(prev => ({ ...prev, account_name: res.data.account_name }));
+        })
+        .catch(err => {
+          console.error('Failed to resolve account:', err);
+          setResolveError('Could not verify this account number. Please check the details.');
+          setBankForm(prev => ({ ...prev, account_name: '' }));
+        })
+        .finally(() => {
+          setIsResolving(false);
+        });
+    } else {
+      setResolveError('');
+      setBankForm(prev => ({ ...prev, account_name: '' }));
+    }
+  }, [bankForm.account_number, bankForm.bank_code]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +89,7 @@ function WalletPage() {
       setBankAccount(res.data.bankAccount);
       setIsEditingBank(false);
     } catch (err: any) {
-      alert(err.response?.data?.msg || 'Failed to save bank details.');
+      toast.error(err.response?.data?.msg || err.response?.data?.error || 'Failed to save bank details.');
     } finally {
       setSavingBank(false);
     }
@@ -133,10 +160,9 @@ function WalletPage() {
                 <div className="earnings-card__action">
                   <motion.button
                     className="pl-btn pl-btn-primary"
-                    disabled={!bankAccount || earnings?.net_payout <= 0}
-                    whileHover={{ y: -2, boxShadow: '0 6px 20px var(--accent-alpha)' }}
-                    whileTap={{ scale: 0.96 }}
-                  >Withdraw Funds</motion.button>
+                    disabled={true}
+                    style={{ opacity: 0.8 }}
+                  >Payouts are Automatic</motion.button>
                   {(!bankAccount && earnings?.net_payout > 0) && (
                     <motion.p
                       className="wallet-alert-text"
@@ -177,7 +203,7 @@ function WalletPage() {
               </p>
               <motion.button
                 className="pl-btn pl-btn-secondary"
-                onClick={() => window.location.href = '/dashboard/contracts'}
+                onClick={() => router.push('/dashboard/contracts')}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.96 }}
               >Manage Contracts</motion.button>
@@ -226,7 +252,16 @@ function WalletPage() {
                       className="pl-input"
                       required
                       value={bankForm.bank_name}
-                      onChange={e => setBankForm({...bankForm, bank_name: e.target.value, bank_code: e.target.options[e.target.selectedIndex].getAttribute('data-code') || ''})}
+                      onChange={e => {
+                        setBankForm({
+                          ...bankForm, 
+                          bank_name: e.target.value, 
+                          bank_code: e.target.options[e.target.selectedIndex].getAttribute('data-code') || '',
+                          account_number: '',
+                          account_name: ''
+                        });
+                        setResolveError('');
+                      }}
                     >
                       <option value="">Select a Bank...</option>
                       <option value="Access Bank" data-code="044">Access Bank</option>
@@ -236,7 +271,7 @@ function WalletPage() {
                       <option value="First Bank of Nigeria" data-code="011">First Bank of Nigeria</option>
                       <option value="Kuda Bank" data-code="50211">Kuda Bank</option>
                       <option value="Moniepoint" data-code="50515">Moniepoint</option>
-                      <option value="Opay" data-code="090399">Opay</option>
+                      <option value="Opay" data-code="999992">Opay</option>
                     </select>
                   </div>
                   <div className="pl-input-group">
@@ -245,7 +280,8 @@ function WalletPage() {
                   </div>
                   <div className="pl-input-group wallet-input-group">
                     <label>Account Name</label>
-                    <input type="text" className="pl-input" required placeholder="Name exactly as it appears on account" value={bankForm.account_name} onChange={e => setBankForm({...bankForm, account_name: e.target.value})} />
+                    <input type="text" className="pl-input" required readOnly={true} placeholder={isResolving ? "Resolving account name..." : "Auto-filled after entering account number"} value={bankForm.account_name} onChange={e => setBankForm({...bankForm, account_name: e.target.value})} style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', borderColor: resolveError ? 'var(--danger)' : undefined }} />
+                    {resolveError && <span style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>{resolveError}</span>}
                   </div>
                   <div className="wallet-btn-row">
                     {bankAccount && (

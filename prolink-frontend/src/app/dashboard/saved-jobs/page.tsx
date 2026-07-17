@@ -5,8 +5,9 @@ import api from '../../../lib/api';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
+import withAuth from '../../../components/withAuth';
 
-export default function SavedJobsPage() {
+function SavedJobsPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [savedJobs, setSavedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -434,3 +435,5 @@ export default function SavedJobsPage() {
     </div>
   );
 }
+
+export default withAuth(SavedJobsPage);

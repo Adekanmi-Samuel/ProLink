@@ -268,6 +268,9 @@ model Report {
   @@index([status])
   @@index([created_at])
   @@index([reporter_id])
+  @@index([reported_user_id])
+  @@index([job_id])
+  @@index([message_id])
   @@map("Report")
 }
 
@@ -280,6 +283,7 @@ model Block {
   blocker    User     @relation("Blocker", fields: [blocker_id], references: [id], onDelete: Cascade)
 
   @@unique([blocker_id, blocked_id])
+  @@index([blocked_id])
   @@map("Block")
 }
 
@@ -348,6 +352,7 @@ model DisputeEvidence {
   submitter    User     @relation(fields: [submitted_by], references: [id], onDelete: Cascade)
 
   @@index([dispute_id])
+  @@index([submitted_by])
   @@map("DisputeEvidence")
 }
 

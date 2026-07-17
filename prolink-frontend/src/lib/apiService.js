@@ -187,7 +187,7 @@ export const apiService = {
 
   // Payments endpoints
   payments: {
-    initializeCheckout: (data) => axiosInstance.post('/payments/initialize-checkout', data),
+    initializeCheckout: (data) => axiosInstance.post('/payments/initialize', data),
     getPaymentStatus: (reference) => axiosInstance.get(`/payments/status/${reference}`),
     getTransactionHistory: (params) => axiosInstance.get('/payments/history', { params }),
   },

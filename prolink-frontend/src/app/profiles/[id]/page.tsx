@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import api from '../../../lib/api';
 import ReportBlockMenu from '../../../components/ReportBlockMenu';
 import ProLinkLoader from '../../../components/ui/ProLinkLoader';
@@ -219,7 +220,7 @@ export default function ProfilePage() {
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
                 >
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.title} style={{ width: '100%', height: 140, objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
+                    <Image src={item.image_url} alt={item.title} width={400} height={140} style={{ width: '100%', height: 140, objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
                   ) : (
                     <div style={{ width: '100%', height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-hover)', color: 'var(--fg-tertiary)', fontSize: '0.82rem' }}>
                       No Image
@@ -315,7 +316,7 @@ export default function ProfilePage() {
               ✕
             </button>
             {selectedPortfolio.image_url && (
-              <img src={selectedPortfolio.image_url} alt={selectedPortfolio.title} style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', background: '#000' }} />
+              <Image src={selectedPortfolio.image_url} alt={selectedPortfolio.title} width={800} height={600} style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', background: '#000' }} />
             )}
             <div style={{ padding: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{selectedPortfolio.title}</h2>

@@ -13,7 +13,9 @@ const poolConfig = {
   host: config.host,
   port: config.port,
   database: config.database,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'false'
+    ? { rejectUnauthorized: false }
+    : { rejectUnauthorized: process.env.NODE_ENV === 'production' },
   max: parseInt(process.env.DB_POOL_MAX || (process.env.VERCEL ? '1' : '10'), 10),
   min: parseInt(process.env.DB_POOL_MIN || (process.env.VERCEL ? '0' : '2'), 10),
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000', 10),

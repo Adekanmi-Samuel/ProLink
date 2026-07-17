@@ -1,6 +1,5 @@
 const jobsService = require('../services/jobsService');
 const emailService = require('../services/emailService');
-const jwt = require('jsonwebtoken');
 const { jobSchema, bidSchema } = require('../validators/jobValidator');
 const logger = require('../config/logger');
 
@@ -25,23 +24,13 @@ const createJob = async (req, res, next) => {
     res.status(201).json({ msg: 'Job posted successfully!', job });
   } catch (err) {
     logger.error('createJob error:', err);
-    res.status(500).json({ error: 'Server Error', msg: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
 const getPublicJobs = async (req, res, next) => {
   try {
-    let userId = null;
-    const authHeader = req.header('Authorization');
-    if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          userId = decoded.user.id;
-        } catch (err) {}
-      }
-    }
+    const userId = req.user?.id || null;
     const { q, minBudget, maxBudget, categoryId, state, city, jobType, page, limit } = req.query;
     const filters = {
       q: q ? String(q) : undefined,
@@ -84,19 +73,9 @@ const getMyBids = async (req, res, next) => {
 
 const getJobById = async (req, res, next) => {
   try {
-    let userId = null;
-    const authHeader = req.header('Authorization');
-    if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          userId = decoded.user.id;
-        } catch (err) {}
-      }
-    }
+    const userId = req.user?.id || null;
     const job = await jobsService.getJobById(parseInt(req.params.id), userId);
-    if (!job) return res.status(404).json({ msg: 'Job not found' });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
     res.json(job);
   } catch (err) {
     res.status(500).json({ error: 'Server Error' });
@@ -109,7 +88,7 @@ const submitBid = async (req, res, next) => {
   try {
     const parseResult = bidSchema.safeParse(req.body);
     if (!parseResult.success) {
-      return res.status(400).json({ msg: parseResult.error.errors[0].message });
+      return res.status(400).json({ error: parseResult.error.errors[0].message });
     }
     const { amount, duration_days, proposal } = parseResult.data;
     const bid = await jobsService.submitBid(parseInt(req.params.id), req.user.id, { amount, duration_days, proposal });
@@ -157,7 +136,7 @@ const submitBid = async (req, res, next) => {
       err.message === 'You cannot interact with this user.' ||
       err.message === 'Job not found.'
     ) {
-      return res.status(400).json({ msg: err.message });
+      return res.status(400).json({ error: err.message });
     }
     logger.error(err);
     res.status(500).json({ error: 'Server Error' });
@@ -167,8 +146,8 @@ const submitBid = async (req, res, next) => {
 const hireProvider = async (req, res, next) => {
   try {
     const { providerId, agreedAmount } = req.body;
-    if (!providerId) return res.status(400).json({ msg: 'providerId is required.' });
-    if (!agreedAmount || isNaN(Number(agreedAmount))) return res.status(400).json({ msg: 'Valid agreedAmount is required.' });
+    if (!providerId) return res.status(400).json({ error: 'providerId is required.' });
+    if (!agreedAmount || isNaN(Number(agreedAmount))) return res.status(400).json({ error: 'Valid agreedAmount is required.' });
     
     const assignment = await jobsService.hireProvider(parseInt(req.params.id), req.user.id, { providerId: parseInt(providerId), agreedAmount: Number(agreedAmount) });
     
@@ -194,9 +173,9 @@ const hireProvider = async (req, res, next) => {
 
     res.status(200).json({ msg: 'Freelancer hired!', assignment });
   } catch (err) {
-    if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
-    if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
-    if (err.message === 'Job is not open for hiring.') return res.status(400).json({ msg: err.message });
+    if (err.message === 'Job not found.') return res.status(404).json({ error: err.message });
+    if (err.message === 'Not authorized.') return res.status(403).json({ error: err.message });
+    if (err.message === 'Job is not open for hiring.') return res.status(400).json({ error: err.message });
     logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
@@ -220,9 +199,9 @@ const completeJob = async (req, res, next) => {
 
     res.json({ msg: 'Job marked as completed.', job });
   } catch (err) {
-    if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
-    if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
-    if (err.message === 'Job cannot be completed in its current state.') return res.status(400).json({ msg: err.message });
+    if (err.message === 'Job not found.') return res.status(404).json({ error: err.message });
+    if (err.message === 'Not authorized.') return res.status(403).json({ error: err.message });
+    if (err.message === 'Job cannot be completed in its current state.') return res.status(400).json({ error: err.message });
     logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
@@ -233,9 +212,9 @@ const cancelJob = async (req, res, next) => {
     const job = await jobsService.cancelJob(parseInt(req.params.id), req.user.id);
     res.json({ msg: 'Job cancelled successfully.', job });
   } catch (err) {
-    if (err.message === 'Job not found.') return res.status(404).json({ msg: err.message });
-    if (err.message === 'Not authorized.') return res.status(403).json({ msg: err.message });
-    if (err.message === 'Only open jobs can be cancelled.') return res.status(400).json({ msg: err.message });
+    if (err.message === 'Job not found.') return res.status(404).json({ error: err.message });
+    if (err.message === 'Not authorized.') return res.status(403).json({ error: err.message });
+    if (err.message === 'Only open jobs can be cancelled.') return res.status(400).json({ error: err.message });
     logger.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
@@ -251,8 +230,8 @@ const withdrawBid = async (req, res, next) => {
       include: { job: true }
     });
 
-    if (!bid) return res.status(404).json({ msg: 'Bid not found.' });
-    if (bid.job.status !== 'open') return res.status(400).json({ msg: 'Cannot withdraw a bid on a job that is no longer open.' });
+    if (!bid) return res.status(404).json({ error: 'Bid not found.' });
+    if (bid.job.status !== 'open') return res.status(400).json({ error: 'Cannot withdraw a bid on a job that is no longer open.' });
 
     await prisma.bid.delete({
       where: { job_id_provider_id: { job_id: jobId, provider_id: providerId } }
@@ -270,9 +249,9 @@ const updateJob = async (req, res, next) => {
     const { title, description, budget, skillIds } = req.body;
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!job) return res.status(404).json({ msg: 'Job not found.' });
-    if (job.client_id !== req.user.id) return res.status(403).json({ msg: 'Not authorized.' });
-    if (job.status !== 'open') return res.status(400).json({ msg: 'Only open jobs can be edited.' });
+    if (!job) return res.status(404).json({ error: 'Job not found.' });
+    if (job.client_id !== req.user.id) return res.status(403).json({ error: 'Not authorized.' });
+    if (job.status !== 'open') return res.status(400).json({ error: 'Only open jobs can be edited.' });
 
     const updated = await prisma.job.update({
       where: { id: jobId },
@@ -302,9 +281,9 @@ const closeJob = async (req, res, next) => {
   try {
     const jobId = parseInt(req.params.id);
     const job = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!job) return res.status(404).json({ msg: 'Job not found.' });
-    if (job.client_id !== req.user.id) return res.status(403).json({ msg: 'Not authorized.' });
-    if (job.status !== 'open') return res.status(400).json({ msg: 'Only open jobs can be closed.' });
+    if (!job) return res.status(404).json({ error: 'Job not found.' });
+    if (job.client_id !== req.user.id) return res.status(403).json({ error: 'Not authorized.' });
+    if (job.status !== 'open') return res.status(400).json({ error: 'Only open jobs can be closed.' });
 
     await prisma.job.update({ where: { id: jobId }, data: { status: 'closed' } });
     res.json({ msg: 'Job closed successfully.' });
@@ -319,15 +298,15 @@ const deleteJob = async (req, res) => {
 
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
-    return res.status(404).json({ msg: 'Job not found' });
+    return res.status(404).json({ error: 'Job not found' });
   }
 
   if (job.client_id !== clientId) {
-    return res.status(403).json({ msg: 'Not authorized to delete this job' });
+    return res.status(403).json({ error: 'Not authorized to delete this job' });
   }
 
   if (job.status !== 'open') {
-    return res.status(400).json({ msg: 'Only open jobs can be deleted. Please cancel or close the job instead.' });
+    return res.status(400).json({ error: 'Only open jobs can be deleted. Please cancel or close the job instead.' });
   }
 
   await prisma.job.delete({ where: { id: jobId } });
