@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
       </aside>
 
-      <motion.main className={styles['admin-content']} key={pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: FAUCET_EASING }}>
+      <main className={styles['admin-content']}>
         <div className={styles['dash-mobile-topbar']} style={{ marginBottom: '1.5rem' }}>
           <button
             className={styles['dash-mobile-topbar__toggle']}
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className={styles['dash-mobile-topbar__title']}>Admin Panel</span>
         </div>
         {children}
-      </motion.main>
+      </main>
     </div>
   );
 }

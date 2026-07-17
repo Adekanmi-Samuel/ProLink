@@ -231,13 +231,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <motion.main
+      <main
         id="dash-main-content"
         className={styles['dash-content']}
-        key={pathname}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: FAUCET_EASING }}
       >
         {/* Mobile nav bar — only visible on mobile (desktop sidebar handles nav) */}
         <div className={styles['dash-mobile-topbar']}>
@@ -271,7 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </div>
         {children}
-      </motion.main>
+      </main>
     </div>
   );
 }
