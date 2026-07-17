@@ -178,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
               {providerLinks.slice(4).map((link, i) => (
-                <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                <div key={link.href}>
                   <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
                     <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
@@ -207,7 +207,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
               {clientLinks.slice(3).map((link, i) => (
-                <motion.div key={link.href} custom={i + 4} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                <div key={link.href}>
                   <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
                     <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
