@@ -10,9 +10,6 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # ============================================================
-  # STAGE 1: CODE QUALITY
-  # ============================================================
   quality:
     name: ✅ Code Quality Check
     runs-on: ubuntu-latest
@@ -34,7 +31,6 @@ jobs:
         working-directory: ./prolink-frontend
         run: npx next build
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NODE_ENV: production
 
       - name: Install Backend Dependencies
@@ -44,116 +40,3 @@ jobs:
       - name: Backend — Build test (Prisma generation)
         working-directory: ./prolink-backend
         run: npm run vercel-build
-
-  # ============================================================
-  # STAGE 2A: DEPLOY FRONTEND TO STAGING
-  # ============================================================
-  deploy-frontend-staging:
-    name: 🚧 Frontend → Staging
-    needs: quality
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.url }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel staging (preview)
-        id: deploy
-        working-directory: ./prolink-frontend
-        run: |
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "Staging URL: $URL"
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
-  # ============================================================
-  # STAGE 2B: DEPLOY BACKEND TO STAGING
-  # ============================================================
-  deploy-backend-staging:
-    name: 🚧 Backend → Staging
-    needs: quality
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment:
-      name: backend-staging
-
-    steps:
-      - name: Deploy backend to Vercel
-        run: echo "Backend auto-deploys via Vercel Git integration"
-
-  # ============================================================
-  # STAGE 3A: DEPLOY FRONTEND TO PRODUCTION
-  # ============================================================
-  deploy-frontend-production:
-    name: 🚀 Frontend → Production
-    needs: quality
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: https://prolink-eight.vercel.app
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel PRODUCTION
-        working-directory: ./prolink-frontend
-        run: |
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
-  # ============================================================
-  # STAGE 3B: DEPLOY BACKEND TO PRODUCTION
-  # ============================================================
-  deploy-backend-production:
-    name: 🚀 Backend → Production
-    needs: quality
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: backend-production
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Run database migrations
-        working-directory: ./prolink-backend
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Deploy backend to Vercel
-        run: echo "Backend auto-deploys via Vercel Git integration"
