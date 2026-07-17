@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   LayoutDashboard, User, Briefcase, FileText,
@@ -11,14 +11,6 @@ import {
 import api from '../../lib/api';
 import styles from './layout.module.css';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
-const DROP_VARIANTS = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i) => ({
-    opacity: 1, x: 0,
-    transition: { duration: 0.4, delay: 0.08 * i, ease: FAUCET_EASING },
-  }),
-};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -173,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <>
               <div className="dash-sidebar__section-label">Work</div>
               {[providerLinks[0], providerLinks[1], providerLinks[2], providerLinks[3]].map((link, i) => (
-                <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                <div key={link.href}>
                   <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
                     <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
@@ -181,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
-                </motion.div>
+                </div>
               ))}
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
@@ -194,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </>
           ) : (
@@ -202,7 +194,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <>
               <div className="dash-sidebar__section-label">Hire</div>
               {[clientLinks[0], clientLinks[1], clientLinks[2]].map((link, i) => (
-                <motion.div key={link.href} custom={i} variants={DROP_VARIANTS} initial="hidden" animate="visible" whileHover={{ x: 3 }}>
+                <div key={link.href}>
                   <Link href={link.href} className={`${styles['dash-sidebar__link']} ${isActive(link.href) ? styles['dash-sidebar__link--active'] : ''}`}>
                     <span className={styles['dash-sidebar__link-icon']}>{link.icon}</span>
                     <span style={{ flex: 1 }}>{link.label}</span>
@@ -210,7 +202,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
-                </motion.div>
+                </div>
               ))}
               <div className="dash-sidebar__divider" />
               <div className="dash-sidebar__section-label">Account</div>
@@ -223,7 +215,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <span className={styles['dash-sidebar__badge']}>{unreadCount}</span>
                     )}
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </>
           )}
