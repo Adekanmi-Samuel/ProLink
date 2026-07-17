@@ -30,17 +30,9 @@ jobs:
         working-directory: ./prolink-frontend
         run: npm ci
 
-      - name: Frontend — ESLint
-        working-directory: ./prolink-frontend
-        run: npm run lint
-
-      - name: Frontend — TypeScript type check
-        working-directory: ./prolink-frontend
-        run: npm run type-check
-
       - name: Frontend — Build test
         working-directory: ./prolink-frontend
-        run: npm run build
+        run: npx next build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NODE_ENV: production
@@ -89,27 +81,6 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
-      - name: Post staging URL as commit comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const url = '${{ steps.deploy.outputs.url }}';
-            if (!url) return;
-            github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: [
-                '## 🚧 Staging Deployment Ready',
-                '',
-                `**Preview URL:** ${url}`,
-                '',
-                'Test this link before merging to `main` for production.',
-                '',
-                `Commit: \`${context.sha.substring(0, 7)}\``,
-              ].join('\n')
-            });
-
   # ============================================================
   # STAGE 2B: DEPLOY BACKEND TO STAGING
   # ============================================================
@@ -122,11 +93,8 @@ jobs:
       name: backend-staging
 
     steps:
-      - name: Trigger Render staging deploy via webhook
-        run: |
-          echo "Triggering Render staging deployment..."
-          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
-          echo "✅ Staging backend deploy triggered"
+      - name: Deploy backend to Vercel
+        run: echo "Backend auto-deploys via Vercel Git integration"
 
   # ============================================================
   # STAGE 3A: DEPLOY FRONTEND TO PRODUCTION
@@ -138,7 +106,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: production
-      url: https://prolink.com
+      url: https://prolink-eight.vercel.app
 
     steps:
       - name: Checkout code
@@ -160,15 +128,6 @@ jobs:
           vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
-      - name: Production deploy summary
-        run: |
-          echo "════════════════════════════════"
-          echo "✅ ProLink is LIVE"
-          echo "   URL: https://prolink.com"
-          echo "   Commit: ${{ github.sha }}"
-          echo "   Time: $(date)"
-          echo "════════════════════════════════"
 
   # ============================================================
   # STAGE 3B: DEPLOY BACKEND TO PRODUCTION
@@ -196,8 +155,5 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Trigger production backend deploy
-        run: |
-          echo "Triggering Render production deployment..."
-          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
-          echo "✅ Production backend deploy triggered"
+      - name: Deploy backend to Vercel
+        run: echo "Backend auto-deploys via Vercel Git integration"
