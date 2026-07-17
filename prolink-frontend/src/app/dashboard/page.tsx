@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+
 import api from '../../lib/api';
 import withAuth from '../../components/withAuth';
 import { AnimatedSection, AnimatedStaggerItem, AnimatedCard, AnimatedHoverCard } from '../../components/AnimatedComponents';
@@ -203,16 +203,12 @@ function DashboardPage() {
     return (
       <div className="page">
         <div className="wrap-sm" style={{ paddingTop: '3rem' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: FAUCET_EASING }}
-          >
+          <div>
             <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
               <p style={{ color: 'var(--fg-secondary)', marginBottom: '1rem' }}>{error || 'Could not load your profile.'}</p>
               <button onClick={load} className="btn btn-outline">Retry</button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     );
@@ -231,10 +227,7 @@ return (
     <div className="wrap" style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'var(--space-3xl)' }}>
 
       {/* ═══ WELCOME BANNER ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: FAUCET_EASING }}
+      <div
         className={`dash-banner dash-banner--${isProvider ? 'provider' : 'client'}`}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -297,7 +290,7 @@ return (
             </span>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ═══ ROLE-SPECIFIC CONTENT ═══ */}
       {isProvider ? (
