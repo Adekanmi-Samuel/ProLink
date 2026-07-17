@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import withAuth from '../../../components/withAuth';
 import { useSocket } from '../../../lib/SocketContext';
 import api from '../../../lib/api';
 import { apiService } from '../../../lib/apiService';
@@ -37,7 +38,7 @@ function avatarColor(name) {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-export default function ChatPage() {
+function ChatPage() {
   const { threadId } = useParams();
   const router = useRouter();
   const { socket } = useSocket();
@@ -587,3 +588,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
+export default withAuth(ChatPage);

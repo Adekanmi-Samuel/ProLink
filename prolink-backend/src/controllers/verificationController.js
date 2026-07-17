@@ -40,8 +40,8 @@ const verifyNIN = async (req, res, next) => {
     const { nin_number } = req.body;
     const userId = req.user.id;
 
-    if (!nin_number || nin_number.length < 11) {
-      return res.status(400).json({ error: 'Valid NIN is required (11 digits)' });
+    if (!nin_number || !/^\d{11}$/.test(nin_number)) {
+      return res.status(400).json({ error: 'Valid NIN is required (exactly 11 digits)' });
     }
 
     await prisma.profile.upsert({
@@ -69,8 +69,8 @@ const verifyCAC = async (req, res, next) => {
     const { cac_number } = req.body;
     const userId = req.user.id;
 
-    if (!cac_number) {
-      return res.status(400).json({ error: 'CAC Number is required' });
+    if (!cac_number || cac_number.trim().length < 5) {
+      return res.status(400).json({ error: 'Valid CAC number is required (minimum 5 characters)' });
     }
 
     await prisma.profile.upsert({

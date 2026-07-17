@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -22,6 +22,7 @@ const DROP_VARIANTS = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -31,10 +32,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       try {
         const res = await api.get('/profiles/me');
         setUser(res.data);
-      } catch { /* noop */ }
+      } catch (err: any) {
+        // Redirect to login on definitive 401
+        if (err?.response?.status === 401) {
+          router.replace('/login');
+        }
+      }
     };
     fetchUser();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user) {

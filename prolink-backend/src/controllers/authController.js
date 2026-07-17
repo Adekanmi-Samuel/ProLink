@@ -150,7 +150,8 @@ const logout = async (req, res, next) => {
       await authService.logoutUser(req.user.id);
     }
   } catch (err) {
-    }
+    // Logout best-effort: token_version already incremented, cookie will be cleared regardless
+  }
 
   const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   res.cookie('token', '', {

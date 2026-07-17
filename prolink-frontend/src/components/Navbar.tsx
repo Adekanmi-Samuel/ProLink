@@ -33,8 +33,12 @@ export default function Navbar() {
         const n = await api.get('/notifications/unread-count');
         setNotifCount(n.data?.count || 0);
       } catch { setNotifCount(0); }
-    } catch {
-      setUser(null);
+    } catch (err: any) {
+      // Only clear user on definitive 401 (not network errors or 500s)
+      if (err?.response?.status === 401) {
+        setUser(null);
+      }
+      // On network/500 errors, keep existing user state (don't flicker)
       setNotifCount(0);
     }
   }, []);
