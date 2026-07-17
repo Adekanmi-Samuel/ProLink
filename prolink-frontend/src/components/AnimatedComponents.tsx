@@ -8,8 +8,7 @@ export function AnimatedSection({ children, className, style, delay = 0.1, stagg
   return (
     <motion.div
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once, margin: '-40px' }}
+      animate="visible"
       variants={{
         hidden: {},
         visible: { transition: { staggerChildren: stagger, delayChildren: delay } },
