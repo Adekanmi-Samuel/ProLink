@@ -316,4 +316,4 @@ return (
 );
 }
 
-export default DashboardPage;
+export default withAuth(DashboardPage);

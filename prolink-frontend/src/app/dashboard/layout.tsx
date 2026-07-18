@@ -215,7 +215,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main
+      <div
         id="dash-main-content"
         className={styles['dash-content']}
       >
@@ -251,7 +251,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </div>
         {children}
-      </main>
+      </div>
     </div>
   );
 }
