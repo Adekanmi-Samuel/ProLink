@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import Link from 'next/link';
 import {
   LayoutDashboard, User, Briefcase, FileText,
@@ -110,29 +110,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 
       {/* Overlay for mobile */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            className={styles.dashLayoutOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {sidebarOpen && (
+        <div
+          className={styles.dashLayoutOverlay}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <aside className={`${styles['dash-sidebar']} ${sidebarOpen ? styles['dash-sidebar--open'] : ''}`}>
         <div className={styles['dash-sidebar__header']}>
-          <motion.div
+          <div
             className={styles['dash-sidebar__avatar']}
-            whileHover={{ scale: 1.1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           >
             {initials}
-          </motion.div>
+          </div>
           <div className={styles['dash-sidebar__user-info']}>
             <div className={styles['dash-sidebar__name']}>
               {user?.full_name || user?.email?.split('@')[0] || 'Dashboard'}

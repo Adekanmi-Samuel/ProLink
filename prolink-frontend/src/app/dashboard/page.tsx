@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 
 import api from '../../lib/api';
 import withAuth from '../../components/withAuth';
-import { AnimatedSection, AnimatedStaggerItem, AnimatedCard, AnimatedHoverCard } from '../../components/AnimatedComponents';
+
 import { useSocket } from '../../lib/SocketContext';
 
 // ── Lazy-load heavy dashboard components to reduce initial bundle ──

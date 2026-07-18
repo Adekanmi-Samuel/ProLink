@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+
 import { AnimatedSection, AnimatedStaggerItem } from '../../components/AnimatedComponents';
 
 const FAUCET_EASING = [0.22, 1, 0.36, 1];
@@ -30,10 +30,7 @@ export default function ProviderDashboard({ profile, earnings, recentJobs, notif
     <>
       {/* -- Profile completeness (only if < 80%) -- */}
       {completePct < 80 && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: FAUCET_EASING }}
+        <div
           className="profile-progress"
         >
           <div className="profile-progress__header">
@@ -53,7 +50,7 @@ export default function ProviderDashboard({ profile, earnings, recentJobs, notif
               Edit profile →
             </Link>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* -- Stat row -- */}
