@@ -212,7 +212,7 @@ const deleteMilestone = async (req, res, next) => {
     }
 
     await milestonesService.deleteMilestone(parseInt(id));
-    res.json({ error: 'Milestone deleted successfully' });
+    res.json({ message: 'Milestone deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete milestone' });
   }
