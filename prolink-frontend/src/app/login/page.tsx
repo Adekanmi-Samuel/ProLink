@@ -25,7 +25,7 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg('');
     setLoading(true);
@@ -40,7 +40,7 @@ function LoginForm() {
         localStorage.setItem('token', response.data.token);
       }
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       setErrorMsg(error.response?.data?.error || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);

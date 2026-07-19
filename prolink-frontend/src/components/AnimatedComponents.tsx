@@ -22,8 +22,14 @@ export function AnimatedSection({ children, className, style, delay = 0.1, stagg
 }
 
 /* ── AnimatedCard — fade + slide up ── */
-export function AnimatedCard({ children, className, style, index = 0, as = 'div' }: any) {
-  const Tag = motion[as] || motion.div;
+export function AnimatedCard({ children, className, style, index = 0, as = 'div' }: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  index?: number;
+  as?: string;
+}) {
+  const Tag = (motion as any)[as] || motion.div;
   return (
     <Tag
       variants={fadeUp}

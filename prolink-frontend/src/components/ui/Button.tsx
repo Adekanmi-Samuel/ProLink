@@ -2,7 +2,7 @@ import React from 'react';
 import Spinner from './Spinner';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }

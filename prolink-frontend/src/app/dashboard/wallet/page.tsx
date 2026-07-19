@@ -7,7 +7,7 @@ import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 import { toast } from 'sonner';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function WalletPage() {
   const router = useRouter();

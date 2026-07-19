@@ -35,14 +35,11 @@ jobs:
       - name: TypeScript type check
         run: npx tsc --noEmit
         working-directory: .
-        continue-on-error: true
-        # continue-on-error: true means TS errors warn you but don't block deploy
-        # Change to false once you've fixed all TypeScript errors
+        # Type errors now block deployment — all TS errors have been fixed
 
       - name: ESLint check
         run: npx next lint --max-warnings 20
         working-directory: .
-        continue-on-error: true
         # Allows up to 20 warnings. Errors still block.
 
       - name: Build test (does the project compile?)

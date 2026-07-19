@@ -9,7 +9,7 @@ import withAuth from '../../../components/withAuth';
 
 function SavedJobsPage() {
   const pageRef = useRef<HTMLDivElement>(null);
-  const [savedJobs, setSavedJobs] = useState([]);
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0, hasMore: false });

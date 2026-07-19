@@ -2,6 +2,8 @@ export interface User {
   id: number;
   email: string;
   user_type: string;
+  is_premium?: boolean;
+  full_name?: string;
   profile?: Profile;
 }
 

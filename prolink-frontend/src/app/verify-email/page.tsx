@@ -55,7 +55,7 @@ export default function VerifyEmailPage() {
     }
   }, [otp]);
 
-  const verifyCode = async (code) => {
+  const verifyCode = async (code: string) => {
     setErrorMsg('');
     setLoading(true);
     try {
@@ -65,7 +65,7 @@ export default function VerifyEmailPage() {
       setTimeout(() => {
         router.push('/login?registered=1');
       }, 1200);
-    } catch (err) {
+    } catch (err: any) {
       setErrorMsg(err.response?.data?.error || 'Invalid or expired code. Please try again.');
     } finally {
       setLoading(false);

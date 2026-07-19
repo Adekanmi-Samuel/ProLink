@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAdmin from '../../../components/withAdmin';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<string, { bg: string; c: string }> = {
   open: { bg: 'rgba(34,197,94,0.12)', c: '#22c55e' },
   assigned: { bg: 'rgba(59,130,246,0.12)', c: '#3b82f6' },
   completed: { bg: 'rgba(107,114,128,0.12)', c: '#6b7280' },
@@ -169,7 +169,7 @@ function AdminJobsPage() {
   );
 }
 
-const TH = ({ children, ...rest }) => (
+const TH = ({ children, ...rest }: { children: React.ReactNode; [key: string]: unknown }) => (
   <th style={{ padding: '0.75rem 0.85rem', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--fg-tertiary)' }} {...rest}>
     {children}
   </th>

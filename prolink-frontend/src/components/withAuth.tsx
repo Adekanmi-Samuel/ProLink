@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import api, { hasAuthCookie } from '../lib/api';
 import ProLinkLoader from './ui/ProLinkLoader';
 
-const withAuth = (WrappedComponent) => {
+const withAuth = (WrappedComponent: React.ComponentType<any>) => {
   // This is the component that will be returned
-  const AuthComponent = (props) => {
+  const AuthComponent = (props: Record<string, unknown>) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { AnimatedSection, AnimatedStaggerItem } from '../../components/AnimatedComponents';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function eventColor(type: string) {
   const m: Record<string, string> = { bid: '--copper', message: '--blue', milestone: '--accent', payment: '--gold', dispute: '--danger', system: '--info' };

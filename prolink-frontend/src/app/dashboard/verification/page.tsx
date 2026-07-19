@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const BADGE_VARIANT = {
+const BADGE_VARIANT: Record<string, { bg: string; c: string; label: string }> = {
   verified: { bg: 'rgba(34,197,94,0.12)', c: '#22c55e', label: 'Verified' },
   pending: { bg: 'rgba(234,179,8,0.12)', c: '#eab308', label: 'Pending Review' },
   none: { bg: 'rgba(107,114,128,0.1)', c: '#6b7280', label: 'Unverified' },

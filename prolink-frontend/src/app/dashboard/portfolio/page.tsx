@@ -5,10 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+interface PortfolioItem {
+  id: string | number;
+  title: string;
+  description?: string;
+  file_url_or_link?: string;
+}
 
 function PortfolioPage() {
-  const [portfolio, setPortfolio] = useState([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ title: '', description: '', file_url_or_link: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -27,9 +34,9 @@ function PortfolioPage() {
 
   useEffect(() => { fetchProfile(); }, []);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg('');
     setSubmitting(true);
@@ -37,7 +44,7 @@ function PortfolioPage() {
       await api.post('/profiles/me/portfolio', formData);
       setFormData({ title: '', description: '', file_url_or_link: '' });
       fetchProfile();
-    } catch (error) {
+    } catch (error: any) {
       setErrorMsg(error.response?.data?.msg || 'Failed to add item.');
     } finally {
       setSubmitting(false);

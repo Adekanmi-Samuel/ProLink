@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const initials = user?.full_name
-    ? user.full_name.split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase()
+    ? user.full_name.split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase()
     : user?.email?.charAt(0).toUpperCase() || '?';
 
   return (

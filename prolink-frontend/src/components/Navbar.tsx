@@ -10,16 +10,16 @@ import { navbarVariants, dropdownVariants } from '../lib/motion';
 import { useSocket } from '../lib/SocketContext';
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [avatarDropdown, setAvatarDropdown] = useState(false);
   const [notifDropdown, setNotifDropdown] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const dropdownRef = useRef(null);
-  const notifRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
@@ -75,7 +75,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!socket) return;
-    const handleNewNotif = (notif) => {
+    const handleNewNotif = (notif: any) => {
       setNotifCount((c) => c + 1);
       setNotifications((prev) => [notif, ...prev].slice(0, 5));
     };
@@ -95,9 +95,9 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!avatarDropdown && !notifDropdown) return;
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setAvatarDropdown(false);
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifDropdown(false);
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAvatarDropdown(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifDropdown(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -117,7 +117,7 @@ export default function Navbar() {
   const isClient = user?.user_type === 'client';
   const isAdmin = user?.user_type === 'admin';
   const initials = user?.full_name
-    ? user.full_name.split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase()
+    ? user.full_name.split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase()
     : '?';
 
   const loggedOutNav = [
@@ -153,7 +153,7 @@ export default function Navbar() {
 
   if (!mounted) return null;
 
-  const isActive = (href) => pathname === href || pathname.startsWith(href + '/');
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <>
@@ -300,7 +300,7 @@ export default function Navbar() {
                 key={theme}
                 initial={{ rotate: -20, opacity: 0 }}
                 animate={{ rotate: 0, opacity: 1 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
               >
                 {theme === 'dark' ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

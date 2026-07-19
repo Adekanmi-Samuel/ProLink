@@ -9,10 +9,10 @@ import ProLinkLoader from '../../components/ui/ProLinkLoader';
 
 export default function JobsPage() {
   const pageRef = useRef<HTMLDivElement>(null);
-  const [jobs, setJobs] = useState([]);
-  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('search');
   const [initialLoadError, setInitialLoadError] = useState('');
   const [jobsError, setJobsError] = useState('');
@@ -350,7 +350,7 @@ export default function JobsPage() {
             <div className="jobs-empty">
               <span className="jobs-empty__icon">⚠️</span>
               <p>{jobsError}</p>
-              <button onClick={fetchJobs} className="pl-btn pl-btn-secondary">Try Again</button>
+              <button onClick={() => fetchJobs()} className="pl-btn pl-btn-secondary">Try Again</button>
             </div>
           ) : displayJobs.length > 0 ? (
             <div className="jobs-list">

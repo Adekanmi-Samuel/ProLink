@@ -10,7 +10,7 @@ import { NIGERIAN_STATES } from '../../lib/states';
 import { useTheme } from '../../components/ThemeProvider';
 
 /* ── Password strength checker ── */
-function getStrength(pw) {
+function getStrength(pw: string) {
   let s = 0;
   if (pw.length >= 8) s++;
   if (/[A-Z]/.test(pw)) s++;
@@ -25,7 +25,7 @@ const STRENGTH_COLORS = ['', 'var(--danger)', 'var(--copper)', 'var(--warning)',
 const NG_STATES = Object.keys(NIGERIAN_STATES);
 
 /* ── Step indicator ── */
-function StepIndicator({ step, steps }) {
+function StepIndicator({ step, steps }: { step: number; steps: number[] }) {
   return (
     <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
       {steps.map((l, i) => (
@@ -70,7 +70,7 @@ export default function SignupPage() {
   const nextStep = () => { setDirection(1); setStep(s => Math.min(s + 1, 3)); };
   const prevStep = () => { setDirection(-1); setStep(s => Math.max(s - 1, 1)); };
 
-  const canContinueStep1 = role && fullName.trim().length >= 2 && email.includes('@') && phone.length >= 10 && state;
+  const canContinueStep1 = !!(role && fullName.trim().length >= 2 && email.includes('@') && phone.length >= 10 && state);
   const canContinueStep2 = password.length >= 8 && password === confirmPassword && agreedTerms;
 
   const handleSubmit = async () => {
@@ -87,7 +87,7 @@ export default function SignupPage() {
       }
       toast.success('Account created! Welcome to ProLink.');
       router.push('/verify-email');
-    } catch (err) {
+    } catch (err: any) {
       const errData = err.response?.data;
       let msg = errData?.msg || errData?.error || 'Registration failed. Please try again.';
       if (errData?.details?.length > 0) {
@@ -274,7 +274,15 @@ export default function SignupPage() {
 }
 
 /* ══════ STEP 1 — Role + Personal Details ══════ */
-function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, setPhone, state, setState, lga, setLga, selectedLGAs, canContinue, onNext }) {
+function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, setPhone, state, setState, lga, setLga, selectedLGAs, canContinue, onNext }: {
+  role: string; setRole: (v: string) => void;
+  fullName: string; setFullName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+  state: string; setState: (v: string) => void;
+  lga: string; setLga: (v: string) => void;
+  selectedLGAs: string[]; canContinue: boolean; onNext: () => void;
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div>
@@ -387,7 +395,12 @@ function Step1({ role, setRole, fullName, setFullName, email, setEmail, phone, s
 }
 
 /* ══════ STEP 2 — Password + Terms ══════ */
-function Step2({ password, setPassword, confirmPassword, setConfirmPassword, agreedTerms, setAgreedTerms, strength, canContinue, onPrev, onNext }) {
+function Step2({ password, setPassword, confirmPassword, setConfirmPassword, agreedTerms, setAgreedTerms, strength, canContinue, onPrev, onNext }: {
+  password: string; setPassword: (v: string) => void;
+  confirmPassword: string; setConfirmPassword: (v: string) => void;
+  agreedTerms: boolean; setAgreedTerms: (v: boolean) => void;
+  strength: number; canContinue: boolean; onPrev: () => void; onNext: () => void;
+}) {
   const [showSignupPw, setShowSignupPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   return (
@@ -467,7 +480,10 @@ function Step2({ password, setPassword, confirmPassword, setConfirmPassword, agr
 }
 
 /* ══════ STEP 3 — Referral + Final Submit ══════ */
-function Step3({ referralCode, setReferralCode, loading, role, onPrev, onSubmit, fullName }) {
+function Step3({ referralCode, setReferralCode, loading, role, onPrev, onSubmit, fullName }: {
+  referralCode: string; setReferralCode: (v: string) => void;
+  loading: boolean; role: string; onPrev: () => void; onSubmit: () => void; fullName: string;
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div>

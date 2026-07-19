@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import api from '../../lib/api';
 import { AnimatedSection, AnimatedStaggerItem } from '../../components/AnimatedComponents';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export default function AdminIndexPage() {
   const [stats, setStats] = useState<any>(null);

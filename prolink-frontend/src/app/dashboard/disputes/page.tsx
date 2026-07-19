@@ -7,7 +7,7 @@ import withAuth from '../../../components/withAuth';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function DisputesPage() {
   const [disputes, setDisputes] = useState<any[]>([]);
@@ -74,7 +74,7 @@ function DisputesPage() {
   }
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: Record<string, { bg: string; c: string; label: string }> = {
       open: { bg: 'rgba(234,179,8,0.12)', c: '#eab308', label: 'Under Review' },
       resolved_refunded: { bg: 'rgba(34,197,94,0.12)', c: '#22c55e', label: 'Resolved (Refunded)' },
       resolved_released: { bg: 'rgba(34,197,94,0.12)', c: '#22c55e', label: 'Resolved (Released)' },

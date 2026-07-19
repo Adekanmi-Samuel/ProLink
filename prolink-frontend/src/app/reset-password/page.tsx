@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import Logo from '../../components/Logo';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function ResetPasswordForm() {
   const router = useRouter();

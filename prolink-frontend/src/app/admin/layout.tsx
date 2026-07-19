@@ -8,10 +8,10 @@ import api from '../../lib/api';
 import styles from './layout.module.css';
 import ProLinkLoader from '../../components/ui/ProLinkLoader';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const DROP_VARIANTS = {
   hidden: { opacity: 0, x: -20 },
-  visible: (i) => ({
+  visible: (i: number) => ({
     opacity: 1, x: 0,
     transition: { duration: 0.4, delay: 0.08 * i, ease: FAUCET_EASING },
   }),

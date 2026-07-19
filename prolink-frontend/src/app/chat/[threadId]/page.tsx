@@ -32,7 +32,7 @@ function formatDateDivider(dateStr: any) {
 }
 
 const COLORS = ['#00D68F', '#4A8CFF', '#E8633C', '#F0B429', '#A78BFA', '#F472B6'];
-function avatarColor(name) {
+function avatarColor(name: string) {
   let hash = 0;
   for (let i = 0; i < (name || 'A').length; i++) hash = (name || 'A').charCodeAt(i) + ((hash << 5) - hash);
   return COLORS[Math.abs(hash) % COLORS.length];
@@ -249,7 +249,7 @@ function ChatPage() {
       try {
         const response = await apiService.upload.single(pendingAttachment);
 
-        const fileUrl = response.url;
+        const fileUrl = response.data.url;
         const isImage = pendingAttachment.type.startsWith('image/');
         const isVideo = pendingAttachment.type.startsWith('video/');
         let messageType = 'document';

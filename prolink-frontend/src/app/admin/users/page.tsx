@@ -6,7 +6,7 @@ import api from '../../../lib/api';
 import withAdmin from '../../../components/withAdmin';
 import Link from 'next/link';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -175,8 +175,8 @@ function AdminUsersPage() {
 const thStyle = { padding: '0.75rem 0.85rem', textAlign: 'left' as const, fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.04em', color: 'var(--fg-tertiary)' };
 const tdS = { padding: '0.65rem 0.85rem', fontSize: '0.85rem' };
 
-function TypeBadge({ type }) {
-  const colors = { client: '#3b82f6', provider: '#eab308', admin: '#ef4444' };
+function TypeBadge({ type }: { type: string }) {
+  const colors: Record<string, string> = { client: '#3b82f6', provider: '#eab308', admin: '#ef4444' };
   return (
     <motion.span
       initial={{ scale: 0 }}
@@ -188,8 +188,8 @@ function TypeBadge({ type }) {
   );
 }
 
-function StatusBadge({ status }) {
-  const colors = { active: '#22c55e', suspended: '#eab308', banned: '#ef4444' };
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = { active: '#22c55e', suspended: '#eab308', banned: '#ef4444' };
   return (
     <span style={{ fontWeight: 600, color: colors[status] || '#6b7280', fontSize: '0.85rem' }}>{status}</span>
   );

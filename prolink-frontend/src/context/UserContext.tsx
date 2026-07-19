@@ -9,6 +9,7 @@ interface User {
   full_name: string | null;
   user_type: 'client' | 'provider' | 'admin';
   email_verified: boolean;
+  is_premium?: boolean;
   nin_status?: string;
   cac_status?: string;
   profile_completed: boolean;

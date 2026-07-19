@@ -6,7 +6,7 @@ import { pageVariants } from '../lib/motion';
 /**
  * Wraps each page with fade transition
  */
-export default function AnimatedPage({ children, className = '', style = {} }) {
+export default function AnimatedPage({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <motion.div
       variants={pageVariants}

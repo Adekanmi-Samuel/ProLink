@@ -77,17 +77,17 @@ const TICKER_ITEMS = [
 
 const COLORS = ['#00D68F', '#4A8CFF', '#059669', '#D97706', '#A78BFA', '#F472B6'];
 
-function avatarColor(name) {
+function avatarColor(name: string) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-const EASE = [0.22, 1, 0.36, 1];
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export default function HomePage() {
   const [headlineIdx, setHeadlineIdx] = useState(0);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<{ verified_freelancers?: number; jobs_completed?: number; total_paid_ngn?: number } | null>(null);
   const [providers, setProviders] = useState(PROVIDERS_HARDCODED);
 
   useEffect(() => {

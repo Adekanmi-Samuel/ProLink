@@ -6,9 +6,19 @@ import Link from 'next/link';
 import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-function timeAgo(dateStr) {
+interface Thread {
+  thread_id: string | number;
+  other_user_name: string;
+  other_user_avatar?: string;
+  job_title?: string;
+  last_message?: string;
+  last_message_at?: string;
+  unread_count?: number;
+}
+
+function timeAgo(dateStr: string) {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -22,7 +32,7 @@ function timeAgo(dateStr) {
 }
 
 function MessagesPage() {
-  const [threads, setThreads] = useState([]);
+  const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,7 +101,7 @@ function MessagesPage() {
                         {thread.other_user_name}
                       </span>
                       <span style={{ color: 'var(--fg-tertiary)', fontSize: '0.7rem', flexShrink: 0, fontFamily: 'var(--font-mono), monospace' }}>
-                        {timeAgo(thread.last_message_at)}
+                        {timeAgo(thread.last_message_at || '')}
                       </span>
                     </div>
                     <p style={{ color: 'var(--accent)', fontSize: '0.78rem', fontWeight: 600, margin: '0.2rem 0 0' }}>
@@ -103,7 +113,7 @@ function MessagesPage() {
                       </p>
                     )}
                   </div>
-                  {thread.unread_count > 0 && (
+                  {(thread.unread_count ?? 0) > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}

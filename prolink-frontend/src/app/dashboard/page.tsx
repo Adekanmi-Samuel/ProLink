@@ -30,7 +30,7 @@ const ClientDashboard = dynamic(() => import('./ClientDashboard').then(m => m.de
   ssr: false,
 });
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // ── Avatar colour consistent per name ──
 const COLORS = ['#00D68F', '#4A8CFF', '#E8633C', '#F0B429', '#A78BFA', '#F472B6'];
@@ -206,7 +206,7 @@ function DashboardPage() {
           <div>
             <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
               <p style={{ color: 'var(--fg-secondary)', marginBottom: '1rem' }}>{error || 'Could not load your profile.'}</p>
-              <button onClick={load} className="btn btn-outline">Retry</button>
+              <button onClick={() => load()} className="btn btn-outline">Retry</button>
             </div>
           </div>
         </div>

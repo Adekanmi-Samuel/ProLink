@@ -6,7 +6,7 @@ import Link from 'next/link';
 import api from '../../lib/api';
 import Logo from '../../components/Logo';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

@@ -201,9 +201,9 @@ const nextConfig: NextConfig = {
   // Enable React Strict Mode for dev-time warnings
   reactStrictMode: true,
 
-  // TypeScript build errors already ignored (keep as-is)
+  // TypeScript type checking enforced at build time
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Optimize package imports for smaller bundles

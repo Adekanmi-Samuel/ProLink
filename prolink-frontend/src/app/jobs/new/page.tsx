@@ -7,7 +7,7 @@ import api from '../../../lib/api';
 import withAuth from '../../../components/withAuth';
 import { NIGERIAN_STATES } from '../../../lib/states';
 
-const FAUCET_EASING = [0.22, 1, 0.36, 1];
+const FAUCET_EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function NewJobPage() {
   const router = useRouter();
