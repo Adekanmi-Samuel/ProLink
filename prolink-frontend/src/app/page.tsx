@@ -617,8 +617,8 @@ export default function HomePage() {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "ProLink Nigeria",
-            url: "https://prolink.vercel.app",
-            logo: "https://prolink.vercel.app/logo.png",
+            url: "https://prolink-eight.vercel.app",
+            logo: "https://prolink-eight.vercel.app/logo.png",
             description: "Nigeria's professional freelance network. Connect with verified professionals, pay in Naira, and get work done securely with escrow protection.",
             sameAs: [
               "https://twitter.com/prolinkng",
@@ -646,12 +646,12 @@ export default function HomePage() {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "ProLink Nigeria",
-            url: "https://prolink.vercel.app",
+            url: "https://prolink-eight.vercel.app",
             potentialAction: {
               "@type": "SearchAction",
               target: {
                 "@type": "EntryPoint",
-                urlTemplate: "https://prolink.vercel.app/jobs?q={search_term_string}"
+                urlTemplate: "https://prolink-eight.vercel.app/jobs?q={search_term_string}"
               },
               "query-input": "required name=search_term_string"
             }

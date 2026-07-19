@@ -21,7 +21,7 @@ export const metadata = {
   openGraph: {
     title: "ProLink Nigeria — Hire Skilled Professionals & Find Work",
     description: "Nigeria's professional freelance network. Connect with verified professionals, pay in Naira, and get work done securely.",
-    url: "https://prolink.vercel.app",
+    url: "https://prolink-eight.vercel.app",
     siteName: "ProLink",
     locale: "en_NG",
     type: "website",
