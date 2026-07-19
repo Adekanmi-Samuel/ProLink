@@ -11,6 +11,9 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.vercel*
+.env.production*
+.env.verify
 
 # IDE
 .idea/
@@ -44,10 +47,10 @@ generated/prisma/
 # Temporary files
 *.tmp
 *.temp
-.vercel
-.env*
-
-# Potential secrets
-b64.txt
 tmp.env
 tmp3.env
+b64.txt
+debug_content.txt
+
+# Uploads
+uploads/

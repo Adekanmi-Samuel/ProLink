@@ -4,7 +4,6 @@ import Navbar from "../components/Navbar";
 import VerificationBanner from "../components/VerificationBanner";
 import Providers from "./providers";
 import ThemeProvider from "../components/ThemeProvider";
-import LandingAnimator from "../components/LandingAnimator";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -14,6 +13,7 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-body', weight: ['300
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: '--font-mono' });
 
 export const metadata = {
+  metadataBase: new URL("https://prolink-eight.vercel.app"),
   title: "ProLink Nigeria — Hire Skilled Professionals & Find Work",
   description: "Nigeria's professional freelance network. Connect with verified professionals, pay in Naira, and get work done securely with escrow protection.",
   keywords: ["freelance", "Nigeria", "hiring", "jobs", "professionals", "remote work", "Naira", "escrow"],
@@ -74,9 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Navbar />
             <VerificationBanner />
             <main id="main-content" style={{ paddingTop: 'var(--navbar-h)' }}>
-              <LandingAnimator>
-                {children}
-              </LandingAnimator>
+              {children}
             </main>
           </ThemeProvider>
         </Providers>
